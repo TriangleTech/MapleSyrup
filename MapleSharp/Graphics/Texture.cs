@@ -18,6 +18,13 @@ public class Texture : IDisposable
     {
         get => textureSize;
     }
+    
+    public Texture(Image image)
+    {
+        textureImage = image;
+        textureSize = new Vector2(image.Width, image.Height);
+        Create();
+    }
 
     private void Create()
     {

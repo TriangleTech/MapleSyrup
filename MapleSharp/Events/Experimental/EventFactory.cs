@@ -2,63 +2,48 @@ namespace MapleSharp.Events.Experimental;
 
 public class EventFactory
 {
-    private Dictionary<string, Func<object, object>> functions = new();
-    private Dictionary<string, Action<object>> actions = new();
+    private readonly Dictionary<EventType, IEventHandler> registeredEvents = new();
 
     public EventFactory()
     {
         
     }
-    
-    public void RegisterEvent(string name, Action<object> callback)
+
+    public void RegisterEvent(IEventHandler handler)
     {
-        if (actions.ContainsKey(name))
-        {
-            actions[name] += callback;
-        }
-        else
-        {
-            actions.Add(name, callback);
-        }
+        if (registeredEvents.ContainsKey(handler.Type))
+            return;
+        registeredEvents.Add(handler.Type, handler);
     }
 
-    public void RegisterEvent(string name, Func<object, object> callback)
+    public void RegisterEvent(EventType type, IEventHandler handler)
     {
-        if (actions.ContainsKey(name))
-        {
-            functions[name] += callback;
-        }
-        else
-        {
-            functions.Add(name, callback);
-        }
+        if (registeredEvents.ContainsKey(type))
+            return;
+        registeredEvents.Add(type, handler);
     }
     
-    public void UnregisterEvent(string name)
+    public void UnregisterEvent(EventType type)
     {
-        if (actions.ContainsKey(name))
-        {
-            actions.Remove(name);
-        }
-    }
-    
-    public void SendEvent(string name, object data)
-    {
-        if (actions.ContainsKey(name))
-        {
-            actions[name].Invoke(data);
-        }
+        if (registeredEvents.ContainsKey(type))
+            registeredEvents.Remove(type);
         
-        throw new Exception("[SendEvent] Event does not exist.");
+        throw new Exception("[UnregisterEvent] Event does not exist.");
     }
     
-    public object RequestEvent(string name, object data)
+    public void InvokeEvent<T>(EventType type, T arg)
     {
-        if (functions.ContainsKey(name))
-        {
-            return functions[name].Invoke(data);
-        }
-
-        throw new Exception("[RequestEvent] Event does not exist.");
+        if (!registeredEvents.ContainsKey(type))
+            throw new Exception("[InvokeEvent] Event does not exist.");
+        var handler = registeredEvents[type];
+        handler.OnDispatchData(arg);
+    }
+    
+    public T InvokeEvent<T>(EventType type, object arg)
+    {
+        if (!registeredEvents.ContainsKey(type))
+            throw new Exception("[InvokeEvent] Event does not exist.");
+        var handler = registeredEvents[type];
+        return (T)handler.OnRequestData(arg);
     }
 }

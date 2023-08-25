@@ -1,29 +1,16 @@
+using MapleSharp.Events.Experimental;
 using MapleSharp.NX;
+using MapleSharp.Services;
 
 namespace MapleSharp.Resources;
 
 public class NxFactory
 {
-    private Dictionary<string, NxFile> nxFiles;
-    private static NxFactory? instance;
-    
-    public static NxFactory Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new NxFactory();
-            }
-
-            return instance;
-        }
-    }
+    private readonly Dictionary<string, NxFile> nxFiles;
     
     public NxFactory()
     {
         nxFiles = new ();
-        instance = this;
     }
 
     public NxFile this[string name]

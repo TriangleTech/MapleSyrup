@@ -21,6 +21,7 @@ public abstract class GameWindow : IWindow
     private ServiceFactory serviceFactory;
     private NxFactory nxFactory;
     private EventFactory eventFactory;
+    private ResourceFactory resourceFactory;
 
     public string Title
     {
@@ -99,16 +100,9 @@ public abstract class GameWindow : IWindow
     private void InitFactories()
     {
         serviceFactory = new ServiceFactory();
+        eventFactory = serviceFactory.GetService<EventFactory>(); // Must be initialized first
         nxFactory = serviceFactory.GetService<NxFactory>();
-        eventFactory = serviceFactory.GetService<EventFactory>();
-        eventFactory.RegisterEvent("testme", TestMethod);
-    }
-
-    private object TestMethod(object arg)
-    {
-        if ((int)arg == 69)
-            return $"ROFL 420:{arg}";
-        return $"LOL 69:{arg}";
+        resourceFactory = serviceFactory.GetService<ResourceFactory>();
     }
 
     public virtual void Initialize()
@@ -119,7 +113,9 @@ public abstract class GameWindow : IWindow
 
     public virtual void OnLoad()
     {
-        
+        var texture = eventFactory.InvokeEvent<Texture>(EventType.TextureRequest, "BasicEff.img/LevelUp/7");
+        Console.WriteLine(texture.TextureSize);
+        texture.Dispose();
     }
 
     public virtual void OnRender()

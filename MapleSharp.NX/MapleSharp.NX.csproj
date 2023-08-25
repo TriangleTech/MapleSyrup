@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="K4os.Compression.LZ4" Version="1.3.6" />
+      <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.6" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+    </ItemGroup>
+
+</Project>

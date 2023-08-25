@@ -17,8 +17,8 @@ public class Game : GameWindow
     
     public override void OnRender()
     {
-        GraphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
-        GraphicsDevice.SwapBuffers();
+        //GraphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        //GraphicsDevice.SwapBuffers();
         base.OnRender();
     }
     

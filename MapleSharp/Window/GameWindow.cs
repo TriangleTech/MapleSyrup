@@ -111,15 +111,18 @@ public abstract class GameWindow : IWindow
         InitSdl();
     }
 
+    private Sprite sprite;
+
     public virtual void OnLoad()
     {
-        var texture = eventFactory.InvokeEvent<Texture>(EventType.TextureRequest, "BasicEff.img/LevelUp/7");
-        Console.WriteLine(texture.TextureSize);
-        texture.Dispose();
+        sprite = new Sprite(eventFactory.InvokeEvent<Texture>(EventType.TextureRequest, "BasicEff.img/LevelUp/7"));
     }
 
     public virtual void OnRender()
     {
+        graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        sprite.Draw();
+        graphicsDevice.SwapBuffers();
     }
 
     public virtual void OnUpdate(float timeDelta)

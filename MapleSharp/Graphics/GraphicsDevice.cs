@@ -19,6 +19,8 @@ public class GraphicsDevice
         if (sdlContext == IntPtr.Zero)
             throw new Exception("Failed to create OpenGL context.");
         GL.LoadBindings(new SDLBindingsContext());
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         window.GraphicsDevice = this;
     }
     

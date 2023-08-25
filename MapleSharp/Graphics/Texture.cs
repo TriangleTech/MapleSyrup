@@ -8,6 +8,7 @@ public class Texture : IDisposable
     private int textureId = -1;
     private Vector2 textureSize;
     private Image textureImage;
+    protected Shader shader;
     
     public int TextureId
     {
@@ -23,6 +24,7 @@ public class Texture : IDisposable
     {
         textureImage = image;
         textureSize = new Vector2(image.Width, image.Height);
+        shader = new Shader("default.vert", "default.frag");
         Create();
     }
 
@@ -43,13 +45,15 @@ public class Texture : IDisposable
         
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)textureSize.X, (int)textureSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-         // we don't need this anymore.
+        
+        shader.Use();
+        shader.SetInt("texture1", 0);
     }
-    
-    protected void UpdateTexture(Texture other)
+
+    public void Use(TextureUnit textureUnit = TextureUnit.Texture0)
     {
-        throw new NotImplementedException();
+        GL.ActiveTexture(textureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, textureId);
     }
     
     public void Dispose()

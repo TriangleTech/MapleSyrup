@@ -222,6 +222,8 @@ public class NxFile
     public Image<Bgra32> GetImage(string path)
     {
         var node = ResolvePath(path);
+        if (node == null)
+            throw new Exception("Node does not exist.");
         return node.To<BitmapNode>().GetBitmap();
     }
     

@@ -1,4 +1,5 @@
-﻿using MapleSharp.Graphics;
+﻿using MapleSharp.Core;
+using MapleSharp.Graphics;
 
 namespace MapleSharp.Window;
 
@@ -11,6 +12,7 @@ public interface IWindow
     bool IsRunning { get; }
     IntPtr Handle { get; }
     GraphicsDevice GraphicsDevice { get; set; }
+    Engine Engine { get; }
     void Initialize();
     void OnLoad();
     void OnRender();

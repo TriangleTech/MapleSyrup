@@ -1,3 +1,4 @@
+using MapleSharp.Core;
 using MapleSharp.Window;
 
 namespace MSClient;
@@ -5,7 +6,7 @@ namespace MSClient;
 public class Game : GameWindow
 {
     public Game()
-        : base()
+        : base(new Engine())
     {
 
     }

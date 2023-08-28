@@ -1,14 +1,14 @@
 ﻿
-using MapleSharp.Events.Experimental;
+using MapleSharp.Core;
+using MapleSharp.Core.Event;
 using MapleSharp.Graphics;
-using MapleSharp.NX;
 using MapleSharp.Resources;
 using MapleSharp.Services;
 using SDL2;
 
 namespace MapleSharp.Window;
 
-public abstract class GameWindow : IWindow
+public abstract class GameWindow : EngineObject, IWindow
 {
     private string title;
     private int width, height;
@@ -20,8 +20,9 @@ public abstract class GameWindow : IWindow
     // Factories
     private ServiceFactory serviceFactory;
     private NxFactory nxFactory;
-    private EventFactory eventFactory;
     private ResourceFactory resourceFactory;
+
+    public Engine Engine { get; }
 
     public string Title
     {
@@ -38,25 +39,22 @@ public abstract class GameWindow : IWindow
     public int Width
     {
         get => width;
-        set { width = value; }
+        set => width = value;
     }
 
     public int Height
     {
         get => height;
-        set { height = value; }
+        set => height = value;
     }
 
     public bool VSync
     {
         get => vsync;
-        set { vsync = value; }
+        set => vsync = value;
     }
 
-    public bool IsRunning
-    {
-        get => isRunning;
-    }
+    public bool IsRunning => isRunning;
 
     public GraphicsDevice GraphicsDevice
     {
@@ -64,27 +62,26 @@ public abstract class GameWindow : IWindow
         set => graphicsDevice = value;
     }
 
-    public IntPtr Handle
-    {
-        get => sdlWindow;
-    }
+    public IntPtr Handle => sdlWindow;
 
-    public GameWindow()
+    public GameWindow(Engine engine) : base(engine)
     {
         title = "MapleSharp";
         width = 1280;
         height = 768;
         vsync = true;
         isRunning = false;
+        Engine = engine;
     }
     
-    public GameWindow(string title, int width, int height, bool vsync)
+    public GameWindow(string title, int width, int height, bool vsync, Engine engine) : base(engine)
     {
         this.title = title;
         this.width = width;
         this.height = height;
         this.vsync = vsync;
         isRunning = false;
+        Engine = engine;
     }
 
     private void InitSdl()
@@ -100,34 +97,33 @@ public abstract class GameWindow : IWindow
     private void InitFactories()
     {
         serviceFactory = new ServiceFactory();
-        eventFactory = serviceFactory.GetService<EventFactory>(); // Must be initialized first
         nxFactory = serviceFactory.GetService<NxFactory>();
         resourceFactory = serviceFactory.GetService<ResourceFactory>();
     }
 
     public virtual void Initialize()
     {
+        Engine.AddSubsystem(new EventSystem());
         InitFactories();
         InitSdl();
     }
-
+    
     private Sprite sprite;
 
     public virtual void OnLoad()
     {
-        sprite = new Sprite(eventFactory.InvokeEvent<Texture>(EventType.TextureRequest, "BasicEff.img/LevelUp/7"));
+        
     }
 
     public virtual void OnRender()
     {
         graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
-        sprite.Draw();
         graphicsDevice.SwapBuffers();
     }
 
     public virtual void OnUpdate(float timeDelta)
     {
-        
+        Engine.Update(timeDelta);
     }
 
     public virtual void OnUnload()
@@ -149,7 +145,7 @@ public abstract class GameWindow : IWindow
             OnUpdate(0.0f);
             OnRender();
         }
-
+        
         OnUnload();
         graphicsDevice.Release();
         SDL.SDL_DestroyWindow(sdlWindow);

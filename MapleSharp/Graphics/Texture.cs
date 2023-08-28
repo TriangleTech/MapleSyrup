@@ -49,6 +49,11 @@ public class Texture : IDisposable
         shader.Use();
         shader.SetInt("texture1", 0);
     }
+    
+    public Shader GetShader()
+    {
+        return shader;
+    }
 
     public void Use(TextureUnit textureUnit = TextureUnit.Texture0)
     {

@@ -3,7 +3,7 @@ using MapleSharp.Resources;
 
 namespace MapleSharp.Scripting;
 
-public class LuaFunctions
+public record LuaGlobals
 {
     public Engine Engine => Engine.Instance;
     public EventSystem EventSystem => Engine.Instance.GetSubsystem<EventSystem>();

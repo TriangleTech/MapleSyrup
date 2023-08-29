@@ -16,7 +16,6 @@ public class GameWindow : IWindow, IDisposable
     private bool vsync;
     private bool isRunning;
     private IntPtr sdlWindow;
-    private GraphicsDevice graphicsDevice;
     private Engine engine;
 
     public Engine Engine => engine;
@@ -53,12 +52,6 @@ public class GameWindow : IWindow, IDisposable
 
     public bool IsRunning => isRunning;
 
-    public GraphicsDevice GraphicsDevice
-    {
-        get => graphicsDevice;
-        set => graphicsDevice = value;
-    }
-
     public IntPtr Handle => sdlWindow;
 
     public GameWindow()
@@ -79,7 +72,6 @@ public class GameWindow : IWindow, IDisposable
         this.vsync = vsync;
         isRunning = false;
         engine = new Engine();
-
     }
 
     private void InitSdl()
@@ -89,46 +81,34 @@ public class GameWindow : IWindow, IDisposable
         if (sdlWindow == IntPtr.Zero)
             throw new Exception(
                 $"[GameWindow] Failed to create SDL window.  Exiting... SDL Error:  {SDL.SDL_GetError()} ");
-        graphicsDevice = new GraphicsDevice(this);
     }
 
     private object test;
 
-    public virtual void Initialize()
+    public void Initialize()
     {
+        InitSdl();
         Engine.AddSubsystem(new EventSystem());
         Engine.AddSubsystem(new LuaSystem());
-        //Engine.AddSubsystem(new NxSystem());
+        Engine.AddSubsystem(new RenderSystem(this));
+        Engine.AddSubsystem(new NxSystem());
         Engine.AddSubsystem(new ResourceSystem(Engine));
-        Engine.GetSubsystem<EventSystem>().RegisterEvent("LuaTest", () => Console.WriteLine("LuaTest"));
-        //var lua = new Lua();
-        //lua["Script"] = new LuaFunctions();
-        //lua["Window"] = this;
-        string script = @$"
-            function Test()
-                
-                Window.Title = 'Test'
-                print('Test')
-            end";
-        //lua.DoString(script);
-        //lua.GetFunction("Test").Call();
-        Engine.GetSubsystem<LuaSystem>().ExecuteOnce("scripts/test_me.lua");
-        InitSdl();
     }
 
     private Sprite sprite;
     private Shader shader;
 
-    public virtual void OnLoad()
+    public void OnLoad()
     {
-        GL.Viewport(0, 0, Width, Height);
+        
     }
 
     float xpos = 0;
 
-    public virtual void OnRender()
+    public void OnRender()
     {
-        graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        Engine.GetSubsystem<RenderSystem>().Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        Engine.GetSubsystem<RenderSystem>().Render();
         //xpos += (float)Math.Sin(SDL.SDL_GetTicks() / 1000.0f) * 10f;
         //var view = Matrix4.LookAt(new Vector3(xpos, 0, 1.0f), new Vector3(xpos, 0, -1.0f), Vector3.UnitY);
         //var projection = Matrix4.CreateOrthographicOffCenter(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
@@ -137,7 +117,7 @@ public class GameWindow : IWindow, IDisposable
         //shader.SetMatrix4("projection", projection);
         //shader.SetMatrix4("view", view);
         //sprite.Draw();
-        graphicsDevice.SwapBuffers();
+        Engine.GetSubsystem<RenderSystem>().SwapBuffers();
     }
 
     public virtual void OnUpdate(float timeDelta)
@@ -166,14 +146,10 @@ public class GameWindow : IWindow, IDisposable
             OnUpdate(timeDelta);
             OnRender();
         }
-
-        if (!isRunning)
-        {
-            OnUnload();
-            graphicsDevice.Release();
-            SDL.SDL_DestroyWindow(sdlWindow);
-            SDL.SDL_Quit();
-        }
+        
+        OnUnload();
+        SDL.SDL_DestroyWindow(sdlWindow);
+        SDL.SDL_Quit();
     }
 
     public IWindow AddPlugin(string pluginName, params object[] args)

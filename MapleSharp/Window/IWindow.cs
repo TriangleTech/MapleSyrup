@@ -11,7 +11,6 @@ public interface IWindow
     bool VSync { get; set; }
     bool IsRunning { get; }
     IntPtr Handle { get; }
-    GraphicsDevice GraphicsDevice { get; set; }
     Engine Engine { get; }
     void Initialize();
     void OnLoad();

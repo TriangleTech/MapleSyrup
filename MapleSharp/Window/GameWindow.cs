@@ -108,13 +108,17 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
         GL.Viewport(0, 0, Width, Height);
     }
 
+    float xpos = 0;
     public virtual void OnRender()
     {
         graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        xpos += (float)Math.Sin(SDL.SDL_GetTicks() / 1000.0f) * 10f;
+        var view = Matrix4.LookAt(new Vector3(xpos, 0, 1.0f), new Vector3(xpos, 0, -1.0f), Vector3.UnitY);
         var projection = Matrix4.CreateOrthographicOffCenter(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
         shader.Use();
         shader.SetInt("image", 0);
         shader.SetMatrix4("projection", projection);
+        shader.SetMatrix4("view", view);
         sprite.Draw();
         graphicsDevice.SwapBuffers();
     }
@@ -139,8 +143,9 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
             SDL.SDL_PollEvent(out var sdlEvent);
             if (sdlEvent.type == SDL.SDL_EventType.SDL_QUIT)
                 isRunning = false;
+            var timeDelta = SDL.SDL_GetTicks() / 1000.0f;
 
-            OnUpdate(0.0f);
+            OnUpdate(timeDelta);
             OnRender();
         }
         

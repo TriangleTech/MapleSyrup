@@ -20,6 +20,18 @@ public class Sprite : EngineObject, IDisposable
     private Shader shader;
     private int vao;
     private Matrix4 model = Matrix4.Identity;
+    
+    public Texture Texture
+    {
+        get => texture;
+        set => texture = value;
+    }
+    
+    public Vector2 Position
+    {
+        get => position;
+        set => position = value;
+    }
 
     public Sprite(Texture textureImage)
         : base(Engine.Instance)
@@ -63,6 +75,7 @@ public class Sprite : EngineObject, IDisposable
 
     public void Draw()
     {
+        //Console.WriteLine($"Position: {position} Normalized: {position.Normalized()}");
         GetSubsystem<ResourceSystem>().GetShader("sprite").Use();
         model = Matrix4.CreateTranslation(new Vector3(position.X, position.Y, 0.0f)) *
                 Matrix4.CreateTranslation(0.5f * origin.X, 0.5f * origin.Y, 0.0f) *

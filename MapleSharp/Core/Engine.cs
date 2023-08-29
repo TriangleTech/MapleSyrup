@@ -57,4 +57,9 @@ public class Engine : IDisposable
             subsystems[i].Shutdown();
         }
     }
+    
+    public static void Hello()
+    {
+        Console.WriteLine("Hello");
+    }
 }

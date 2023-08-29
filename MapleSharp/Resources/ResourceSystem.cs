@@ -13,7 +13,7 @@ public class ResourceSystem : ISubsystem
 
     public ResourceSystem(Engine engine)
     {
-        nxSystem = engine.GetSubsystem<NxSystem>();
+        //nxSystem = engine.GetSubsystem<NxSystem>();
     }
     
     public void Initialize()
@@ -44,14 +44,19 @@ public class ResourceSystem : ISubsystem
         return texture;
     }
     
-    public Texture GetTexture(string texturePath)
+    public Texture GetTexture(object texturePath)
     {
-        if (textureCache.TryGetValue(texturePath.ToLower(), out var requestedTexture))
+        if (texturePath is not string)
+        {
+            throw new ArgumentException($"[ResourceSystem] Texture path must be a string. ({texturePath})");
+        }
+        
+        if (textureCache.TryGetValue(((string)texturePath).ToLower(), out var requestedTexture))
         {
             return requestedTexture;
         }
 
-        return LoadTexture(texturePath);
+        return LoadTexture((string)texturePath);
     }
     
     public Shader LoadShader(string resourceName, string vertexShader, string fragmentShader, string geometryShader = null)

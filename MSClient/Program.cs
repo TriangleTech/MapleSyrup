@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using MSClient;
+using MapleSharp.Core;
+using MapleSharp.Window;
 
-using var game = new Game();
+using var game = new GameWindow();
 game.Run();

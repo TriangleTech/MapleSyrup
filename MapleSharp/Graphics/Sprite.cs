@@ -7,7 +7,7 @@ using OpenTK.Mathematics;
 
 namespace MapleSharp.Graphics;
 
-public class Sprite : EngineObject, IDisposable
+public class Sprite : IDisposable
 {
     private Texture texture;
     private Vector2 position;
@@ -34,7 +34,7 @@ public class Sprite : EngineObject, IDisposable
     }
 
     public Sprite(Texture textureImage)
-        : base(Engine.Instance)
+        : base()
     {
         texture = textureImage;
         position = new Vector2(0f, 0f);
@@ -43,7 +43,7 @@ public class Sprite : EngineObject, IDisposable
         size = new Vector2(texture.TextureSize.X, texture.TextureSize.Y);
         rotation = 0.0f;
         color = new Vector3(1.0f, 1.0f, 1.0f);
-        shader = GetSubsystem<ResourceSystem>().GetShader("sprite");
+        //shader = GetSubsystem<ResourceSystem>().GetShader("sprite");
         Init();
     }
 
@@ -75,16 +75,16 @@ public class Sprite : EngineObject, IDisposable
 
     public void Draw()
     {
-        //Console.WriteLine($"Position: {position} Normalized: {position.Normalized()}");
-        GetSubsystem<ResourceSystem>().GetShader("sprite").Use();
+        //GetSubsystem<ResourceSystem>().GetShader("sprite").SetInt("image", 0);
+        //GetSubsystem<ResourceSystem>().GetShader("sprite").Use();
         model = Matrix4.CreateTranslation(new Vector3(position.X, position.Y, 0.0f)) *
                 Matrix4.CreateTranslation(0.5f * origin.X, 0.5f * origin.Y, 0.0f) *
                 Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rotation)) *
                 Matrix4.CreateTranslation(-0.5f * origin.X, -0.5f * origin.Y, 0.0f) *
                 Matrix4.CreateScale(new Vector3(size));
-        GetSubsystem<ResourceSystem>().GetShader("sprite").SetMatrix4("model", model);
-        GetSubsystem<ResourceSystem>().GetShader("sprite").SetVector3("imageColor", color);
-        GetSubsystem<ResourceSystem>().GetShader("sprite").SetFloat("alpha", alpha);
+        //GetSubsystem<ResourceSystem>().GetShader("sprite").SetMatrix4("model", model);
+        //GetSubsystem<ResourceSystem>().GetShader("sprite").SetVector3("imageColor", color);
+        //GetSubsystem<ResourceSystem>().GetShader("sprite").SetFloat("alpha", alpha);
         texture.Use();
         GL.BindVertexArray(vao);
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);

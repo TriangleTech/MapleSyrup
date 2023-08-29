@@ -6,13 +6,12 @@ using SDL2;
 
 namespace MapleSharp.Graphics;
 
-public class GraphicsDevice : EngineObject
+public class GraphicsDevice
 {
     private IWindow window;
     private IntPtr sdlContext;
     
     public GraphicsDevice(IWindow gameWindow)
-        : base(gameWindow.Engine)
     {
         window = gameWindow;
         sdlContext = SDL.SDL_GL_CreateContext(window.Handle);

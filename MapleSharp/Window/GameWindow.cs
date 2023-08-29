@@ -1,15 +1,15 @@
 ﻿
 using MapleSharp.Core;
-using MapleSharp.Core.Event;
 using MapleSharp.Graphics;
 using MapleSharp.Resources;
+using MapleSharp.Scripting;
+using NLua;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
 using SDL2;
 
 namespace MapleSharp.Window;
 
-public abstract class GameWindow : EngineObject, IWindow, IDisposable
+public class GameWindow : IWindow, IDisposable
 {
     private string title;
     private int width, height;
@@ -17,8 +17,9 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
     private bool isRunning;
     private IntPtr sdlWindow;
     private GraphicsDevice graphicsDevice;
-    
-    public Engine Engine { get; }
+    private Engine engine;
+
+    public Engine Engine => engine;
 
     public string Title
     {
@@ -60,24 +61,25 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
 
     public IntPtr Handle => sdlWindow;
 
-    public GameWindow(Engine engine) : base(engine)
+    public GameWindow()
     {
         title = "MapleSharp";
         width = 1280;
         height = 768;
         vsync = true;
         isRunning = false;
-        Engine = engine;
+        engine = new Engine();
     }
-    
-    public GameWindow(string title, int width, int height, bool vsync, Engine engine) : base(engine)
+
+    public GameWindow(string title, int width, int height, bool vsync)
     {
         this.title = title;
         this.width = width;
         this.height = height;
         this.vsync = vsync;
         isRunning = false;
-        Engine = engine;
+        engine = new Engine();
+
     }
 
     private void InitSdl()
@@ -90,46 +92,62 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
         graphicsDevice = new GraphicsDevice(this);
     }
 
+    private object test;
+
     public virtual void Initialize()
     {
         Engine.AddSubsystem(new EventSystem());
-        Engine.AddSubsystem(new NxSystem());
+        Engine.AddSubsystem(new LuaSystem());
+        //Engine.AddSubsystem(new NxSystem());
         Engine.AddSubsystem(new ResourceSystem(Engine));
+        Engine.GetSubsystem<EventSystem>().RegisterEvent("LuaTest", () => Console.WriteLine("LuaTest"));
+        //var lua = new Lua();
+        //lua["Script"] = new LuaFunctions();
+        //lua["Window"] = this;
+        string script = @$"
+            function Test()
+                
+                Window.Title = 'Test'
+                print('Test')
+            end";
+        //lua.DoString(script);
+        //lua.GetFunction("Test").Call();
+        Engine.GetSubsystem<LuaSystem>().ExecuteOnce("scripts/test_me.lua");
         InitSdl();
     }
-    
+
     private Sprite sprite;
     private Shader shader;
 
     public virtual void OnLoad()
     {
-        shader = GetSubsystem<ResourceSystem>().LoadShader("sprite", "default.vert", "default.frag");
-        sprite = new Sprite(GetSubsystem<ResourceSystem>().GetTexture("map/Back/grassySoil.img/back/1"));
         GL.Viewport(0, 0, Width, Height);
     }
 
     float xpos = 0;
+
     public virtual void OnRender()
     {
         graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
-        xpos += (float)Math.Sin(SDL.SDL_GetTicks() / 1000.0f) * 10f;
-        var view = Matrix4.LookAt(new Vector3(xpos, 0, 1.0f), new Vector3(xpos, 0, -1.0f), Vector3.UnitY);
-        var projection = Matrix4.CreateOrthographicOffCenter(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
-        shader.Use();
-        shader.SetInt("image", 0);
-        shader.SetMatrix4("projection", projection);
-        shader.SetMatrix4("view", view);
-        sprite.Draw();
+        //xpos += (float)Math.Sin(SDL.SDL_GetTicks() / 1000.0f) * 10f;
+        //var view = Matrix4.LookAt(new Vector3(xpos, 0, 1.0f), new Vector3(xpos, 0, -1.0f), Vector3.UnitY);
+        //var projection = Matrix4.CreateOrthographicOffCenter(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
+        //shader.Use();
+        //shader.SetInt("image", 0);
+        //shader.SetMatrix4("projection", projection);
+        //shader.SetMatrix4("view", view);
+        //sprite.Draw();
         graphicsDevice.SwapBuffers();
     }
 
     public virtual void OnUpdate(float timeDelta)
     {
-        Engine.Update(timeDelta);
+        Engine.Instance.Update(timeDelta);
     }
 
     public virtual void OnUnload()
     {
+
     }
 
     public void Run()
@@ -148,11 +166,14 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
             OnUpdate(timeDelta);
             OnRender();
         }
-        
-        OnUnload();
-        graphicsDevice.Release();
-        SDL.SDL_DestroyWindow(sdlWindow);
-        SDL.SDL_Quit();
+
+        if (!isRunning)
+        {
+            OnUnload();
+            graphicsDevice.Release();
+            SDL.SDL_DestroyWindow(sdlWindow);
+            SDL.SDL_Quit();
+        }
     }
 
     public IWindow AddPlugin(string pluginName, params object[] args)
@@ -164,9 +185,9 @@ public abstract class GameWindow : EngineObject, IWindow, IDisposable
     {
         throw new NotImplementedException();
     }
-    
+
     public void Dispose()
     {
-        Engine.Dispose();
+        Engine.Instance.Dispose();
     }
 }

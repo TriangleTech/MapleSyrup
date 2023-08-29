@@ -2,13 +2,16 @@ using MapleSharp.Core.Interface;
 
 namespace MapleSharp.Core;
 
-public class Engine
+public class Engine : IDisposable
 {
     private readonly List<ISubsystem> subsystems = new();
+    private static Engine instance;
+    
+    public static Engine Instance => instance;
     
     public Engine()
     {
-        
+        instance = this;
     }
 
     public void AddSubsystem(ISubsystem subsystem)
@@ -19,6 +22,7 @@ public class Engine
             return;
         }
         
+        subsystem.Initialize();
         subsystems.Add(subsystem);
     }
 
@@ -43,6 +47,14 @@ public class Engine
         for (int i = 0; i < subsystems.Count; i++)
         {
             subsystems[i].Update(timeDelta);
+        }
+    }
+    
+    public void Dispose()
+    {
+        for (int i = 0; i < subsystems.Count; i++)
+        {
+            subsystems[i].Shutdown();
         }
     }
 }

@@ -3,14 +3,13 @@ using OpenTK.Mathematics;
 
 namespace MapleSharp.Graphics;
 
-// A simple class meant to help create shaders.
 public class Shader
 {
     public readonly int Handle;
 
     private readonly Dictionary<string, int> _uniformLocations;
     
-    public Shader(string vertPath, string fragPath)
+    public Shader(string vertPath, string fragPath, string geometryPath = null)
     {
 
         var shaderSource = File.ReadAllText(vertPath);
@@ -23,12 +22,26 @@ public class Shader
         var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
         GL.ShaderSource(fragmentShader, shaderSource);
         CompileShader(fragmentShader);
-        Handle = GL.CreateProgram();
         
+        int geometryShader = 0;
+        if (geometryPath != null)
+        {
+            shaderSource = File.ReadAllText(geometryPath);
+            geometryShader = GL.CreateShader(ShaderType.GeometryShader);
+            GL.ShaderSource(geometryShader, shaderSource);
+            CompileShader(geometryShader);
+        }
+        
+        Handle = GL.CreateProgram();
         GL.AttachShader(Handle, vertexShader);
         GL.AttachShader(Handle, fragmentShader);
-        LinkProgram(Handle);
         
+        if (geometryPath != null)
+        {
+            GL.AttachShader(Handle, geometryShader);
+        }
+        
+        LinkProgram(Handle);
         GL.DetachShader(Handle, vertexShader);
         GL.DetachShader(Handle, fragmentShader);
         GL.DeleteShader(fragmentShader);
@@ -74,16 +87,7 @@ public class Shader
     {
         return GL.GetAttribLocation(Handle, attribName);
     }
-
-    // Uniform setters
-    // Uniforms are variables that can be set by user code, instead of reading them from the VBO.
-    // You use VBOs for vertex-related data, and uniforms for almost everything else.
-
-    // Setting a uniform is almost always the exact same, so I'll explain it here once, instead of in every method:
-    //     1. Bind the program you want to set the uniform on
-    //     2. Get a handle to the location of the uniform with GL.GetUniformLocation.
-    //     3. Use the appropriate GL.Uniform* function to set the uniform.
-
+    
     /// <summary>
     /// Set a uniform int on this shader.
     /// </summary>
@@ -91,7 +95,7 @@ public class Shader
     /// <param name="data">The data to set</param>
     public void SetInt(string name, int data)
     {
-        GL.UseProgram(Handle);
+        //GL.UseProgram(Handle);
         GL.Uniform1(_uniformLocations[name], data);
     }
 
@@ -102,7 +106,7 @@ public class Shader
     /// <param name="data">The data to set</param>
     public void SetFloat(string name, float data)
     {
-        GL.UseProgram(Handle);
+        //GL.UseProgram(Handle);
         GL.Uniform1(_uniformLocations[name], data);
     }
 
@@ -111,15 +115,16 @@ public class Shader
     /// </summary>
     /// <param name="name">The name of the uniform</param>
     /// <param name="data">The data to set</param>
-    /// <remarks>
-    ///   <para>
-    ///   The matrix is transposed before being sent to the shader.
-    ///   </para>
-    /// </remarks>
     public void SetMatrix4(string name, Matrix4 data)
     {
-        GL.UseProgram(Handle);
-        GL.UniformMatrix4(_uniformLocations[name], true, ref data);
+        //GL.UseProgram(Handle);
+        GL.UniformMatrix4(_uniformLocations[name], false, ref data);
+    }
+    
+    public void SetVector2(string name, Vector2 data)
+    {
+        //GL.UseProgram(Handle);
+        GL.Uniform2(_uniformLocations[name], data);
     }
 
     /// <summary>
@@ -129,7 +134,13 @@ public class Shader
     /// <param name="data">The data to set</param>
     public void SetVector3(string name, Vector3 data)
     {
-        GL.UseProgram(Handle);
+        //GL.UseProgram(Handle);
         GL.Uniform3(_uniformLocations[name], data);
+    }
+    
+    public void SetVector4(string name, Vector4 data)
+    {
+        //GL.UseProgram(Handle);
+        GL.Uniform4(_uniformLocations[name], data);
     }
 }

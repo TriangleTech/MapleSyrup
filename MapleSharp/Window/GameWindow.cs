@@ -3,12 +3,13 @@ using MapleSharp.Core;
 using MapleSharp.Core.Event;
 using MapleSharp.Graphics;
 using MapleSharp.Resources;
-using MapleSharp.Services;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using SDL2;
 
 namespace MapleSharp.Window;
 
-public abstract class GameWindow : EngineObject, IWindow
+public abstract class GameWindow : EngineObject, IWindow, IDisposable
 {
     private string title;
     private int width, height;
@@ -17,11 +18,6 @@ public abstract class GameWindow : EngineObject, IWindow
     private IntPtr sdlWindow;
     private GraphicsDevice graphicsDevice;
     
-    // Factories
-    private ServiceFactory serviceFactory;
-    private NxFactory nxFactory;
-    private ResourceFactory resourceFactory;
-
     public Engine Engine { get; }
 
     public string Title
@@ -93,31 +89,33 @@ public abstract class GameWindow : EngineObject, IWindow
                 $"[GameWindow] Failed to create SDL window.  Exiting... SDL Error:  {SDL.SDL_GetError()} ");
         graphicsDevice = new GraphicsDevice(this);
     }
-    
-    private void InitFactories()
-    {
-        serviceFactory = new ServiceFactory();
-        nxFactory = serviceFactory.GetService<NxFactory>();
-        resourceFactory = serviceFactory.GetService<ResourceFactory>();
-    }
 
     public virtual void Initialize()
     {
         Engine.AddSubsystem(new EventSystem());
-        InitFactories();
+        Engine.AddSubsystem(new NxSystem());
+        Engine.AddSubsystem(new ResourceSystem(Engine));
         InitSdl();
     }
     
     private Sprite sprite;
+    private Shader shader;
 
     public virtual void OnLoad()
     {
-        
+        shader = GetSubsystem<ResourceSystem>().LoadShader("sprite", "default.vert", "default.frag");
+        sprite = new Sprite(GetSubsystem<ResourceSystem>().GetTexture("map/Back/grassySoil.img/back/1"));
+        GL.Viewport(0, 0, Width, Height);
     }
 
     public virtual void OnRender()
     {
         graphicsDevice.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        var projection = Matrix4.CreateOrthographicOffCenter(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
+        shader.Use();
+        shader.SetInt("image", 0);
+        shader.SetMatrix4("projection", projection);
+        sprite.Draw();
         graphicsDevice.SwapBuffers();
     }
 
@@ -160,5 +158,10 @@ public abstract class GameWindow : EngineObject, IWindow
     public IWindow AddDependency(string pluginName, params object[] args)
     {
         throw new NotImplementedException();
+    }
+    
+    public void Dispose()
+    {
+        Engine.Dispose();
     }
 }

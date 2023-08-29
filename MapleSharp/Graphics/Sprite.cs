@@ -1,110 +1,85 @@
 
 
+using MapleSharp.Core;
+using MapleSharp.Resources;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
 namespace MapleSharp.Graphics;
 
-public class Sprite : IDisposable
+public class Sprite : EngineObject, IDisposable
 {
-    private readonly IndexBuffer indexBuffer;
-    private readonly Texture texture;
-    private Matrix4 transform;
-    private Vector2 position, origin, size;
-    private float rotation, zIndex;
+    private Texture texture;
+    private Vector2 position;
+    private Vector2 origin;
+    private Vector2 size;
+    private float rotation;
+    private float alpha;
+    private Vector3 color;
+    private float[] vertices;
+    private Shader shader;
+    private int vao;
+    private Matrix4 model = Matrix4.Identity;
 
-    public Vector2 Position
+    public Sprite(Texture textureImage)
+        : base(Engine.Instance)
     {
-        get => position;
-        set
-        {
-            position = value;
-            UpdateMatrix();
-        }
+        texture = textureImage;
+        position = new Vector2(0f, 0f);
+        origin = Vector2.Zero;
+        alpha = 1.0f;
+        size = new Vector2(texture.TextureSize.X, texture.TextureSize.Y);
+        rotation = 0.0f;
+        color = new Vector3(1.0f, 1.0f, 1.0f);
+        shader = GetSubsystem<ResourceSystem>().GetShader("sprite");
+        Init();
     }
-    
-    public Vector2 Origin
-    {
-        get => origin;
-        set
-        {
-            origin = value;
-            UpdateMatrix();
-        }
-    }
-    
-    public Vector2 Size
-    {
-        get => size;
-        set
-        {
-            size = value;
-            UpdateMatrix();
-        }
-    }
-    
-    public float Rotation
-    {
-        get => rotation;
-        set
-        {
-            rotation = value;
-            UpdateMatrix();
-        }
-    }
-    
-    public float ZIndex
-    {
-        get => zIndex;
-        set
-        {
-            zIndex = value;
-            UpdateMatrix();
-        }
-    }
-    public Color4 Color { get; set; } = Color4.White;
 
-    public Sprite(Image image)
+    private void Init()
     {
-        texture = new Texture(image);
-        indexBuffer = new IndexBuffer();
-        Position = new Vector2(0, 0);
-        Size = new Vector2(image.Width, image.Height);
-        Rotation = 0f;
+        vertices = new[]
+        {
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f
+        };
         
-    }
-    
-    public Sprite(Texture texture)
-    {
-        this.texture = texture;
-        indexBuffer = new IndexBuffer();
-        Position = new Vector2(0, 0);
-        Rotation = 0f;
-    }
-    
-    private void UpdateMatrix()
-    {
-        transform = Matrix4.CreateTranslation(Position.X, Position.Y, ZIndex) *
-                    Matrix4.CreateRotationZ(Rotation) *
-                    Matrix4.CreateTranslation(-Origin.X, -Origin.Y, 0f) *
-                    Matrix4.CreateScale(Size.X, Size.Y, 1f);
+        GL.GenVertexArrays(1, out vao);
+        GL.GenBuffers(1, out int vbo);
+        
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+        
+        GL.BindVertexArray(vao);
+        GL.EnableVertexAttribArray(0);
+        GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        GL.BindVertexArray(0);
     }
 
     public void Draw()
     {
-        indexBuffer.Bind();
+        GetSubsystem<ResourceSystem>().GetShader("sprite").Use();
+        model = Matrix4.CreateTranslation(new Vector3(position.X, position.Y, 0.0f)) *
+                Matrix4.CreateTranslation(0.5f * origin.X, 0.5f * origin.Y, 0.0f) *
+                Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rotation)) *
+                Matrix4.CreateTranslation(-0.5f * origin.X, -0.5f * origin.Y, 0.0f) *
+                Matrix4.CreateScale(new Vector3(size));
+        GetSubsystem<ResourceSystem>().GetShader("sprite").SetMatrix4("model", model);
+        GetSubsystem<ResourceSystem>().GetShader("sprite").SetVector3("imageColor", color);
+        GetSubsystem<ResourceSystem>().GetShader("sprite").SetFloat("alpha", alpha);
         texture.Use();
-        //texture.GetShader().SetMatrix4("view", Matrix4.CreateTranslation(0f, 0f, -3.0f));
-        //texture.GetShader().SetMatrix4("model", Matrix4.Zero);
-        //var projection = Matrix4.CreateOrthographic(1280f, 768f, 0.1f, 100.0f);
-        //texture.GetShader().SetMatrix4("projection", projection);
-        texture.GetShader().Use();
-        indexBuffer.Draw();
+        GL.BindVertexArray(vao);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+        GL.BindVertexArray(0);
     }
     
     public void Dispose()
     {
-        texture.Dispose();
-        indexBuffer.Dispose();
         GC.SuppressFinalize(this);
     }
 }

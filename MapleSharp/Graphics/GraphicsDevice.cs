@@ -1,6 +1,5 @@
 using CM3D.Core.Windowing;
 using MapleSharp.Core;
-using MapleSharp.Services;
 using MapleSharp.Window;
 using OpenTK.Graphics.OpenGL4;
 using SDL2;

@@ -57,10 +57,16 @@ public class NxFile
 
         ParseHeader();
         stringOffsetTable = new long[header.GetStringCount()];
-        bitmapOffsetTable = new long[header.GetBitmapCount()];
-        audioOffSetTable = new long[header.GetAudioCount()];
+        
+        if (header.GetBitmapCount() > 0)
+            bitmapOffsetTable = new long[header.GetBitmapCount()];
+        
+        if (header.GetAudioCount() > 0)
+            audioOffSetTable = new long[header.GetAudioCount()];
+        
         nodeData = new Node[header.GetNodeCount()];
         stringData = new string[header.GetStringCount()];
+        
         ParseOffsetTables();
         ParseStrings();
         ParseNodes();
@@ -78,14 +84,17 @@ public class NxFile
         uint bitmapCount = reader.ReadUInt();
         
         ulong bitmapTableOffset = 0;
-        if (bitmapCount != 0)
+        if (bitmapCount > 0)
             bitmapTableOffset = reader.ReadULong();
 
         uint audioCount = reader.ReadUInt();
-        
         ulong audioTableOffset = 0;
-        if (audioCount != 0)
+        if (audioCount > 0)
             audioTableOffset = reader.ReadULong();
+        
+        // TODO: Quest.nx throws an EOF error when trying to read the audio table. This is a temporary fix until I can figure out why. count is 38900, offset is 0...why?
+        if (audioTableOffset == 0 && audioCount > 0)
+            audioCount = 0;
 
         header = new(nodeCount, nodeOffset, stringCount, stringTableOffset, 
             bitmapCount, bitmapTableOffset, audioCount, audioTableOffset);
@@ -117,7 +126,6 @@ public class NxFile
             }
         }
 
-        // TODO: Implement this when able, at this current time it throws an EOF error for all files.
         if (header.GetAudioCount() > 0)
         {
             reader.SetIndex((int)header.GetAudioTableOffset());

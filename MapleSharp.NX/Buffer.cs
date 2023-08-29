@@ -20,6 +20,7 @@ public class Buffer : IDisposable
         viewStream.CopyTo(stream);
         stream.Dispose();
         buffer = stream.ToArray();
+        viewStream.Dispose();
         index = 0;
         endOfFile = buffer.Length - 1;
     }
@@ -157,6 +158,8 @@ public class Buffer : IDisposable
         var data = buffer.Skip(index).Take(sizeof(ushort)).ToArray();
         var val = BitConverter.ToUInt16(data);
         index += sizeof(ushort);
+        
+        data = null;
 
         return val;
     }
@@ -491,6 +494,8 @@ public class Buffer : IDisposable
             throw new Exception("Attempted to increment index past end of file");
         index += offset;
     }
+    
+    public int EOF => endOfFile;
 
     public void Dispose()
     {

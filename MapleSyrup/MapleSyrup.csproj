@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Include="..\..\Assets\Shaders\default.frag">
+        <Link>Assets\Shaders\default.frag</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\..\Assets\Shaders\default.vert">
+        <Link>Assets\Shaders\default.vert</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\..\Assets\Shaders\sprite.frag">
+        <Link>Assets\Shaders\sprite.frag</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\..\Assets\Shaders\sprite.vert">
+        <Link>Assets\Shaders\sprite.vert</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NLua" Version="1.6.3" />
+      <PackageReference Include="OpenTK" Version="4.8.0" />
+      <PackageReference Include="SDL2-CS.NetCore" Version="2.0.8" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Graphics\Sprite.cs" />
+      <Compile Remove="Graphics\Texture.cs" />
+    </ItemGroup>
+</Project>

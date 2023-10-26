@@ -34,7 +34,9 @@ public class ResourceSystem : ISubsystem
     
     public Image LoadImage(string imagePath)
     {
-        var image = nxSystem.ResolvePath<BitmapNode>(imagePath).GetBitmap();
+        var splitPath = imagePath.Split('/');
+        var nxNode = nxSystem.ResolvePath(imagePath);
+        var image = nxNode.GetImage();
         if (image == null)
             throw new NullReferenceException("[ResourceSystem] Failed to load image.");
         imageCache.Add(imagePath.ToLower(), image);
@@ -58,7 +60,7 @@ public class ResourceSystem : ISubsystem
             return requestedTexture;
         }
         
-        var image = nxSystem.ResolvePath<BitmapNode>(texturePath).GetBitmap();
+        var image = nxSystem.ResolvePath(texturePath).GetImage();
         var texture = new TextureNode(image);
         if (texture == null)
             throw new NullReferenceException("[ResourceSystem] Failed to load texture.");

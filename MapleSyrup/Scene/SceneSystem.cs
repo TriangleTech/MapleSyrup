@@ -5,15 +5,26 @@ namespace MapleSyrup.Scene;
 
 public class SceneSystem : ISubsystem
 {
-    private SceneNode root;
+    private Node root;
+    private readonly Queue<int> recycledIds;
+    private int nextId;
 
-    public SceneSystem(SceneNode scene)
+    public SceneSystem(Node scene)
     {
-        root = new SceneNode();
+        root = scene;
+        root.Name = "Root";
+        recycledIds = new Queue<int>();
+        nextId = 0;
     }
-    
+
     public void Initialize()
     {
+        root.ID = GetNextId();
+    }
+    
+    public void Render()
+    {
+        root.Render();
     }
 
     public void Update(float timeDelta)
@@ -23,51 +34,35 @@ public class SceneSystem : ISubsystem
 
     public void Shutdown()
     {
-        root.Dispose();
-    }
-    
-    public SceneNode CreateSceneNode()
-    {
-        root = new SceneNode();
-        return root;
-    }
-    
-    public void DestroySceneNode(SceneNode node)
-    {
-        node.Dispose();
-    }
-    
-    public SceneNode GetRootNode()
-    {
-        return root;
-    }
-    
-    public void SetRootNode(SceneNode node)
-    {
-        root = node;
-    }
-    
-    public void Render()
-    {
-        root.Render();
-    }
-    
-    public void Dispose()
-    {
-        root.Dispose();
     }
 
-    public void AddChild(Node child)
+    public void AddChild(Node node)
     {
-        if (child == null)
-            return;
-        root.AddChild(child);
+        if (node == null)
+            throw new ArgumentNullException($"[SceneSystem] Cannot add null node to scene {root.Name}.");
+        node.Root = root;
+        node.ID = GetNextId();
+        root.AddChild(node);
     }
     
-    public void RemoveChild(Node child)
+    public void RemoveNode(string name)
     {
-        if (child == null)
-            return;
-        root.RemoveChild(child);
+        var node = root.FindNode(name);
+        if (node == null)
+            throw new ArgumentNullException($"[SceneSystem] Cannot remove null node from scene {root.Name}.");
+        root.RemoveChild(node);
+        recycledIds.Enqueue(node.ID);
+    }
+    
+    private int GetNextId()
+    {
+        if (recycledIds.Count > 0)
+        {
+            return recycledIds.Dequeue();
+        }
+        else
+        {
+            return nextId++;
+        }
     }
 }

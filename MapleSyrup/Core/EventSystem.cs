@@ -4,10 +4,10 @@ namespace MapleSyrup.Core;
 
 public class EventSystem : ISubsystem
 {
-    private Dictionary<string, Action> datalessEvents = new();
-    private Dictionary<string, Action<object>> dataEvents = new();
-    private Queue<string> datalessQueue = new();
-    private Queue<(string, object)> dataQueue = new();
+    private readonly Dictionary<string, List<Action>> datalessEvents = new();
+    private readonly Dictionary<string, List<Action<object>>> dataEvents = new();
+    private readonly Queue<string> datalessQueue = new();
+    private readonly Queue<(string, object)> dataQueue = new();
     
     public void Initialize()
     {
@@ -21,7 +21,10 @@ public class EventSystem : ISubsystem
             if (datalessQueue.Count > 0)
             {
                 var eventName = datalessQueue.Dequeue();
-                datalessEvents[eventName].Invoke();
+                foreach (var callback in datalessEvents[eventName])
+                {
+                    callback?.Invoke();
+                }
             }
         });
         
@@ -30,7 +33,10 @@ public class EventSystem : ISubsystem
             if (dataQueue.Count > 0)
             {
                 var (eventName, data) = dataQueue.Dequeue();
-                dataEvents[eventName].Invoke(data);
+                foreach (var callback in dataEvents[eventName])
+                {
+                    callback?.Invoke(data);
+                }
             }
         });
     }
@@ -43,29 +49,29 @@ public class EventSystem : ISubsystem
         dataQueue.Clear();
     }
 
-    public void RegisterEvent(string eventName, Action callback)
+    public void ListenForEvent(string eventName, Action callback)
     {
-        if (datalessEvents.ContainsKey(eventName))
+        if (datalessEvents.TryGetValue(eventName, value: out var @event))
         {
-            Console.WriteLine($"[EventSystem] Event {eventName} already exists.");
+            @event.Add(callback);
             return;
         }
         
-        datalessEvents.Add(eventName, callback);
+        datalessEvents.Add(eventName, new List<Action>() { callback });
     }
     
-    public void RegisterEvent(string eventName, Action<object> callback)
+    public void ListenForEvent(string eventName, Action<object> callback)
     {
-        if (dataEvents.ContainsKey(eventName))
+        if (dataEvents.TryGetValue(eventName, out var @event))
         {
-            Console.WriteLine($"[EventSystem] Event {eventName} already exists.");
+            @event.Add(callback);
             return;
         }
         
-        dataEvents.Add(eventName, callback);
+        dataEvents.Add(eventName, new List<Action<object>>() { callback });
     }
 
-    public void QueueEvent(string eventName)
+    public void TriggerEvent(string eventName)
     {
         if (!datalessEvents.ContainsKey(eventName))
         {
@@ -76,7 +82,7 @@ public class EventSystem : ISubsystem
         datalessQueue.Enqueue(eventName);
     }
     
-    public void QueueEvent(string eventName, object data)
+    public void TriggerEvent(string eventName, object data)
     {
         if (!dataEvents.ContainsKey(eventName))
         {

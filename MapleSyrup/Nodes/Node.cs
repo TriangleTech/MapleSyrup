@@ -1,28 +1,27 @@
 using MapleSyrup.Core;
+using MapleSyrup.Graphics;
+using MapleSyrup.Resources.Scripting;
 using OpenTK.Mathematics;
 
 namespace MapleSyrup.Nodes;
 
 public class Node : IDisposable
 {
-    private readonly List<Node> children = new();
-    private string name = "";
-    private int nodeId = 0;
-    private Node parent = null;
-    private Vector2 position = Vector2.Zero;
-    private Vector2 origin = Vector2.Zero;
-    private Vector2 size = Vector2.Zero;
-    private float zOrder = 0.0f;
-    private float rotation = 0.0f;
-    private float alpha = 1.0f;
-    private Vector3 color = Vector3.One;
-    private Matrix4 transform = Matrix4.Identity;
+    private string nodeName;
+    private int nodeId;
+    private Vector2 position;
+    private int zBuffer;
+    private RenderLayer renderLayer;
+    private Dictionary<RenderLayer, Dictionary<int, List<Node>>> children;
+    private LuaScript script;
+    private Node rootNode;
+    
     protected Engine Engine => Engine.Instance;
     
     public string Name
     {
-        get => name;
-        set => name = value;
+        get => nodeName;
+        set => nodeName = value;
     }
     
     public int ID
@@ -31,111 +30,148 @@ public class Node : IDisposable
         set => nodeId = value;
     }
     
-    public Node Parent
-    {
-        get => parent;
-        set => parent = value;
-    }
-    
     public Vector2 Position
     {
         get => position;
         set => position = value;
     }
-    
-    public Vector2 Origin
+
+    public int Z
     {
-        get => origin;
-        set => origin = value;
+        get => zBuffer;
+        set => zBuffer = value;
     }
     
-    public Vector2 Size
+    public RenderLayer Layer
     {
-        get => size;
-        set => size = value;
-    }
-    
-    public float ZOrder
-    {
-        get => zOrder;
-        set => zOrder = value;
-    }
-    
-    public float Rotation
-    {
-        get => rotation;
-        set => rotation = value;
-    }
-    
-    public float Alpha
-    {
-        get => alpha;
-        set => alpha = value;
-    }
-    
-    public Vector3 Color
-    {
-        get => color;
-        set => color = value;
-    }
-    
-    public Matrix4 Transform
-    {
-        get => transform;
-        set => transform = value;
+        get => renderLayer;
+        set => renderLayer = value;
     }
 
-    public void AddChild(Node child)
+    public Node Root
     {
-        children.Add(child);
+        get => rootNode;
+        set => rootNode = value;
     }
-    
-    public void RemoveChild(Node child)
+
+    public Node()
     {
-        children.Remove(child);
+        Name = "Node";
+        ID = 0;
+        Position = Vector2.Zero;
+        Z = 0;
+        Layer = RenderLayer.Background;
+        children = new Dictionary<RenderLayer, Dictionary<int, List<Node>>>();
+        InitLayers();
     }
-    
-    public void RemoveChild(int index)
+
+    private void InitLayers()
     {
-        children.RemoveAt(index);
+        children.Add(RenderLayer.Background, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject1, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject2, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject3, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject4, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject5, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject6, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.TileObject7, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.WeatherEffect, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.Foreground, new Dictionary<int, List<Node>>());
+        children.Add(RenderLayer.UI, new Dictionary<int, List<Node>>());
     }
-    
-    public void RemoveAllChildren()
-    {
-        children.Clear();
-    }
-    
-    public T GetChild<T>() where T : Node
-    {
-        return children.OfType<T>().FirstOrDefault();
-    }
-    
-    public IEnumerable<T> GetChildren<T>() where T : Node
-    {
-        return children.OfType<T>();
-    }
-    
-    public IEnumerable<Node> GetChildren()
-    {
-        return children;
-    }
-    
-    public virtual void Update(float timeDelta)
-    {
-        foreach (var child in children)
-            child.Update(timeDelta);
-    }
-    
+
     public virtual void Render()
     {
-        foreach (var child in children)
-            child.Render();
+            foreach (var keyValuePair in children[RenderLayer.Background])
+            {
+                foreach (var node in keyValuePair.Value)
+                {
+                    node.Render();
+                }
+            }
+            
+            foreach (var keyValuePair in children[RenderLayer.TileObject1])
+            {
+                foreach (var node in keyValuePair.Value)
+                {
+                    node.Render();
+                }
+            }
+    }
+
+    public virtual void Update(float timeDelta)
+    {
+        foreach (var keyValuePair in children[RenderLayer.Background])
+        {
+            foreach (var node in keyValuePair.Value)
+            {
+                node.Update(timeDelta);
+            }
+        }
+            
+        foreach (var keyValuePair in children[RenderLayer.TileObject1])
+        {
+            foreach (var node in keyValuePair.Value)
+            {
+                node.Update(timeDelta);
+            }
+        }
+    }
+
+    public void AddChild(Node node)
+    {
+        if (node == null)
+            return;
+        if (!children[node.Layer].ContainsKey(node.Z))
+            children[node.Layer].Add(node.Z, new List<Node>());
+        children[node.Layer][node.Z].Add(node);
     }
     
+    public T FindNode<T>(string name) where T : Node
+    {
+        foreach (var keyValuePair in children)
+        {
+            foreach (var keyValuePair2 in keyValuePair.Value)
+            {
+                foreach (var node in keyValuePair2.Value)
+                {
+                    if (node.Name == name)
+                        return (T) node;
+                }
+            }
+        }
+
+        return null;
+    }
+    
+    public Node FindNode(string name)
+    {
+        foreach (var keyValuePair in children)
+        {
+            foreach (var keyValuePair2 in keyValuePair.Value)
+            {
+                foreach (var node in keyValuePair2.Value)
+                {
+                    if (node.Name == name)
+                        return node;
+                }
+            }
+        }
+
+        return null;
+    }
+    
+    public void RemoveChild(Node node)
+    {
+        if (node == null)
+            return;
+        if (children[node.Layer][node.Z] == null)
+            return;
+        children[node.Layer][node.Z].Remove(node);
+    }
+
     public virtual void Dispose()
     {
-        foreach (var child in children)
-            child.Dispose();
-        GC.SuppressFinalize(this);
+        
     }
 }

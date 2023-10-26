@@ -1,7 +1,7 @@
 using MapleSyrup.Core.Interface;
 using NLua;
 
-namespace MapleSyrup.Scripting;
+namespace MapleSyrup.Resources.Scripting;
 
 /// <summary>
 /// The LuaSystem is used to execute Lua scripts.
@@ -10,16 +10,6 @@ public class LuaSystem : ISubsystem
 {
     private List<LuaScript> luaInstances = new();
     private Queue<LuaScript> luaQueue = new();
-    
-    /// <summary>
-    /// Contains the Lua instance and the script. OnStartCalled is optional.
-    /// </summary>
-    public record LuaScript
-    {
-        public required string Script { get; set; }
-        public required Lua LuaInstance { get; set; }
-        public bool OnStartCalled { get; set; }
-    }
     
     public LuaSystem()
     {

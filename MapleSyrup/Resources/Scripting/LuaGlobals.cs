@@ -1,7 +1,6 @@
 using MapleSyrup.Core;
-using MapleSyrup.Resources;
 
-namespace MapleSyrup.Scripting;
+namespace MapleSyrup.Resources.Scripting;
 
 /// <summary>
 /// Contains the global variables that are available to Lua scripts. Any subsystems that need to be accessed from Lua should be added here.

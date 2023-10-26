@@ -7,6 +7,15 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    </PropertyGroup>
+
     <ItemGroup>
       <None Include="..\..\Assets\Shaders\default.frag">
         <Link>Assets\Shaders\default.frag</Link>
@@ -37,11 +46,17 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
+      <Compile Remove="Graphics\Sprite.cs" />
+      <Compile Remove="Graphics\Texture.cs" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Graphics\Sprite.cs" />
-      <Compile Remove="Graphics\Texture.cs" />
+      <Folder Include="..\..\Assets\Scripts\">
+        <Link>Assets\Scripts</Link>
+      </Folder>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
     </ItemGroup>
 </Project>

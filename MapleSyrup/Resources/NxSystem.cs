@@ -3,53 +3,50 @@ using MapleSyrup.NX;
 
 namespace MapleSyrup.Resources;
 
-public class NxSystem : ISubsystem
+public unsafe class NxSystem : ISubsystem
 {
-    private readonly Dictionary<string, NxFile> nxFiles = new();
-
-    public NxFile this[string name]
+    private NxFile character, map;
+    
+    public NxFile Character => character;
+    public NxFile Map => map;
+    
+    public NxSystem()
     {
-        get
-        {
-            if (nxFiles.TryGetValue(name, out var requestedNxFile))
-            {
-                return requestedNxFile;
-            }
-            
-            throw new NullReferenceException($"[NxSystem] Attempted to get NxFile that does not exist. ({name})");
-        }
+        character = new NxFile("D:/v62/Character.nx");
+        map = new NxFile("D:/v62/Map.nx");
     }
 
-    public T ResolvePath<T>(string path) where T : Node
+    public NxNode ResolvePath(string path)
     {
         var splitPath = path.Split('/');
-        var nxFile = this[splitPath[0]];
-        var currentNode = nxFile.BaseNode;
+        NxFile nxFile = null;
+
+        switch (splitPath[0])
+        {
+            case "character":
+                nxFile = character;
+                break;
+            case "map":
+                nxFile = map;
+                break;
+        }
+
+        var currentNode = nxFile.Root;
+        NxNode nextNode = null;
 
         for (int i = 1; i < splitPath.Length; i++)
         {
-            currentNode = currentNode[splitPath[i]];
+            Console.WriteLine($"Current node: {currentNode.Name}");
+            nextNode = currentNode[splitPath[i]];
+            currentNode = nextNode;
         }
 
-        return currentNode.To<T>();
+        return currentNode;
     }
 
     public void Initialize()
     {
-#if DEBUG
-        Directory.GetFiles("D:/v62/", "*.nx").ToList().ForEach(x =>
-        {
-            var nxFile = new NxFile(x);
-            Console.WriteLine($"[NxSystem] Loaded {Path.GetFileNameWithoutExtension(x)}");
-            nxFiles.Add(Path.GetFileNameWithoutExtension(x).ToLower(), nxFile);
-        });
-#else
-        Directory.GetFiles(".", "*.nx").ToList().ForEach(x =>
-        {
-            var nxFile = new NxFile(x);
-            nxFiles.Add(Path.GetFileNameWithoutExtension(x).ToLower(), nxFile);
-        });
-#endif
+        
     }
 
     public void Update(float timeDelta)
@@ -58,10 +55,7 @@ public class NxSystem : ISubsystem
 
     public void Shutdown()
     {
-        foreach (var nxFile in nxFiles)
-        {
-            nxFile.Value.Dispose();
-        }
-        nxFiles.Clear();
+        character.Release();
+        map.Release();
     }
 }

@@ -13,10 +13,10 @@ public class TextureNode : Node
     }
     
     private int textureId = -1;
-    private Vector2 textureSize;
     private Image textureImage;
     private FlipMode flipMode = FlipMode.None;
     private TextureNode texture;
+    private Vector2 textureSize;
     
     public TextureNode Texture
     {
@@ -29,29 +29,32 @@ public class TextureNode : Node
         get => textureId;
     }
     
-    public Vector2 TextureSize
-    {
-        get => textureSize;
-    }
-    
     public FlipMode Flip
     {
         get => flipMode;
         set => flipMode = value;
     }
     
+    public Vector2 Size
+    {
+        get => textureSize;
+        set => textureSize = value;
+    }
+    
     public TextureNode(Image image) 
     {
         textureImage = image;
-        textureSize = new Vector2(image.Width, image.Height);
+        Size = new Vector2(image.Width, image.Height);
         Create();
         texture = this;
     }
 
     private void Create()
     {
-        byte[] data = new byte[(int)textureSize.X * (int)textureSize.Y * 4];
+        byte[] data = new byte[(int)Size.X * (int)Size.Y * 4];
         var image = textureImage.CloneAs<Rgba32>();
+        //image.Mutate(x => x.Flip(SixLabors.ImageSharp.Processing.FlipMode.Vertical)); // this is a hack to fix the image being flipped vertically
+        
         if (flipMode == FlipMode.Horizontal)
             image.Mutate(x => x.Flip(SixLabors.ImageSharp.Processing.FlipMode.Horizontal));
         else if (flipMode == FlipMode.Vertical)
@@ -66,7 +69,7 @@ public class TextureNode : Node
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
         
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)textureSize.X, (int)textureSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)Size.X, (int)Size.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
     }
 

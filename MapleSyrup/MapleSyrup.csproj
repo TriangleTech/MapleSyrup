@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -17,46 +18,28 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Include="..\..\Assets\Shaders\default.frag">
-        <Link>Assets\Shaders\default.frag</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Include="..\..\Assets\Shaders\default.vert">
-        <Link>Assets\Shaders\default.vert</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Include="..\..\Assets\Shaders\sprite.frag">
-        <Link>Assets\Shaders\sprite.frag</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Include="..\..\Assets\Shaders\sprite.vert">
-        <Link>Assets\Shaders\sprite.vert</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NLua" Version="1.6.3" />
-      <PackageReference Include="OpenTK" Version="4.8.0" />
-      <PackageReference Include="SDL2-CS.NetCore" Version="2.0.8" />
+      <PackageReference Include="K4os.Compression.LZ4" Version="1.3.7-beta" />
       <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+      <PackageReference Include="YamlDotNet" Version="13.7.1" />
     </ItemGroup>
 
     <ItemGroup>
       <Compile Remove="Graphics\Sprite.cs" />
-      <Compile Remove="Graphics\Texture.cs" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="..\..\Assets\Scripts\">
-        <Link>Assets\Scripts</Link>
-      </Folder>
+      <Folder Include="Resources\Rnx\" />
+      <Folder Include="Resources\Wz\" />
+      <Folder Include="Worlds\" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
+      <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     </ItemGroup>
 </Project>

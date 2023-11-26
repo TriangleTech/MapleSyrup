@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.Factories;
 
-public class ResourceFactory : IFactory, IDisposable
+public class ResourceFactory : IFactory
 {
     public Dictionary<string, Texture2D> textureCache = new();
     private Dictionary<string, NxFile> nxCache = new();
@@ -24,11 +24,6 @@ public class ResourceFactory : IFactory, IDisposable
         {
             nxCache.Add(Path.GetFileNameWithoutExtension(file), new NxFile(file));
         }
-    }
-
-    public void Shutdown()
-    {
-        
     }
 
     public Texture2D CreateTexture(string texturePath)
@@ -70,8 +65,8 @@ public class ResourceFactory : IFactory, IDisposable
             tex.Dispose();
         textureCache.Clear();
     }
-
-    public void Dispose()
+    
+    public void Shutdown()
     {
         Clear();
         foreach (var nx in nxCache.Values)

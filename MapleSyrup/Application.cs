@@ -7,7 +7,7 @@ namespace MapleSyrup;
 public class Application : Game
 {
     private GraphicsDeviceManager graphicsDeviceManager;
-    private World world;
+    private ServiceFactory service;
     
     public Application()
     {
@@ -16,33 +16,34 @@ public class Application : Game
         graphicsDeviceManager.PreferredBackBufferHeight = 768;
         graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
         graphicsDeviceManager.ApplyChanges();
+        service = new ServiceFactory();
+    }
+
+    private void InitializeFactories()
+    {
+        service.AddFactory<ResourceFactory>();
+        service.AddFactory<WorldFactory>();
     }
 
     protected override void Initialize()
     {
         base.Initialize();
-
-        world = World.CreateWorld();
-        world.Initialize();
+        InitializeFactories();
     }
 
     protected override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
         
-        world.Update(gameTime.ElapsedGameTime.Seconds);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         base.Draw(gameTime);
 
-        world.Draw();
     }
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing);
-        world.Dispose();
-    }
+        base.Dispose(disposing); }
 }

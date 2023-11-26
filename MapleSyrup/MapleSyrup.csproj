@@ -36,7 +36,6 @@
     <ItemGroup>
       <Folder Include="Resources\Rnx\" />
       <Folder Include="Resources\Wz\" />
-      <Folder Include="Worlds\" />
     </ItemGroup>
 
     <ItemGroup>

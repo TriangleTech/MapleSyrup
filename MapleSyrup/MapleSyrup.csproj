@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>disable</Nullable>
+        <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
@@ -34,11 +34,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Resources\Rnx\" />
-      <Folder Include="Resources\Wz\" />
+      <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FNA\FNA.Core.csproj" />
+      <Folder Include="Gameplay\" />
+      <Folder Include="Graphics\" />
     </ItemGroup>
 </Project>

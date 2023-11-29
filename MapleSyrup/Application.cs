@@ -1,5 +1,4 @@
-using MapleSyrup.ECS;
-using MapleSyrup.Factories;
+using MapleSyrup.Core;
 using Microsoft.Xna.Framework;
 
 namespace MapleSyrup;
@@ -7,7 +6,8 @@ namespace MapleSyrup;
 public class Application : Game
 {
     private GraphicsDeviceManager graphicsDeviceManager;
-    private ServiceFactory service;
+    private MapleContext context;
+    private MapleEngine engine;
     
     public Application()
     {
@@ -16,31 +16,26 @@ public class Application : Game
         graphicsDeviceManager.PreferredBackBufferHeight = 768;
         graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
         graphicsDeviceManager.ApplyChanges();
-        service = new ServiceFactory();
-    }
-
-    private void InitializeFactories()
-    {
-        service.AddFactory<ResourceFactory>();
-        service.AddFactory<WorldFactory>();
     }
 
     protected override void Initialize()
     {
+        context = new(this);
+        engine = new MapleEngine(context);
+        engine.Initialize();
         base.Initialize();
-        InitializeFactories();
     }
 
     protected override void Update(GameTime gameTime)
     {
+        engine.Update(gameTime);
         base.Update(gameTime);
-        
     }
 
     protected override void Draw(GameTime gameTime)
     {
+        engine.Render();
         base.Draw(gameTime);
-
     }
 
     protected override void Dispose(bool disposing)

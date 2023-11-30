@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+
 namespace MapleSyrup.Resources.Nx;
 
 public class NxVectorNode : NxNode
@@ -18,5 +20,10 @@ public class NxVectorNode : NxNode
     public int GetY()
     {
         return y;
+    }
+
+    public Vector2 GetVector()
+    {
+        return new Vector2(x, y);
     }
 }

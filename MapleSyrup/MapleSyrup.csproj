@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
@@ -30,15 +30,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Graphics\Sprite.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\FNA\FNA.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Gameplay\" />
-      <Folder Include="Graphics\" />
     </ItemGroup>
 </Project>

@@ -41,11 +41,12 @@ public class NxNode
             if (children.TryGetValue(name, out NxNode? child))
                 return child;
             
-            var innerChild = CheckChildren(name);
-            if (innerChild == null)
-                throw new Exception(
-                    "[Node] Attempted to get non-existent child. Not located in first or second layer children.");
-            return innerChild;
+            //var innerChild = CheckChildren(name);
+            //if (innerChild == null)
+            //    throw new Exception(
+            //        "[Node] Attempted to get non-existent child. Not located in first or second layer children.");
+            //return innerChild;
+            throw new NullReferenceException();
         }
     }
     

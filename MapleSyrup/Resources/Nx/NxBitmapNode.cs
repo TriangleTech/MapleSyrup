@@ -1,7 +1,10 @@
 using System.Runtime.CompilerServices;
 using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace MapleSyrup.Resources.Nx;
@@ -40,18 +43,35 @@ public class NxBitmapNode : NxNode
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Image<Bgra32>? GetBitmap()
+    public Image<Bgra32> GetBitmap()
     {
         if (reader == null || bitmapOffset == 0)
             throw new Exception("[NxBitmapNode] Attempted to retrieve a bitmap with no data");
         
+        reader.SetIndex((int)bitmapOffset);
         int length = reader.ReadInt();
-        byte[] compressedBitmap = reader.ReadBytes(length, (int)bitmapOffset).ToArray();
+        byte[] compressedBitmap = reader.ReadBytes(length, (int)bitmapOffset + 4).ToArray();
         byte[] uncompressedBitmap = new byte[width * height * 4];
         LZ4Codec.Decode(compressedBitmap, 0, compressedBitmap.Length, 
             uncompressedBitmap, 0, uncompressedBitmap.Length);
         var image = Image.LoadPixelData<Bgra32>(uncompressedBitmap, width, height);
         
         return image;
+    }
+
+    public Texture2D GetTexture(GraphicsDevice device)
+    {
+        using var img = GetBitmap();
+        using var stream = new MemoryStream();
+        img.Save(stream, new PngEncoder());
+
+        var tex = Texture2D.FromStream(device, stream);
+        return tex;
+    }
+
+    public void Save()
+    {
+        var img = GetBitmap();
+        img.SaveAsPng(new FileStream("/home/beray/mapledev/banana.png", FileMode.CreateNew));
     }
 }

@@ -9,7 +9,17 @@ public enum DataType
     Long,
     Double,
     Float,
+    String,
     
-    // Specific Value Type
+    // FNA Value Types
     GameTime,
+    
+    // Nx Value Types
+    NxNode,
+    NxAudioNode,
+    NxBitmapNode,
+    NxDoubleNode,
+    NxIntNode,
+    NxStringNode,
+    NxVectorNode,
 }

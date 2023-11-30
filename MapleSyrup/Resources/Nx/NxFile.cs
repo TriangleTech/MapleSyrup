@@ -34,7 +34,7 @@ public class NxFile : IDisposable
     private void ParseFile(string path)
     {
         byte[] data = File.ReadAllBytes(path);
-        reader = new NxBuffer(data);
+        reader = new NxBuffer(ref data);
 
         var magic = reader.ReadInt();
         if (magic != 0x34474B50)
@@ -224,6 +224,7 @@ public class NxFile : IDisposable
         stringOffsetTable.Dispose();
         stringData.Dispose();
         nodeData.Dispose();
+        GC.Collect();
     }
 
     public enum LoadProtocol

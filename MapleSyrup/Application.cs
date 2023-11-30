@@ -1,13 +1,19 @@
 using MapleSyrup.Core;
+using MapleSyrup.Gameplay;
+using MapleSyrup.Resources.Nx;
+using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace MapleSyrup;
 
 public class Application : Game
 {
     private GraphicsDeviceManager graphicsDeviceManager;
-    private MapleContext context;
+    private GameContext context;
     private MapleEngine engine;
+    private MapleWorld world;
     
     public Application()
     {
@@ -16,13 +22,14 @@ public class Application : Game
         graphicsDeviceManager.PreferredBackBufferHeight = 768;
         graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
         graphicsDeviceManager.ApplyChanges();
+        context = new(this);
+        engine = new MapleEngine(context);
     }
 
     protected override void Initialize()
     {
-        context = new(this);
-        engine = new MapleEngine(context);
         engine.Initialize();
+        world = context.GetSubsystem<WorldSystem>().Create("000010000"); // TODO: Once verified find where to actually put this...
         base.Initialize();
     }
 
@@ -40,5 +47,7 @@ public class Application : Game
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing); }
+        base.Dispose(disposing); 
+        context.Shutdown();
+    }
 }

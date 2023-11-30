@@ -8,7 +8,7 @@ public class NxBuffer
     private int dataIndex = 0;
     private int endOfFile;
 
-    public NxBuffer(byte[] fileData)
+    public NxBuffer(ref byte[] fileData)
     {
         dataBlock = fileData;
         endOfFile = fileData.Length;

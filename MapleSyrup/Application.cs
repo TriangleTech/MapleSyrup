@@ -1,5 +1,4 @@
 using MapleSyrup.Core;
-using MapleSyrup.Gameplay;
 using MapleSyrup.Resources.Nx;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
@@ -13,7 +12,6 @@ public class Application : Game
     private GraphicsDeviceManager graphicsDeviceManager;
     private GameContext context;
     private MapleEngine engine;
-    private MapleWorld world;
     
     public Application()
     {
@@ -29,7 +27,6 @@ public class Application : Game
     protected override void Initialize()
     {
         engine.Initialize();
-        world = context.GetSubsystem<WorldSystem>().Create("000010000"); // TODO: Once verified find where to actually put this...
         base.Initialize();
     }
 

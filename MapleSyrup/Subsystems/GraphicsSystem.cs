@@ -1,5 +1,4 @@
 using MapleSyrup.Core;
-using MapleSyrup.Gameplay.Map;
 using MapleSyrup.Nodes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,13 +33,7 @@ public class GraphicsSystem : ISubsystem
         // TODO: Fix this later
         var sprite = node.GetComponent<Sprite>();
         spriteBatch.Draw(sprite.Texture, node.Position, null, Color.White, node.Rotation, 
-            node.Origin, node.Scale, SpriteEffects.None, (int)node.Layer / 10f);
-    }
-
-    public void DrawMapItem(MapItem item)
-    {
-        spriteBatch.Draw(item.Texture, item.Position, null, Color.White, item.Rotation, 
-            item.Origin, item.Scale, SpriteEffects.None, (int)item.Layer / 10f);
+            node.Origin, node.Scale, SpriteEffects.None, (int)0 / 10f);
     }
 
     public void EndDraw()

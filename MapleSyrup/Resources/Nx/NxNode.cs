@@ -93,7 +93,7 @@ public class NxNode
     /// <returns></returns>
     public bool HasChild(string name)
     {
-        return children.TryGetValue(name, out NxNode? child);
+        return children.ContainsKey(name);
     }
 
     /// <summary>

@@ -20,7 +20,6 @@ public class MapleEngine : IGameObject
         Context.AddSubsystem<NxSystem>();
         Context.AddSubsystem<ResourceSystem>();
         Context.AddSubsystem<NodeSystem>();
-        Context.AddSubsystem<WorldSystem>();
     }
 
     public void Render()

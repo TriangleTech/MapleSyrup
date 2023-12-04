@@ -1,5 +1,4 @@
 using MapleSyrup.Core;
-using MapleSyrup.Gameplay.Map;
 using Microsoft.Xna.Framework;
 
 namespace MapleSyrup.Nodes;
@@ -11,7 +10,6 @@ public class Node2D : IGameObject
     public Vector2 Origin = Vector2.One;
     public Vector2 Scale = Vector2.One;
     public float Rotation = 0f;
-    public RenderLayer Layer = RenderLayer.Background;
     
     public GameContext Context { get; }
     

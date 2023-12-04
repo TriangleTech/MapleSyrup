@@ -14,6 +14,7 @@ public class NxFile : IDisposable
     private IMemoryOwner<string> stringData;
     private IMemoryOwner<long> bitmapOffsetTable;
     private IMemoryOwner<long> audioOffSetTable;
+    private FileStream stream;
     
     public NxNode BaseNode => nodeData.Memory.Span[0];
 
@@ -21,9 +22,12 @@ public class NxFile : IDisposable
     /// Initializes the NX File 
     /// </summary>
     /// <param name="path">Path to the NX File</param>
-    public NxFile(string path)
+    public NxFile(string path, bool parseAll = false)
     {
-        ParseFile(path);
+        if (parseAll)
+            ParseFile(path);
+        else
+            ParseFirstNode(path);
     }
 
     /// <summary>
@@ -52,6 +56,12 @@ public class NxFile : IDisposable
         ParseOffsetTables();
         ParseStrings();
         ParseNodes();
+    }
+
+    private void ParseFirstNode(string path)
+    {
+        stream = new FileStream(path, FileMode.Open);
+        
     }
 
     /// <summary>

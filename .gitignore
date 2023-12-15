@@ -4,4 +4,4 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 FNA/
-FNA/obj_core/
+.idea

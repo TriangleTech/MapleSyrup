@@ -1,9 +1,8 @@
 using MapleSyrup.Core;
+using MapleSyrup.Resources;
 using MapleSyrup.Resources.Nx;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Color = Microsoft.Xna.Framework.Color;
 
 namespace MapleSyrup;
 
@@ -26,7 +25,12 @@ public class Application : Game
 
     protected override void Initialize()
     {
-        engine.Initialize();
+        engine.Initialize(ResourceBackend.Nx);
+        var resource = context.GetSubsystem<ResourceSystem>();
+        var item = resource.GetItem("Map/Map/Map0/000010000.img/back/0/bS");
+        if (item.resourceType == ResourceType.String)
+            Console.WriteLine(item.data);
+        
         base.Initialize();
     }
 
@@ -44,7 +48,7 @@ public class Application : Game
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing); 
         context.Shutdown();
+        base.Dispose(disposing);
     }
 }

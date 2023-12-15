@@ -1,16 +1,17 @@
 namespace MapleSyrup.Core.Event;
 
-public class EventData
+public record EventData
 {
-    private readonly Dictionary<DataType, object> dataMap = new();
+    public readonly Dictionary<string, object> Data;
     
-    /// <summary>
-    /// Gets/Sets the value of the data type you're searching.
-    /// </summary>
-    /// <param name="dataType"></param>
-    public object this[DataType dataType]
+    public EventData()
     {
-        get => dataMap[dataType] ?? null;
-        set => dataMap[dataType] = value;
+        Data = new();
+    }
+    
+    public object this[string key]
+    {
+        get => Data[key];
+        set => Data[key] = value;
     }
 }

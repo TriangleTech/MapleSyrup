@@ -11,80 +11,119 @@ namespace MapleSyrup.Core;
 public class GameContext
 {
     private List<ISubsystem> subsystems;
-    private Dictionary<EventType, List<Action<EventData>>> eventHandlers;
     public readonly GraphicsDevice GraphicsDevice;
+    private readonly Dictionary<EventType, List<Subscriber>> subscribers;
+    private readonly List<EventType> publishedEvents;
     
     public GameContext(Game game)
     {
         GraphicsDevice = game.GraphicsDevice;
-        subsystems = new();
-        eventHandlers = new();
+        subsystems = new List<ISubsystem>();
+        subscribers = new();
+        publishedEvents = new();
     }
-
-    /// <summary>
-    /// Adds a subsystem and initializes it. Subsystems have a copy of the context as well.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public void AddSubsystem<T>() where T : ISubsystem
+    
+    public void AddSubsystem<T>() where T : ISubsystem, new()
     {
-        var system = Activator.CreateInstance<T>();
-        system.Initialize(this);
-        subsystems.Add(system);
+        var subsystem = new T();
+        subsystem.Initialize(this);
+        subsystems.Add(subsystem);
     }
-
-    /// <summary>
-    /// Gets a specific subsystem from the list.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    /// <exception cref="NullReferenceException"></exception>
-    public T GetSubsystem<T>()
+    
+    public void RemoveSubsystem<T>() where T : ISubsystem
     {
-        return (T)subsystems.Find(x => x is T);
+        var subsystem = subsystems.Find(system => system is T);
+        subsystem.Shutdown();
+        subsystems.Remove(subsystem);
     }
-
-    /// <summary>
-    /// Register an event and its handler (the method). 
-    /// </summary>
-    /// <param name="eventType"></param>
-    /// <param name="eventHandler"></param>
-    public void RegisterEventHandler(EventType eventType, Action<EventData> eventHandler)
+    
+    public T GetSubsystem<T>() where T : ISubsystem
     {
-        if (!eventHandlers.ContainsKey(eventType))
-            eventHandlers.Add(eventType, new());
-        eventHandlers[eventType].Add(eventHandler);
+        return (T) subsystems.Find(system => system is T);
     }
-
-    /// <summary>
-    /// Triggers an event and notifies all subscribers.
-    /// </summary>
-    /// <param name="eventType"></param>
-    public void SendEvent(EventType eventType)
+    
+    public void SubscribeToEvent(EventType eventType, Subscriber subscriber)
     {
-        if (eventHandlers.TryGetValue(eventType, out var events))
-            events.ForEach(handler => handler?.Invoke(null!));
+        if (!subscribers.ContainsKey(eventType))
+        {
+            subscribers.Add(eventType, new List<Subscriber>());
+        }
+        subscribers[eventType].Add(subscriber);
     }
-
-    /// <summary>
-    /// Triggers an events, notifies and sends all subscribers the data.
-    /// </summary>
-    /// <param name="eventType"></param>
-    /// <param name="eventData"></param>
-    public void SendEvent(EventType eventType, EventData eventData)
-    {
-        if (eventHandlers.TryGetValue(eventType, out var events))
-            events.ForEach(handler => handler?.Invoke(eventData));
-    }
-
-    public void SendToOne(object sender, object receiver, EventType eventType)
+    
+    public void SubscribeToSpecificEvent(EventType eventType, object sender, object receiver, Action<EventData> eventHandler)
     {
         throw new NotImplementedException();
     }
-
+    
+    public void UnsubscribeFromEvent(EventType eventType, Subscriber subscriber)
+    {
+        if (!subscribers.ContainsKey(eventType))
+        {
+            return;
+        }
+        subscribers[eventType].Remove(subscriber);
+    }
+    
+    public void RegisterEvent(EventType eventType)
+    {
+        if (publishedEvents.Contains(eventType))
+            return;
+        publishedEvents.Add(eventType);
+    }
+    
+    public void UnregisterEvent(EventType eventType)
+    {
+        if (!publishedEvents.Contains(eventType))
+            return;
+        publishedEvents.Remove(eventType);
+    }
+    
+    public void PublishEvent(EventType eventType)
+    {
+        if (!publishedEvents.Contains(eventType))
+            return;
+        if (!subscribers.ContainsKey(eventType))
+            return;
+        subscribers[eventType].ForEach(subscriber =>
+        {
+            subscriber.Event?.Invoke(null);
+        });
+    }
+    
+    public void PublishEvent(EventType eventType, EventData eventData)
+    {
+        if (!publishedEvents.Contains(eventType))
+            return;
+        if (!subscribers.ContainsKey(eventType))
+            return;
+        subscribers[eventType].ForEach(subscriber =>
+        {
+            subscriber.Event?.Invoke(eventData);
+        });
+    }
+    
+    public void PublishToOne(EventType eventType, EventData eventData)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public void PublishToAll(EventData eventData)
+    {
+        foreach (var pubEvent in publishedEvents)
+        {
+            if (!subscribers.ContainsKey(pubEvent))
+                continue;
+            subscribers[pubEvent].ForEach(subscriber =>
+            {
+                subscriber.Event?.Invoke(eventData);
+            });
+        }
+    }
+    
     public void Shutdown()
     {
         subsystems.ForEach(system => system.Shutdown());
-        eventHandlers.Clear();
         GC.Collect();
     }
 }

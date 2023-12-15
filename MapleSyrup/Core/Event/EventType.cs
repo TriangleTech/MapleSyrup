@@ -2,7 +2,7 @@ namespace MapleSyrup.Core.Event;
 
 public enum EventType
 {
-    // Engine Events
+    // Engine events
     BeforeRender,
     RenderPass,
     AfterRender,
@@ -10,18 +10,12 @@ public enum EventType
     UpdatePass,
     AfterUpdate,
     
-    // World Events
-    WorldCreated,
-    WorldChanged,
-    WorldDestroyed,
-    
-    // Map Events
-    MakeBack,
-    MakeTile,
-    MakeObj,
-    
-    // Node Events
-    NodeCreated,
-    NodeChanged,
-    NodeDestroyed
+    // Scene events
+    SceneCreated,
+    SceneChanged,
+    SceneDestroyed,
+    SceneLoaded,
+    SceneUnloaded,
+    SceneRendered,
+    SceneUpdated,
 }

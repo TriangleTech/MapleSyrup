@@ -3,5 +3,5 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-SDL-CS/bin
 FNA/
+FNA/obj_core/

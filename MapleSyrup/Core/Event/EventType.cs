@@ -3,19 +3,15 @@ namespace MapleSyrup.Core.Event;
 public enum EventType
 {
     // Engine events
-    BeforeRender,
-    RenderPass,
-    AfterRender,
-    BeforeUpdate,
-    UpdatePass,
-    AfterUpdate,
+    OnEngineInitialized,
+    OnEngineShutdown,
+    OnEngineUpdate,
+    OnEngineRender,
     
     // Scene events
-    SceneCreated,
-    SceneChanged,
-    SceneDestroyed,
-    SceneLoaded,
-    SceneUnloaded,
-    SceneRendered,
-    SceneUpdated,
+    OnSceneCreated,
+    OnSceneChanged,
+    OnSceneUnloaded,
+    OnSceneUpdate,
+    OnSceneRender,
 }

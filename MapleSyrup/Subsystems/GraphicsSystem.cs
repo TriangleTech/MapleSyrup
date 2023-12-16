@@ -1,5 +1,4 @@
 using MapleSyrup.Core;
-using MapleSyrup.Nodes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
@@ -20,7 +19,17 @@ public class GraphicsSystem : ISubsystem
 
     public void BeginDrawing()
     {
-        
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+    }
+
+    public void Draw(Texture2D texture, Vector2 position)
+    {
+        spriteBatch.Draw(texture, position, Color.White);
+    }
+    
+    public void EndDrawing()
+    {
+        spriteBatch.End();
     }
     
     public void Shutdown()

@@ -97,10 +97,45 @@ public class ResourceSystem : ISubsystem
     
     private Texture2D LoadNxTexture(string name)
     {
-        throw new NotImplementedException();
+        var split = name.Split('/');
+        var nxFile = nxFiles[split[0]];
+        var node = nxFile.ResolvePath(name);
+        if (node.Name != split.Last())
+            return null;
+        var texture = node.To<NxBitmapNode>().GetTexture(Context.GraphicsDevice);
+        
+        return texture;
     }
     
     private Texture2D LoadWzTexture(string name)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public int GetNodeCount(string path)
+    {
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                return GetNxNodeCount(path);
+            case ResourceBackend.Wz:
+                return GetWzNodeCount(path);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
+        }
+    }
+    
+    private int GetNxNodeCount(string path)
+    {
+        var split = path.Split('/');
+        var nxFile = nxFiles[split[0]];
+        var node = nxFile.ResolvePath(path);
+        if (node.Name != split.Last())
+            return 0;
+        return node.Children.Count;
+    }
+    
+    private int GetWzNodeCount(string path)
     {
         throw new NotImplementedException();
     }
@@ -123,6 +158,9 @@ public class ResourceSystem : ISubsystem
         var split = path.Split('/');
         var nxFile = nxFiles[split[0]];
         var node = nxFile.ResolvePath(path);
+        if (node.Name != split.Last())
+            return (ResourceType.Unknown, null);
+        
         switch (node.NodeType)
         {
             case NodeType.Bitmap:

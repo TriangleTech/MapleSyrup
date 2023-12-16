@@ -223,7 +223,8 @@ public class NxFile : IDisposable
         var split = path.Split('/');
         for (int i = 1; i < split.Length; i++)
         {
-            node = (NxNode)node[split[i]];
+            if (node.HasChild(split[i]))
+                node = (NxNode)node[split[i]];
         }
 
         return node;

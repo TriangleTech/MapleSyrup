@@ -1,15 +1,13 @@
-using MapleSyrup.Core.Event;
-
-namespace MapleSyrup.Core;
+namespace MapleSyrup.Core.Event;
 
 /// <summary>
 /// Primary interface of the MapleEngine.
 /// </summary>
-public abstract class GameObject
+public abstract class EventObject
 {
     protected GameContext Context { get; }
 
-    public GameObject(GameContext context)
+    public EventObject(GameContext context)
     {
         Context = context;
     }
@@ -37,6 +35,11 @@ public abstract class GameObject
     public void UnregisterEvent(EventType eventType)
     {
         Context.UnregisterEvent(eventType);
+    }
+    
+    public void PublishEvent(EventType eventType)
+    {
+        Context.PublishEvent(eventType);
     }
     
     public void PublishEvent(EventType eventType, EventData eventData)

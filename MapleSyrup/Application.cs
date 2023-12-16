@@ -26,10 +26,8 @@ public class Application : Game
     protected override void Initialize()
     {
         engine.Initialize(ResourceBackend.Nx);
-        var resource = context.GetSubsystem<ResourceSystem>();
-        var item = resource.GetItem("Map/Map/Map0/000010000.img/back/0/bS");
-        if (item.resourceType == ResourceType.String)
-            Console.WriteLine(item.data);
+        var scene = context.GetSubsystem<SceneSystem>();
+        scene.LoadScene("000010000");
         
         base.Initialize();
     }

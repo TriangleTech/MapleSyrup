@@ -37,6 +37,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Gameplay\" />
+      <Folder Include="Graphics\" />
     </ItemGroup>
 </Project>

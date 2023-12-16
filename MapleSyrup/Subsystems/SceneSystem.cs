@@ -1,7 +1,6 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.Nodes;
-using MapleSyrup.Nodes.Components;
+using MapleSyrup.Gameplay;
 
 namespace MapleSyrup.Subsystems;
 
@@ -17,13 +16,13 @@ public class SceneSystem : ISubsystem
 
     public void Shutdown()
     {
-        
+        Current.Shutdown();
     }
 
     public void LoadScene(string worldId)
     {
         var scene = new Scene(Context);
-        scene.AddComponent(new WorldInfo(Context));
+        scene.LoadScene(worldId);
         Current = scene;
         
         var eventData = new EventData
@@ -32,7 +31,7 @@ public class SceneSystem : ISubsystem
             ["WorldId"] = worldId
         };
 
-        Context.PublishEvent(EventType.SceneCreated, eventData);
+        Context.PublishEvent(EventType.OnSceneCreated, eventData);
     }
     
     public void ChangeScene(string worldId)
@@ -42,6 +41,6 @@ public class SceneSystem : ISubsystem
     
     public void UnloadScene()
     {
-        Context.PublishEvent(EventType.SceneUnloaded);
+        Context.PublishEvent(EventType.OnSceneUnloaded);
     }
 }

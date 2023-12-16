@@ -7,5 +7,6 @@ public enum ResourceType
     Integer,
     Double,
     String,
-    Vector
+    Vector,
+    Unknown
 }

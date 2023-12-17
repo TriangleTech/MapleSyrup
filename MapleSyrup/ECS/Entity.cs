@@ -15,6 +15,7 @@ public class Entity : EventObject, IComparable<RenderLayer>, IEquatable<RenderLa
     public bool IsEnabled;
     public bool IsDestroyed;
     public RenderLayer Layer;
+    public int ZIndex;
     
     public Entity(GameContext context, int id, string name, string tag)
         : base(context)

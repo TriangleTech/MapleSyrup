@@ -20,15 +20,17 @@ public class TileObjSystem : DrawableSystem
     public override void OnRender(EventData eventData)
     {
         var scene = Context.GetSubsystem<SceneSystem>().Current;
+        var entities = scene.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).ToList();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
-        for (int i = 0; i < scene.Entities.Count; i++)
+        for (int i = 0; i < entities.Count; i++)
         {
-            if (!scene.Entities[i].IsEnabled || !scene.Entities[i].HasComponent<TileItem>())
+            if (!entities[i].IsEnabled || !entities[i].HasComponent<MapItem>())
                 continue;
-            var item = scene.Entities[i].GetComponent<TileItem>();
+            var item = entities[i].GetComponent<MapItem>();
             spriteBatch.Draw(item.Texture, item.Position, null, Color.White, 0f, item.Origin, 1f, SpriteEffects.None, 0f);
         }
         spriteBatch.End();
+        entities.Clear();
         base.OnRender(eventData);
     }
 }

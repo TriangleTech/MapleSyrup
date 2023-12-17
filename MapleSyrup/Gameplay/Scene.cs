@@ -87,7 +87,6 @@ public class Scene : EventObject
         LoadBackground();
         LoadTiles();
         LoadObjects();
-        Entities.Sort((a, b) => a.CompareTo(b.Layer));
         PublishEvent(EventType.OnSceneCreated, new EventData
         {
             ["Scene"] = this,
@@ -168,11 +167,13 @@ public class Scene : EventObject
                 var y = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/y").data;
                 var u = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/u").data;
                 var no = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/no").data;
+                var z = (int)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/z").data;
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/zM").data;
                 var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
                 var tile = CreateEntity($"tile_{i}", "Tile");
                 tile.Layer = (RenderLayer)layer + 1;
-                tile.AddComponent(new TileItem()
+                tile.ZIndex = z + 10 * (3000 * layer - zM) - 1073721834;
+                tile.AddComponent(new MapItem()
                 {
                     Position = new Vector2(x, y),
                     Origin = origin,
@@ -183,12 +184,51 @@ public class Scene : EventObject
             layer++;
         } while (layer < 8);
     }
-    
+
     private void LoadObjects()
     {
-        
+        var layer = 0;
+        var resource = Context.GetSubsystem<ResourceSystem>();
+
+        do
+        {
+            for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj"); i++)
+            {
+                var oS = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/oS").data;
+                var l0 = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/l0").data;
+                var l1 = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/l1").data;
+                var l2 = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/l2").data;
+                var nodeCount = resource.GetNodeCount($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}");
+
+                if (nodeCount == 1)
+                {
+                    var x = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/x").data;
+                    var y = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/y").data;
+                    var z = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/z").data;
+                    var f = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/f").data;
+                    var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/zM").data;
+                    var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/origin").data;
+
+                    var obj = CreateEntity($"obj_{i}", "Object");
+                    obj.Layer = (RenderLayer)layer + 1;
+                    obj.ZIndex = (int)(30000 * layer + z) - 1073739824;
+                    obj.AddComponent(new MapItem()
+                    {
+                        Position = new Vector2(x, y),
+                        Origin = origin,
+                        Texture = resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0").data as Texture2D,
+                    });
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            layer++;
+        } while (layer < 8);
     }
-    
+
     private void OnUpdate(EventData eventData)
     {
         var data = new EventData

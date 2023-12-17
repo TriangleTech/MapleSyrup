@@ -4,6 +4,7 @@ public class WorldInfo : Component
 {
     public string WorldId;
     public bool IsTown;
+    public bool CanSwim;
     public double MobRate;
     public string Bmg;
     public int ReturnMap;
@@ -16,4 +17,5 @@ public class WorldInfo : Component
     public int VrLeft;
     public int VrBottom;
     public int VrRight;
+    public RectangleF Bounds;
 }

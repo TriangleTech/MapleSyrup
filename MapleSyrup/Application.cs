@@ -27,7 +27,7 @@ public class Application : Game
     {
         engine.Initialize(ResourceBackend.Nx);
         var scene = context.GetSubsystem<SceneSystem>();
-        scene.LoadScene("000010000");
+        scene.LoadScene("100000000");
         
         base.Initialize();
     }

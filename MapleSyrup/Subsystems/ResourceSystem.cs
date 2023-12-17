@@ -175,6 +175,8 @@ public class ResourceSystem : ISubsystem
                 return (ResourceType.Integer, node.GetData<NxIntNode>());
             case NodeType.Double:
                 return (ResourceType.Double, node.GetData<NxDoubleNode>());
+            case NodeType.NoData:
+                return (ResourceType.Unknown, null);
             default:
                 throw new ArgumentOutOfRangeException(nameof(node.NodeType), node.NodeType, null);
         }

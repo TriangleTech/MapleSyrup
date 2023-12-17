@@ -24,14 +24,7 @@ public class SceneSystem : ISubsystem
         var scene = new Scene(Context);
         scene.LoadScene(worldId);
         Current = scene;
-        
-        var eventData = new EventData
-        {
-            ["Scene"] = scene,
-            ["WorldId"] = worldId
-        };
-
-        Context.PublishEvent(EventType.OnSceneCreated, eventData);
+        Context.PublishEvent(EventType.OnSceneCreated);
     }
     
     public void ChangeScene(string worldId)

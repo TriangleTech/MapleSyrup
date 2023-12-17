@@ -35,8 +35,4 @@
     <ItemGroup>
       <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Graphics\" />
-    </ItemGroup>
 </Project>

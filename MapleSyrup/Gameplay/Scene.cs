@@ -76,8 +76,8 @@ public class Scene : EventObject
             // TODO: Clear scene and do transition
         }
         
-        DrawableSystems.Add(new RenderSystem(Context));
         DrawableSystems.Add(new BackgroundSystem(Context));
+        DrawableSystems.Add(new TileObjSystem(Context));
         
         worldId = id;
         var root = CreateEntity("root", "Scene");
@@ -87,6 +87,7 @@ public class Scene : EventObject
         LoadBackground();
         LoadTiles();
         LoadObjects();
+        Entities.Sort((a, b) => a.CompareTo(b.Layer));
         PublishEvent(EventType.OnSceneCreated, new EventData
         {
             ["Scene"] = this,
@@ -155,7 +156,32 @@ public class Scene : EventObject
     
     private void LoadTiles()
     {
-        
+        var layer = 0;
+        var resource = Context.GetSubsystem<ResourceSystem>();
+        var tileSet = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/0/info/tS").data;
+
+        do
+        {
+            for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile"); i++)
+            {
+                var x = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/x").data;
+                var y = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/y").data;
+                var u = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/u").data;
+                var no = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/no").data;
+                var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/zM").data;
+                var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
+                var tile = CreateEntity($"tile_{i}", "Tile");
+                tile.Layer = (RenderLayer)layer + 1;
+                tile.AddComponent(new TileItem()
+                {
+                    Position = new Vector2(x, y),
+                    Origin = origin,
+                    Texture = resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}").data as Texture2D,
+                });
+            }
+
+            layer++;
+        } while (layer < 8);
     }
     
     private void LoadObjects()

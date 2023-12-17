@@ -26,6 +26,7 @@ public class Sprite : Component
         Color = Color.White;
         Flipped = SpriteEffects.None;
         LayerDepth = 0f;
+        Enabled = true;
     }
     
     public Sprite(Texture2D texture)
@@ -39,5 +40,6 @@ public class Sprite : Component
         Color = Color.White;
         Flipped = SpriteEffects.None;
         LayerDepth = 0f;
+        Enabled = true;
     }
 }

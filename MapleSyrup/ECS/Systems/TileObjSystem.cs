@@ -7,11 +7,11 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MapleSyrup.ECS.Systems;
 
-public class BackgroundSystem : DrawableSystem
+public class TileObjSystem : DrawableSystem
 {
     private SpriteBatch spriteBatch;
     
-    public BackgroundSystem(GameContext context) 
+    public TileObjSystem(GameContext context) 
         : base(context)
     {
         spriteBatch = new SpriteBatch(Context.GraphicsDevice);
@@ -23,13 +23,12 @@ public class BackgroundSystem : DrawableSystem
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
         for (int i = 0; i < scene.Entities.Count; i++)
         {
-            if (!scene.Entities[i].IsEnabled || !scene.Entities[i].HasComponent<BackgroundItem>())
+            if (!scene.Entities[i].IsEnabled || !scene.Entities[i].HasComponent<TileItem>())
                 continue;
-            var background = scene.Entities[i].GetComponent<BackgroundItem>();
-            spriteBatch.Draw(background.Texture, background.Position, null, Color.White, 0f, background.Origin, 1f, SpriteEffects.None, 0f);
+            var item = scene.Entities[i].GetComponent<TileItem>();
+            spriteBatch.Draw(item.Texture, item.Position, null, Color.White, 0f, item.Origin, 1f, SpriteEffects.None, 0f);
         }
         spriteBatch.End();
-        
         base.OnRender(eventData);
     }
 }

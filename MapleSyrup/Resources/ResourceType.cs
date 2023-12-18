@@ -8,5 +8,6 @@ public enum ResourceType
     Double,
     String,
     Vector,
+    Directory,
     Unknown
 }

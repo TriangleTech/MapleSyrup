@@ -17,7 +17,7 @@ public class BackgroundSystem : DrawableSystem
         spriteBatch = new SpriteBatch(Context.GraphicsDevice);
     }
 
-    public override void OnRender(EventData eventData)
+    protected override void OnRender(EventData eventData)
     {
         var scene = Context.GetSubsystem<SceneSystem>().Current;
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);

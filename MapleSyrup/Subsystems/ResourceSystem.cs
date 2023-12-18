@@ -72,27 +72,26 @@ public class ResourceSystem : ISubsystem
         }
     }
     
-    public Texture2D GetTexture(string name)
+    private Texture2D LoadTexture(string name)
     {
         if (textures.TryGetValue(name, out var lookup))
             return lookup;
-
-        var texture = LoadTexture(name);
-        textures.Add(name, texture);
-        return texture;
-    }
-    
-    private Texture2D LoadTexture(string name)
-    {
+        
+        Texture2D texture;
         switch (resourceBackend)
         {
             case ResourceBackend.Nx:
-                return LoadNxTexture(name);
+                texture = LoadNxTexture(name);
+                break;
             case ResourceBackend.Wz:
-                return LoadWzTexture(name);
+                texture = LoadWzTexture(name);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
         }
+        
+        textures.Add(name, texture);
+        return textures[name];
     }
     
     private Texture2D LoadNxTexture(string name)
@@ -164,7 +163,7 @@ public class ResourceSystem : ISubsystem
         switch (node.NodeType)
         {
             case NodeType.Bitmap:
-                return (ResourceType.Image, GetTexture(path));
+                return (ResourceType.Image, LoadTexture(path));
             case NodeType.Vector:
                 return (ResourceType.Vector, node.GetData<NxVectorNode>());
             case NodeType.Audio:
@@ -176,9 +175,9 @@ public class ResourceSystem : ISubsystem
             case NodeType.Double:
                 return (ResourceType.Double, node.GetData<NxDoubleNode>());
             case NodeType.NoData:
-                return (ResourceType.Unknown, null);
+                return (ResourceType.Directory, null);
             default:
-                throw new ArgumentOutOfRangeException(nameof(node.NodeType), node.NodeType, null);
+                return (ResourceType.Unknown, null);
         }
     }
     

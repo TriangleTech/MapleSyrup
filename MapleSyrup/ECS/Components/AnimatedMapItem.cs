@@ -6,14 +6,14 @@ namespace MapleSyrup.ECS.Components;
 
 public class AnimatedMapItem : Component
 {
-    public List<Vector2> Positions;
-    public List<Vector2> Origins;
-    public int FrameCount;
-    public int CurrentFrame;
-    public Color Color;
-    public List<Texture2D> Frames;
-    public List<int> Delay;
-    public List<int> Alpha0;
-    public List<int> Alpha255;
-    public int CurrentDelay;
+    public List<Vector2> Positions = new List<Vector2>();
+    public List<Vector2> Origins = new List<Vector2>();
+    public int FrameCount = 0;
+    public int CurrentFrame = 0;
+    public Color Color = Color.White;
+    public List<Texture2D> Frames = new List<Texture2D>();
+    public List<int> Delay = new List<int>();
+    public List<int> Alpha0 = new List<int>();
+    public List<int> Alpha255 = new List<int>();
+    public int CurrentDelay = 0;
 }

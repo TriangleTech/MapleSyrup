@@ -11,7 +11,7 @@ public abstract class DrawableSystem : EventObject
         SubscribeToEvent(EventType.OnSceneRender, new Subscriber() { EventType = EventType.OnSceneRender, Sender = this, Event = OnRender });
     }
 
-    public virtual void OnRender(EventData eventData)
+    protected virtual void OnRender(EventData eventData)
     {
         
     }

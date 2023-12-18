@@ -20,8 +20,8 @@ public class Scene : EventObject
     private Queue<int> recycledIds;
     private int entityCount;
     private string worldId;
-    
-    public Scene(GameContext context) 
+
+    public Scene(GameContext context)
         : base(context)
     {
         Entities = new List<Entity>();
@@ -30,36 +30,36 @@ public class Scene : EventObject
         recycledIds = new Queue<int>();
         entityCount = 0;
         worldId = string.Empty;
-        
-        
+
+
         RegisterEvent(EventType.OnSceneCreated);
         RegisterEvent(EventType.OnSceneChanged);
         RegisterEvent(EventType.OnSceneRender);
         RegisterEvent(EventType.OnSceneUpdate);
         RegisterEvent(EventType.OnSceneUnloaded);
-        
-        SubscribeToEvent(EventType.OnEngineRender, new Subscriber() { EventType = EventType.OnEngineRender, Sender = this, Event = OnRender });
-        SubscribeToEvent(EventType.OnEngineUpdate, new Subscriber() { EventType = EventType.OnEngineUpdate, Sender = this, Event = OnUpdate });
+
+        SubscribeToEvent(EventType.OnEngineRender,
+            new Subscriber() { EventType = EventType.OnEngineRender, Sender = this, Event = OnRender });
+        SubscribeToEvent(EventType.OnEngineUpdate,
+            new Subscriber() { EventType = EventType.OnEngineUpdate, Sender = this, Event = OnUpdate });
     }
-    
+
     public Entity CreateEntity(string name, string tag = "entity")
     {
         if (recycledIds.Count > 0)
         {
             var id = recycledIds.Dequeue();
-            if (Entities[id] != null)
-                throw new Exception($"Entity with id {id} is not null");
             var entity = new Entity(Context, id, name, tag);
-            Entities[id] = entity;
+            Entities.Add(entity);
             return entity;
         }
-        
+
         var newId = entityCount++;
         var newEntity = new Entity(Context, newId, name, tag);
         Entities.Add(newEntity);
         return newEntity;
     }
-    
+
     public void DestroyEntity(Entity entity)
     {
         if (entity == null)
@@ -75,15 +75,16 @@ public class Scene : EventObject
         {
             // TODO: Clear scene and do transition
         }
-        
+
         // The order these are added is the order they are updated and rendered
         DrawableSystems.Add(new BackgroundSystem(Context));
         DrawableSystems.Add(new TileObjSystem(Context));
-        
+        UpdateableSystems.Add(new AnimMapItemSystem(Context));
+
         worldId = id;
         var root = CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
-        
+
         LoadWorldInfo();
         LoadBackground();
         LoadTiles();
@@ -95,28 +96,36 @@ public class Scene : EventObject
     {
         if (Entities[0].Tag != "Scene")
             throw new Exception("Why is the root entity not tagged as Scene?");
-        
+
         var info = Entities[0].GetComponent<WorldInfo>();
         var resource = Context.GetSubsystem<ResourceSystem>();
         if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/town").resourceType != ResourceType.Unknown)
             info.IsTown = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/town").data == 1;
         if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/swim").resourceType != ResourceType.Unknown)
             info.CanSwim = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/swim").data == 1;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/fieldLimit").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/fieldLimit").resourceType !=
+            ResourceType.Unknown)
             info.FieldLimit = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/fieldLimit").data;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/returnMap").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/returnMap").resourceType !=
+            ResourceType.Unknown)
             info.ReturnMap = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/returnMap").data;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/forcedReturn").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/forcedReturn").resourceType !=
+            ResourceType.Unknown)
             info.ForcedReturn = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/forcedReturn").data;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mobRate").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mobRate").resourceType !=
+            ResourceType.Unknown)
             info.MobRate = (double)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mobRate").data;
         if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/bgm").resourceType != ResourceType.Unknown)
             info.Bmg = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/bgm").data;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/hideMinimap").resourceType != ResourceType.Unknown)
-            info.HideMinimap = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/hideMinimap").data == 1;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/moveLimit").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/hideMinimap").resourceType !=
+            ResourceType.Unknown)
+            info.HideMinimap = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/hideMinimap").data ==
+                               1;
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/moveLimit").resourceType !=
+            ResourceType.Unknown)
             info.MoveLimit = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/moveLimit").data;
-        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mapMark").resourceType != ResourceType.Unknown)
+        if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mapMark").resourceType !=
+            ResourceType.Unknown)
             info.MapMark = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/mapMark").data;
         if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRTop").resourceType != ResourceType.Unknown)
         {
@@ -124,7 +133,8 @@ public class Scene : EventObject
             info.VrLeft = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRLeft").data;
             info.VrBottom = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRBottom").data;
             info.VrRight = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRRight").data;
-            info.Bounds = new RectangleF(info.VrLeft, info.VrTop, info.VrRight - info.VrLeft, info.VrBottom - info.VrTop);
+            info.Bounds = new RectangleF(info.VrLeft, info.VrTop, info.VrRight - info.VrLeft,
+                info.VrBottom - info.VrTop);
         }
         // TODO: Generate World Bounds if VrTop, VrLeft, VrBottom, VrRight are not set
     }
@@ -175,7 +185,7 @@ public class Scene : EventObject
             }
         }
     }
-    
+
     private void LoadTiles()
     {
         var layer = 0;
@@ -195,7 +205,7 @@ public class Scene : EventObject
                 var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
                 var tile = CreateEntity($"tile_{i}", "Tile");
                 tile.Layer = (RenderLayer)(1 << (layer + 1));
-                tile.ZIndex = z + 10 * (3000 * layer - zM) - 0x3FFFB1EA;//1073721834;
+                tile.ZIndex = z + 10 * (3000 * layer - zM) - 0x3FFFB1EA; //1073721834;
                 tile.AddComponent(new MapItem()
                 {
                     Position = new Vector2(x, y),
@@ -212,6 +222,7 @@ public class Scene : EventObject
     {
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
+        
         do
         {
             for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj"); i++)
@@ -226,12 +237,18 @@ public class Scene : EventObject
                 var f = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/f").data;
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/zM").data;
                 var nodeCount = resource.GetNodeCount($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}");
+
+                var obj = CreateEntity($"obj_{i}", "Object");
+                obj.Layer = (RenderLayer)layer + 1;
+                obj.ZIndex = (int)(30000 * layer + z) - 0x3FFFF830; //1073739824;
+
+                if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/r").resourceType !=
+                    ResourceType.Unknown)
+                    obj.IsEnabled = false;
+
                 if (nodeCount == 1)
                 {
                     var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/origin").data;
-                    var obj = CreateEntity($"obj_{i}", "Object");
-                    obj.Layer = (RenderLayer)layer + 1;
-                    obj.ZIndex = (int)(30000 * layer + z) - 0x3FFFF830;//1073739824;
                     obj.AddComponent(new MapItem()
                     {
                         Position = new Vector2(x, y),
@@ -243,32 +260,47 @@ public class Scene : EventObject
                 else
                 {
                     // TODO: Handle seats later
-                    if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType == ResourceType.Unknown)
-                        continue;
-                    var obj = CreateEntity($"obj_{i}_animated", "Object");
-                    obj.Layer = (RenderLayer)layer + 1;
-                    obj.ZIndex = (int)(30000 * layer + z) - 0x3FFFF830;
-                    obj.AddComponent(new AnimatedMapItem());
-                    var animated = obj.GetComponent<AnimatedMapItem>();
-                    animated.Positions = new List<Vector2>();
-                    animated.Origins = new List<Vector2>();
-                    animated.Frames = new List<Texture2D>();
-                    animated.Delay = new List<int>();
-                    animated.Alpha0 = new List<int>();
-                    animated.Alpha255 = new List<int>();
                     
+                    obj.AddComponent(new AnimatedMapItem());
+                    
+                    var animated = obj.GetComponent<AnimatedMapItem>();
+                    //animated.Positions = new List<Vector2>();
+                    //animated.Origins = new List<Vector2>();
+                    //animated.Frames = new List<Texture2D>();
+                    //animated.Delay = new List<int>();
+                    //animated.Alpha0 = new List<int>();
+                    //animated.Alpha255 = new List<int>();
+
                     for (int j = 0; j < nodeCount; j++)
                     {
+                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
+                            ResourceType.Directory)
+                        {
+                            DestroyEntity(obj);
+                            continue;
+                        }
+
+                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType == ResourceType.Integer)
+                        {
+                            DestroyEntity(obj);
+                            continue;
+                        }
+                        
                         var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
                         animated.Positions.Add(new Vector2(x, y));
                         animated.Origins.Add(origin);
                         animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType != ResourceType.Unknown)
-                            animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").data);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType != ResourceType.Unknown)
+                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType !=
+                            ResourceType.Unknown)
+                            animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
+                                .data);
+                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=
+                            ResourceType.Unknown)
                             animated.Alpha0.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType != ResourceType.Unknown)
-                            animated.Alpha255.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").data);
+                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType !=
+                            ResourceType.Unknown)
+                            animated.Alpha255.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1")
+                                .data);
                     }
                 }
             }
@@ -284,15 +316,15 @@ public class Scene : EventObject
             ["Entities"] = Entities,
             ["GameTime"] = eventData["GameTime"] as GameTime,
         };
-        
+
         PublishEvent(EventType.OnSceneUpdate, data);
     }
-    
+
     private void OnRender(EventData eventData)
     {
         PublishEvent(EventType.OnSceneRender);
     }
-    
+
     public void Shutdown()
     {
         for (var index = 0; index < Entities.Count; index++)

@@ -290,8 +290,8 @@ public class Scene : EventObject
                         animated.Positions.Add(new Vector2(x, y));
                         animated.Origins.Add(origin);
                         animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType !=
-                            ResourceType.Unknown)
+                        //if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType !=
+                            //ResourceType.Unknown)
                             animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
                                 .data);
                         if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=

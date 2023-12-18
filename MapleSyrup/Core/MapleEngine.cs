@@ -13,6 +13,7 @@ public class MapleEngine : EventObject
     {
         Context.AddSubsystem<GraphicsSystem>();
         Context.AddSubsystem<ResourceSystem>();
+        Context.AddSubsystem<TimeSystem>();
         Context.AddSubsystem<SceneSystem>();
         
         RegisterEvent(EventType.OnEngineInitialized);

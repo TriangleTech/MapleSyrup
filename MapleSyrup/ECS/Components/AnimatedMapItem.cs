@@ -16,4 +16,5 @@ public class AnimatedMapItem : Component
     public List<int> Alpha0 = new List<int>();
     public List<int> Alpha255 = new List<int>();
     public int CurrentDelay = 0;
+    public bool AwaitingNextFrame = false;
 }

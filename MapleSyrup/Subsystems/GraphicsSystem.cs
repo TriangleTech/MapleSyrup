@@ -16,21 +16,6 @@ public class GraphicsSystem : ISubsystem
         Context = context;
         spriteBatch = new SpriteBatch(Context.GraphicsDevice);
     }
-
-    public void BeginDrawing()
-    {
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
-    }
-
-    public void Draw(Texture2D texture, Vector2 position)
-    {
-        spriteBatch.Draw(texture, position, Color.White);
-    }
-    
-    public void EndDrawing()
-    {
-        spriteBatch.End();
-    }
     
     public void Shutdown()
     {

@@ -7,22 +7,28 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MapleSyrup.ECS.Systems;
 
-public class TileObjSystem : DrawableSystem
+public class TileObjSystem 
 {
+    private readonly GameContext Context;
     private SpriteBatch spriteBatch;
     
     public TileObjSystem(GameContext context) 
-        : base(context)
     {
+        Context = context;
         spriteBatch = new SpriteBatch(Context.GraphicsDevice);
+        
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Subscribe(this, EventType.OnSceneRender, OnDraw);
+        events.Subscribe(this, EventType.OnSceneUpdate, OnUpdate);
     }
 
-    protected override void OnRender(EventData eventData)
+    private void OnDraw(EventData eventData)
     {
         var scene = Context.GetSubsystem<SceneSystem>().Current;
         var entities = scene.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).ToList();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
-        for (int i = 0; i < entities.Count; i++)
+        var camera = scene.Entities[0].GetComponent<Camera>();
+        
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);        for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled)
                 continue;
@@ -40,7 +46,40 @@ public class TileObjSystem : DrawableSystem
             }
         }
         spriteBatch.End();
-        entities.Clear();
-        base.OnRender(eventData);
+        entities.Clear(); // TODO: This is a hack to prevent memory leak
+    }
+    
+    private void OnUpdate(EventData eventData)
+    {
+        var scene = Context.GetSubsystem<SceneSystem>().Current;
+        var entities = scene.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).ToList();
+        for (var i = 0; i < entities.Count; i++)
+        {
+            if (!entities[i].IsEnabled || !entities[i].HasComponent<AnimatedMapItem>())
+                continue;
+            var item = entities[i].GetComponent<AnimatedMapItem>();
+            Task.Run(() => UpdateAnimation(item));
+        }
+        entities.Clear(); // TODO: This is a hack to prevent memory leak
+    }
+    
+    private void UpdateAnimation(AnimatedMapItem item)
+    {
+        var time = Context.GetSubsystem<TimeSystem>();
+        if (item.CurrentFrame >= item.Frames.Count - 1)
+        {
+            item.CurrentFrame = 0;
+            item.CurrentDelay = item.Delay[0];
+        }
+
+        if (item.CurrentDelay <= 0)
+        {
+            item.CurrentFrame++;
+            item.CurrentDelay = item.Delay[item.CurrentFrame];
+        }
+        else
+        {
+            item.CurrentDelay -= (int)time.DeltaTime;
+        }
     }
 }

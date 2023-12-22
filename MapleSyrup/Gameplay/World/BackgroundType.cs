@@ -2,10 +2,12 @@ namespace MapleSyrup.Gameplay.World;
 
 public enum BackgroundType
 {
+    Default,
     HorizontalTiled,
-    HorizontalScrollingA,
-    HorizontalScrollingB,
     VerticalTiled,
+    Tiled,
+    HorizontalScrollingA,
     VerticalScrollingA,
+    HorizontalScrollingB,
     VerticalScrollingB,
 }

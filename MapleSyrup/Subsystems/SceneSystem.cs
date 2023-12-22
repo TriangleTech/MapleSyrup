@@ -24,16 +24,20 @@ public class SceneSystem : ISubsystem
         var scene = new Scene(Context);
         scene.LoadScene(worldId);
         Current = scene;
-        Context.PublishEvent(EventType.OnSceneCreated);
+        
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneCreated);
     }
     
     public void ChangeScene(string worldId)
     {
-        
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneChanged);
     }
     
     public void UnloadScene()
     {
-        Context.PublishEvent(EventType.OnSceneUnloaded);
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneUnloaded);
     }
 }

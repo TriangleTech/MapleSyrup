@@ -5,7 +5,7 @@ using MapleSyrup.Gameplay.World;
 
 namespace MapleSyrup.ECS;
 
-public class Entity : EventObject, IComparable<RenderLayer>, IEquatable<RenderLayer>
+public class Entity : IComparable<RenderLayer>, IEquatable<RenderLayer>
 {
     protected Entity Parent;
     public readonly int Id;
@@ -18,7 +18,6 @@ public class Entity : EventObject, IComparable<RenderLayer>, IEquatable<RenderLa
     public int ZIndex;
     
     public Entity(GameContext context, int id, string name, string tag)
-        : base(context)
     {
         Id = id;
         Name = name;

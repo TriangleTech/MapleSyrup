@@ -9,39 +9,31 @@ using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.Gameplay;
 
-public class Scene : EventObject
+public class Scene 
 {
+    private readonly GameContext Context;
     public readonly List<Entity> Entities;
-    public readonly List<DrawableSystem> DrawableSystems;
-    public readonly List<UpdateableSystem> UpdateableSystems;
+    private readonly List<object> entitySystems;
     private Queue<int> recycledIds;
     private int entityCount;
     private string worldId;
 
     public Scene(GameContext context)
-        : base(context)
     {
+        Context = context;
         Entities = new List<Entity>();
-        DrawableSystems = new List<DrawableSystem>();
-        UpdateableSystems = new List<UpdateableSystem>();
+        entitySystems = new();
         recycledIds = new Queue<int>();
         entityCount = 0;
         worldId = string.Empty;
 
-
-        RegisterEvent(EventType.OnSceneCreated);
-        RegisterEvent(EventType.OnSceneChanged);
-        RegisterEvent(EventType.OnSceneRender);
-        RegisterEvent(EventType.OnSceneUpdate);
-        RegisterEvent(EventType.OnSceneUnloaded);
-
-        SubscribeToEvent(EventType.OnEngineRender,
-            new Subscriber() { EventType = EventType.OnEngineRender, Sender = this, Event = OnRender });
-        SubscribeToEvent(EventType.OnEngineUpdate,
-            new Subscriber() { EventType = EventType.OnEngineUpdate, Sender = this, Event = OnUpdate });
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Subscribe(this, EventType.OnRender, OnDraw);
+        events.Subscribe(this, EventType.OnUpdate, OnUpdate);
     }
 
     public Entity CreateEntity(string name, string tag = "entity")
@@ -64,7 +56,6 @@ public class Scene : EventObject
     {
         if (entity == null)
             return;
-        //Context.PublishEvent(EventType.OnEntityDestroyed, eventData);
         recycledIds.Enqueue(entity.Id);
         Entities.Remove(entity);
     }
@@ -77,19 +68,24 @@ public class Scene : EventObject
         }
 
         // The order these are added is the order they are updated and rendered
-        DrawableSystems.Add(new BackgroundSystem(Context));
-        DrawableSystems.Add(new TileObjSystem(Context));
-        UpdateableSystems.Add(new AnimMapItemSystem(Context));
+        entitySystems.Add(new BackgroundSystem(Context));
+        entitySystems.Add(new CloudSystem(Context));
+        entitySystems.Add(new TileObjSystem(Context));
+        entitySystems.Add(new CameraSystem(Context));
+        entitySystems.Add(new MovementSystem(Context));
 
         worldId = id;
         var root = CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
+        root.AddComponent(new Camera());
 
         LoadWorldInfo();
         LoadBackground();
         LoadTiles();
         LoadObjects();
-        PublishEvent(EventType.OnSceneCreated);
+
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneCreated);
     }
 
     private void LoadWorldInfo()
@@ -133,7 +129,7 @@ public class Scene : EventObject
             info.VrLeft = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRLeft").data;
             info.VrBottom = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRBottom").data;
             info.VrRight = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/info/VRRight").data;
-            info.Bounds = new RectangleF(info.VrLeft, info.VrTop, info.VrRight - info.VrLeft,
+            info.Bounds = new Rectangle(info.VrLeft, info.VrTop, info.VrRight - info.VrLeft,
                 info.VrBottom - info.VrTop);
         }
         // TODO: Generate World Bounds if VrTop, VrLeft, VrBottom, VrRight are not set
@@ -196,6 +192,11 @@ public class Scene : EventObject
         {
             for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile"); i++)
             {
+                if (tileSet == string.Empty ||
+                    resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/info/tS").resourceType !=
+                    ResourceType.Unknown)
+                    tileSet = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/info/tS").data;
+
                 var x = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/x").data;
                 var y = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/y").data;
                 var u = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/u").data;
@@ -204,8 +205,8 @@ public class Scene : EventObject
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/zM").data;
                 var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
                 var tile = CreateEntity($"tile_{i}", "Tile");
-                tile.Layer = (RenderLayer)(1 << (layer + 1));
-                tile.ZIndex = z + 10 * (3000 * layer - zM) - 0x3FFFB1EA; //1073721834;
+                tile.Layer = (RenderLayer)layer + 1;
+                tile.ZIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
                 tile.AddComponent(new MapItem()
                 {
                     Position = new Vector2(x, y),
@@ -222,7 +223,7 @@ public class Scene : EventObject
     {
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
-        
+
         do
         {
             for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj"); i++)
@@ -240,11 +241,11 @@ public class Scene : EventObject
 
                 var obj = CreateEntity($"obj_{i}", "Object");
                 obj.Layer = (RenderLayer)layer + 1;
-                obj.ZIndex = (int)(30000 * layer + z) - 0x3FFFF830; //1073739824;
+                obj.ZIndex = (int)(30000 * layer + z) - 1073739824;
 
                 if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/r").resourceType !=
                     ResourceType.Unknown)
-                    obj.IsEnabled = false;
+                    obj.IsEnabled = true;
 
                 if (nodeCount == 1)
                 {
@@ -260,16 +261,9 @@ public class Scene : EventObject
                 else
                 {
                     // TODO: Handle seats later
-                    
+
                     obj.AddComponent(new AnimatedMapItem());
-                    
                     var animated = obj.GetComponent<AnimatedMapItem>();
-                    //animated.Positions = new List<Vector2>();
-                    //animated.Origins = new List<Vector2>();
-                    //animated.Frames = new List<Texture2D>();
-                    //animated.Delay = new List<int>();
-                    //animated.Alpha0 = new List<int>();
-                    //animated.Alpha255 = new List<int>();
 
                     for (int j = 0; j < nodeCount; j++)
                     {
@@ -280,20 +274,19 @@ public class Scene : EventObject
                             continue;
                         }
 
-                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType == ResourceType.Integer)
+                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType ==
+                            ResourceType.Integer)
                         {
                             DestroyEntity(obj);
                             continue;
                         }
-                        
+
                         var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
                         animated.Positions.Add(new Vector2(x, y));
                         animated.Origins.Add(origin);
                         animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
-                        //if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType !=
-                            //ResourceType.Unknown)
-                            animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
-                                .data);
+                        animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
+                            .data);
                         if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=
                             ResourceType.Unknown)
                             animated.Alpha0.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
@@ -309,20 +302,21 @@ public class Scene : EventObject
         } while (layer < 8);
     }
 
-    private void OnUpdate(EventData eventData)
+    public void OnUpdate(EventData eventData)
     {
         var data = new EventData
         {
-            ["Entities"] = Entities,
             ["GameTime"] = eventData["GameTime"] as GameTime,
         };
 
-        PublishEvent(EventType.OnSceneUpdate, data);
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneUpdate, data);
     }
 
-    private void OnRender(EventData eventData)
+    public void OnDraw(EventData eventData)
     {
-        PublishEvent(EventType.OnSceneRender);
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneRender);
     }
 
     public void Shutdown()
@@ -334,11 +328,12 @@ public class Scene : EventObject
         }
 
         Entities.Clear();
-        DrawableSystems.Clear();
-        UpdateableSystems.Clear();
+        entitySystems.Clear();
         recycledIds.Clear();
         entityCount = 0;
         worldId = string.Empty;
-        PublishEvent(EventType.OnSceneUnloaded);
+
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Publish(EventType.OnSceneUnloaded);
     }
 }

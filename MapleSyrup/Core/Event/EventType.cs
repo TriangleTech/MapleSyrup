@@ -3,10 +3,10 @@ namespace MapleSyrup.Core.Event;
 public enum EventType
 {
     // Engine events
-    OnEngineInitialized,
-    OnEngineShutdown,
-    OnEngineUpdate,
-    OnEngineRender,
+    OnInitialize,
+    OnShutdown,
+    OnUpdate,
+    OnRender,
     
     // Scene events
     OnSceneCreated,

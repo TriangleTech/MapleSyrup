@@ -1,3 +1,5 @@
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+
 namespace MapleSyrup.ECS.Components;
 
 public class WorldInfo : Component
@@ -17,5 +19,5 @@ public class WorldInfo : Component
     public int VrLeft;
     public int VrBottom;
     public int VrRight;
-    public RectangleF Bounds;
+    public Rectangle Bounds;
 }

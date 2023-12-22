@@ -2,24 +2,26 @@ using MapleSyrup.Gameplay.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.ECS.Components;
 
 public class BackgroundItem : Component
 {
     public Texture2D Texture;
-    public Vector2 Position;
-    public Vector2 Origin;
-    public float Scale;
-    public float Rotation;
-    public Color Color;
-    public SpriteEffects Flipped;
+    public Vector2 Position = Vector2.Zero;
+    public Vector2 Origin = Vector2.Zero;
+    public Rectangle Source = Rectangle.Empty;
+    public float Scale = 1f;
+    public float Rotation = 0f;
+    public Color Color = Color.White;
+    public SpriteEffects Flipped = SpriteEffects.None;
     public BackgroundType Type;
-    public Vector2 Shift;
-    public Vector2 Speed;
-    public int Cx;
-    public int Cy;
-    public int Rx;
-    public int Ry;
-    public int Alpha;
+    public Vector2 Shift = Vector2.Zero;
+    public Vector2 Speed = Vector2.Zero;
+    public int Cx = 0;
+    public int Cy = 0;
+    public int Rx = 0;
+    public int Ry = 0;
+    public int Alpha = 255;
 }

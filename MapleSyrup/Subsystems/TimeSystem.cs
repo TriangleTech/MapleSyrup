@@ -13,7 +13,8 @@ public class TimeSystem : ISubsystem
     public void Initialize(GameContext context)
     {
         Context = context;
-        Context.SubscribeToEvent(EventType.OnEngineUpdate, new Subscriber() { EventType = EventType.OnEngineUpdate, Sender = this, Event = OnUpdateTime });
+        var events = Context.GetSubsystem<EventSystem>();
+        events.Subscribe(this, EventType.OnUpdate, OnUpdateTime);
     }
     
     private void OnUpdateTime(EventData eventData)

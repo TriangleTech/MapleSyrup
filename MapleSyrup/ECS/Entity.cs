@@ -17,7 +17,7 @@ public class Entity : IComparable<RenderLayer>, IEquatable<RenderLayer>
     public RenderLayer Layer;
     public int ZIndex;
     
-    public Entity(GameContext context, int id, string name, string tag)
+    public Entity(int id, string name, string tag)
     {
         Id = id;
         Name = name;

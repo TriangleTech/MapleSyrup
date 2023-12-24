@@ -31,5 +31,26 @@ public class CameraSystem
                            Matrix.CreateRotationZ(camera.Rotation) *
                            Matrix.CreateScale(new Vector3(camera.Zoom, camera.Zoom, 1)) *
                            Matrix.CreateTranslation(new Vector3(camera.Origin.X, camera.Origin.Y, 0));
+
+        if (camera.EnabledCulling)
+        {
+            var entities = scene.Entities.Where(x => !x.HasComponent<BackgroundItem>()).ToList();
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (entities[i].GetComponent<Transform>().Position.X < camera.Position.X - camera.Viewport.Width - 175)
+                    entities[i].IsEnabled = false;
+                else if (entities[i].GetComponent<Transform>().Position.X >
+                         camera.Position.X + camera.Viewport.Width + 175)
+                    entities[i].IsEnabled = false;
+                else if (entities[i].GetComponent<Transform>().Position.Y <
+                         camera.Position.Y - camera.Viewport.Height - 175)
+                    entities[i].IsEnabled = false;
+                else if (entities[i].GetComponent<Transform>().Position.Y >
+                         camera.Position.Y + camera.Viewport.Height + 175)
+                    entities[i].IsEnabled = false;
+                else
+                    entities[i].IsEnabled = true;
+            }
+        }
     }
 }

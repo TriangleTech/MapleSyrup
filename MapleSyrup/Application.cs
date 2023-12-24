@@ -6,6 +6,7 @@ using MapleSyrup.Resources.Nx;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SDL2;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace MapleSyrup;
@@ -19,8 +20,8 @@ public class Application : Game
     public Application()
     {
         graphicsDeviceManager = new GraphicsDeviceManager(this);
-        graphicsDeviceManager.PreferredBackBufferWidth = 1280;
-        graphicsDeviceManager.PreferredBackBufferHeight = 720;
+        graphicsDeviceManager.PreferredBackBufferWidth = 800;
+        graphicsDeviceManager.PreferredBackBufferHeight = 600;
         graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
         graphicsDeviceManager.ApplyChanges();
         context = new(this);
@@ -33,6 +34,8 @@ public class Application : Game
         context.AddSubsystem<ResourceSystem>();
         context.AddSubsystem<TimeSystem>();
         context.AddSubsystem<SceneSystem>();
+        
+        SDL.SDL_SetWindowTitle(Window.Handle, "MapleSyrup");
         
         base.Initialize();
     }
@@ -55,6 +58,11 @@ public class Application : Game
             ["GameTime"] = gameTime
         };
         events.Publish(EventType.OnUpdate, eventData);
+        
+        var scene = context.GetSubsystem<SceneSystem>().Current;
+        var entities = scene.Entities.FindAll(x => x.IsEnabled);
+
+        SDL.SDL_SetWindowTitle(this.Window.Handle, $"MapleSyrup - Number of Entities Visible {entities.Count}");
         base.Update(gameTime);
     }
 

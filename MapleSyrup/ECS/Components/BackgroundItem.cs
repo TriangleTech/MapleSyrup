@@ -9,11 +9,6 @@ namespace MapleSyrup.ECS.Components;
 public class BackgroundItem : Component
 {
     public Texture2D Texture;
-    public Vector2 Position = Vector2.Zero;
-    public Vector2 Origin = Vector2.Zero;
-    public Rectangle Source = Rectangle.Empty;
-    public float Scale = 1f;
-    public float Rotation = 0f;
     public Color Color = Color.White;
     public SpriteEffects Flipped = SpriteEffects.None;
     public BackgroundType Type;

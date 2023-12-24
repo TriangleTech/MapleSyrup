@@ -26,19 +26,25 @@ public class BackgroundSystem
 
     private void OnDraw(EventData eventData)
     {
-        var scene = Context.GetSubsystem<SceneSystem>().Current;
-        var camera = scene.Entities[0].GetComponent<Camera>();
-        var info = scene.Entities[0].GetComponent<WorldInfo>();
+        var scene = Context.GetSubsystem<SceneSystem>();
+        var camera = scene.GetRoot().GetComponent<Camera>();
+        var info = scene.GetRoot().GetComponent<WorldInfo>();
+        var entities = scene.GetEntitiesByTag("Background");
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.AnisotropicWrap,
             DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
-        for (int i = 0; i < scene.Entities.Count; i++)
+        for (int i = 0; i < entities.Count; i++)
         {
-            if (!scene.Entities[i].IsEnabled || !scene.Entities[i].HasComponent<BackgroundItem>())
+            if (!entities[i].IsEnabled || !entities[i].HasComponent<BackgroundItem>())
                 continue;
-            var background = scene.Entities[i].GetComponent<BackgroundItem>();
-            spriteBatch.Draw(background.Texture, background.Position, background?.Source == Rectangle.Empty ? null : background.Source, background.Color,
-                background.Rotation, background.Origin, background.Scale, background.Flipped, 0f);
+            
+            var background = entities[i].GetComponent<BackgroundItem>();
+            var transform = entities[i].GetComponent<Transform>();
+            if (background.Type == BackgroundType.Default)
+                transform.Scale = (float)background.Texture.Width / camera.Viewport.Width;
+            
+            spriteBatch.Draw(background.Texture, transform.Position, transform?.Source == Rectangle.Empty ? null : transform.Source, background.Color,
+                transform.Rotation, transform.Origin, transform.Scale, background.Flipped, 0f);
         }
 
         spriteBatch.End();

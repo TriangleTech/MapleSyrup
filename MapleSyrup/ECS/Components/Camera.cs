@@ -14,4 +14,5 @@ public class Camera : Component
     public float Speed = 5f;
     public Rectangle Bounds = Rectangle.Empty;
     public Viewport Viewport = new Viewport();
+    public bool EnabledCulling = true;
 }

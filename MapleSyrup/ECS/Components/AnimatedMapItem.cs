@@ -12,7 +12,7 @@ public class AnimatedMapItem : Component
     public Color Color = Color.White;
     public List<Texture2D> Frames = new();
     public List<int> Delay = new();
-    public List<int> Alpha0 = new();
-    public List<int> Alpha255 = new();
+    public List<int> StartAlpha = new();
+    public List<int> EndAlpha = new();
     public int CurrentDelay = 0;
 }

@@ -18,7 +18,6 @@ public class Scene
     private readonly GameContext Context;
     public readonly List<Entity> Entities;
     private readonly List<object> entitySystems;
-    private Queue<int> recycledIds;
     private int entityCount;
     private string worldId;
 
@@ -27,7 +26,6 @@ public class Scene
         Context = context;
         Entities = new List<Entity>();
         entitySystems = new();
-        recycledIds = new Queue<int>();
         entityCount = 0;
         worldId = string.Empty;
 
@@ -38,16 +36,9 @@ public class Scene
 
     public Entity CreateEntity(string name, string tag = "entity")
     {
-        if (recycledIds.Count > 0)
-        {
-            var id = recycledIds.Dequeue();
-            var entity = new Entity(Context, id, name, tag);
-            Entities.Add(entity);
-            return entity;
-        }
-
         var newId = entityCount++;
-        var newEntity = new Entity(Context, newId, name, tag);
+        var newEntity = new Entity(newId, name, tag);
+        newEntity.AddComponent(new Transform());
         Entities.Add(newEntity);
         return newEntity;
     }
@@ -56,10 +47,9 @@ public class Scene
     {
         if (entity == null)
             return;
-        recycledIds.Enqueue(entity.Id);
         Entities.Remove(entity);
     }
-
+    
     public void LoadScene(string id)
     {
         if (worldId != string.Empty)
@@ -78,7 +68,7 @@ public class Scene
         var root = CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
         root.AddComponent(new Camera());
-
+        
         LoadWorldInfo();
         LoadBackground();
         LoadTiles();
@@ -159,12 +149,13 @@ public class Scene
                 var origin = (Vector2)resource.GetItem($"Map/Back/{bS}.img/back/{no}/origin").data;
                 var background = CreateEntity($"background_{i}", "Background");
                 background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                var transform = background.GetComponent<Transform>();
+                transform.Position = new Vector2(x, y);
+                transform.Origin = origin;
                 background.AddComponent(new BackgroundItem()
                 {
                     Color = Color.White,
                     Enabled = true,
-                    Position = new Vector2(x, y),
-                    Origin = origin,
                     Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D,
                     Rx = rx,
                     Ry = ry,
@@ -204,13 +195,15 @@ public class Scene
                 var z = (int)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/z").data;
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/zM").data;
                 var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
-                var tile = CreateEntity($"tile_{i}", "Tile");
+                var tile = CreateEntity($"tile_{i}", "MapItem");
                 tile.Layer = (RenderLayer)layer + 1;
                 tile.ZIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
+                
+                var transform = tile.GetComponent<Transform>();
+                transform.Position = new Vector2(x, y);
+                transform.Origin = origin;
                 tile.AddComponent(new MapItem()
                 {
-                    Position = new Vector2(x, y),
-                    Origin = origin,
                     Texture = resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}").data as Texture2D,
                 });
             }
@@ -239,9 +232,11 @@ public class Scene
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/zM").data;
                 var nodeCount = resource.GetNodeCount($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}");
 
-                var obj = CreateEntity($"obj_{i}", "Object");
+                var obj = CreateEntity($"obj_{i}", "MapItem");
                 obj.Layer = (RenderLayer)layer + 1;
                 obj.ZIndex = (int)(30000 * layer + z) - 1073739824;
+                var transform = obj.GetComponent<Transform>();
+                transform.Position = new Vector2(x, y);
 
                 if (resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/r").resourceType !=
                     ResourceType.Unknown)
@@ -250,10 +245,10 @@ public class Scene
                 if (nodeCount == 1)
                 {
                     var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/origin").data;
+                    transform.Origin = origin;
+                    
                     obj.AddComponent(new MapItem()
                     {
-                        Position = new Vector2(x, y),
-                        Origin = origin,
                         Texture = resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0").data as Texture2D,
                         Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
                     });
@@ -261,40 +256,7 @@ public class Scene
                 else
                 {
                     // TODO: Handle seats later
-
-                    obj.AddComponent(new AnimatedMapItem());
-                    var animated = obj.GetComponent<AnimatedMapItem>();
-
-                    for (int j = 0; j < nodeCount; j++)
-                    {
-                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
-                            ResourceType.Directory)
-                        {
-                            DestroyEntity(obj);
-                            continue;
-                        }
-
-                        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType ==
-                            ResourceType.Integer)
-                        {
-                            DestroyEntity(obj);
-                            continue;
-                        }
-
-                        var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
-                        animated.Positions.Add(new Vector2(x, y));
-                        animated.Origins.Add(origin);
-                        animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
-                        animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
-                            .data);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=
-                            ResourceType.Unknown)
-                            animated.Alpha0.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
-                        if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType !=
-                            ResourceType.Unknown)
-                            animated.Alpha255.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1")
-                                .data);
-                    }
+                    LoadAnimatedObject(ref obj, nodeCount, oS, l0, l1, l2, x, y);
                 }
             }
 
@@ -302,7 +264,78 @@ public class Scene
         } while (layer < 8);
     }
 
-    public void OnUpdate(EventData eventData)
+    private void LoadAnimatedObject(ref Entity obj, int nodeCount, string oS, string l0, string l1, string l2, int x, int y)
+    {
+        var resource = Context.GetSubsystem<ResourceSystem>();
+        obj.AddComponent(new AnimatedMapItem());
+        var animated = obj.GetComponent<AnimatedMapItem>();
+        var transform = obj.GetComponent<Transform>();
+        transform.Position = new Vector2(x, y);
+
+        for (int j = 0; j < nodeCount; j++)
+        {
+            if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
+                ResourceType.Directory)
+            {
+                DestroyEntity(obj);
+                continue;
+            }
+
+            if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType ==
+                ResourceType.Integer)
+            {
+                DestroyEntity(obj);
+                continue;
+            }
+
+            var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
+            transform.Origin = origin;
+            animated.Positions.Add(new Vector2(x, y));
+            animated.Origins.Add(origin);
+            animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
+            animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
+                .data);
+            if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=
+                ResourceType.Unknown)
+                animated.StartAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
+            if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType !=
+                ResourceType.Unknown)
+                animated.EndAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1")
+                    .data);
+        }
+    }
+
+    private void LoadPortals()
+    {
+        var resource = Context.GetSubsystem<ResourceSystem>();
+        var worldPath = $"Map/Map/Map{worldId[0]}/{worldId}.img";
+        var portalCount = resource.GetNodeCount($"{worldPath}/portal");
+        
+        for (int i = 0; i < portalCount; i++)
+        {
+            var name = (string)resource.GetItem($"{worldPath}/portal/{i}/pn").data;
+            var script = (string)resource.GetItem($"{worldPath}/portal/{i}/script").data;
+            var x = (int)resource.GetItem($"{worldPath}/portal/{i}/x").data;
+            var y = (int)resource.GetItem($"{worldPath}/portal/{i}/y").data;
+            var targetMap = (int)resource.GetItem($"{worldPath}/portal/{i}/tm").data; // The map it leads to
+            var targetPortal = (string)resource.GetItem($"{worldPath}/portal/{i}/tn").data; // The portal you end up on
+            var portal = CreateEntity($"portal_{name}", "Portal");
+            var transform = portal.GetComponent<Transform>();
+            
+            portal.Layer = RenderLayer.Foreground;
+            transform.Position = new Vector2(x, y);
+            portal.AddComponent(new Portal()
+            {
+                Name = name,
+                ScriptName = script,
+                TargetMapId = targetMap,
+                TargetPortalName = targetPortal,
+                PortalId = i
+            });
+        }
+    }
+
+    private void OnUpdate(EventData eventData)
     {
         var data = new EventData
         {
@@ -313,7 +346,7 @@ public class Scene
         events.Publish(EventType.OnSceneUpdate, data);
     }
 
-    public void OnDraw(EventData eventData)
+    private void OnDraw(EventData eventData)
     {
         var events = Context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnSceneRender);
@@ -329,7 +362,6 @@ public class Scene
 
         Entities.Clear();
         entitySystems.Clear();
-        recycledIds.Clear();
         entityCount = 0;
         worldId = string.Empty;
 

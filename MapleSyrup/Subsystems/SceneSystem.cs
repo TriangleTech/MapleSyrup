@@ -1,6 +1,9 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
+using MapleSyrup.ECS;
+using MapleSyrup.ECS.Components;
 using MapleSyrup.Gameplay;
+using MapleSyrup.Gameplay.World;
 
 namespace MapleSyrup.Subsystems;
 
@@ -39,5 +42,50 @@ public class SceneSystem : ISubsystem
     {
         var events = Context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnSceneUnloaded);
+    }
+
+    public Entity GetRoot()
+    {
+        return Current.Entities[0];
+    }
+    
+    public List<Entity> GetEntities()
+    {
+        return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).ToList();
+    }
+    
+    public List<Entity> GetEntitiesByTag(string tag)
+    {
+        return Current.Entities.Where(x => x.Tag == tag).OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).ToList();
+    }
+    
+    public List<Entity> GetEntitiesByLayer(RenderLayer layer)
+    {
+        return Current.Entities.Where(x => x.Layer == layer).ToList();
+    }
+    
+    public List<Entity> GetEntitiesByVisibility(bool visible)
+    {
+        return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).Where(x => x.IsEnabled == visible).ToList();
+    }
+    
+    public List<Entity> GetEntitiesWithComponent<T>() where T : Component
+    {
+        return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).Where(x => x.HasComponent<T>()).ToList();
+    }
+    
+    public List<Entity> GetEntitiesWithComponents<T, TU>() where T : Component where TU : Component
+    {
+        return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).Where(x => x.HasComponent<T>() && x.HasComponent<TU>()).ToList();
+    }
+    
+    public Entity GetPortalByName(string name)
+    {
+        return Current.Entities.Find(x => x.HasComponent<Portal>() && x.GetComponent<Portal>().Name == name);
+    }
+    
+    public Entity GetPortalById(int id)
+    {
+        return Current.Entities.Find(x => x.HasComponent<Portal>() && x.GetComponent<Portal>().PortalId == id);
     }
 }

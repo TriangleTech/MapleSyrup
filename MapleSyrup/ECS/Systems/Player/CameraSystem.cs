@@ -1,13 +1,14 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace MapleSyrup.ECS.Systems;
+namespace MapleSyrup.ECS.Systems.Player;
 
 public class CameraSystem 
 {

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Map;
 
 public class BackgroundItem : Component
 {

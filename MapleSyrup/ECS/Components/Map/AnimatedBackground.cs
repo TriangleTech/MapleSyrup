@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Map;
 
 public class AnimatedBackground : BackgroundItem
 {

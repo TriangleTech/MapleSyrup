@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Player;
 
 public class AvatarLook : Component
 {

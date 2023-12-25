@@ -2,6 +2,7 @@ using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Gameplay;
 using MapleSyrup.Gameplay.World;
 
@@ -81,11 +82,11 @@ public class SceneSystem : ISubsystem
     
     public Entity GetPortalByName(string name)
     {
-        return Current.Entities.Find(x => x.HasComponent<Portal>() && x.GetComponent<Portal>().Name == name);
+        return Current.Entities.Find(x => x.HasComponent<PortalInfo>() && x.GetComponent<PortalInfo>().Name == name);
     }
     
     public Entity GetPortalById(int id)
     {
-        return Current.Entities.Find(x => x.HasComponent<Portal>() && x.GetComponent<Portal>().PortalId == id);
+        return Current.Entities.Find(x => x.HasComponent<PortalInfo>() && x.GetComponent<PortalInfo>().PortalId == id);
     }
 }

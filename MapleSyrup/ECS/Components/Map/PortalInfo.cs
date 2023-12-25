@@ -1,14 +1,15 @@
+using MapleSyrup.Gameplay.World;
 using Microsoft.Xna.Framework;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Map;
 
-public class Portal : Component
+public class PortalInfo : Component
 {
     public string Name;
     public Vector2 Position;
     public int TargetMapId;
     public string TargetPortalName;
-    public int PortalType;
+    public PortalType PortalType;
     public int PortalId;
     public string ScriptName;
     

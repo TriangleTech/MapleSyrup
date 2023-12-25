@@ -2,7 +2,10 @@ using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.ECS.Systems;
+using MapleSyrup.ECS.Systems.Map;
+using MapleSyrup.ECS.Systems.Player;
 using MapleSyrup.Gameplay.World;
 using MapleSyrup.Resources;
 using MapleSyrup.Subsystems;
@@ -45,9 +48,8 @@ public class Scene
 
     public void DestroyEntity(Entity entity)
     {
-        if (entity == null)
-            return;
-        Entities.Remove(entity);
+        entity.Components.Clear();
+        Entities.Where(x => x.Id == entity.Id).ToList().ForEach(x => Entities.Remove(x));
     }
     
     public void LoadScene(string id)
@@ -155,7 +157,6 @@ public class Scene
                 background.AddComponent(new BackgroundItem()
                 {
                     Color = Color.White,
-                    Enabled = true,
                     Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D,
                     Rx = rx,
                     Ry = ry,
@@ -202,6 +203,7 @@ public class Scene
                 var transform = tile.GetComponent<Transform>();
                 transform.Position = new Vector2(x, y);
                 transform.Origin = origin;
+                
                 tile.AddComponent(new MapItem()
                 {
                     Texture = resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}").data as Texture2D,
@@ -267,41 +269,69 @@ public class Scene
     private void LoadAnimatedObject(ref Entity obj, int nodeCount, string oS, string l0, string l1, string l2, int x, int y)
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
-        obj.AddComponent(new AnimatedMapItem());
-        var animated = obj.GetComponent<AnimatedMapItem>();
         var transform = obj.GetComponent<Transform>();
         transform.Position = new Vector2(x, y);
-
-        for (int j = 0; j < nodeCount; j++)
+        
+        // TODO: Handle seats
+        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
+            ResourceType.Directory)
         {
-            if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
-                ResourceType.Directory)
-            {
-                DestroyEntity(obj);
-                continue;
-            }
+            DestroyEntity(obj);
+            Console.WriteLine("Seat Detected, Skipping...");
+            return;
+        }
 
-            if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/blend").resourceType ==
-                ResourceType.Integer)
+        // TODO: Handle blend 
+        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/blend").resourceType ==
+            ResourceType.Integer)
+        {
+            DestroyEntity(obj);
+            Console.WriteLine("Blend Detected, Skipping...");
+            return;
+        }
+        
+        // Frame Animation
+        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/a0").resourceType ==
+            ResourceType.Unknown)
+        {
+            obj.AddComponent(new AnimatedMapItem());
+            var animated = obj.GetComponent<AnimatedMapItem>();
+            
+            for (int j = 0; j < nodeCount; j++)
             {
-                DestroyEntity(obj);
-                continue;
+                var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
+                transform.Origin = origin;
+                animated.Positions.Add(new Vector2(x, y));
+                animated.Origins.Add(origin);
+                animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
+                if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").resourceType !=
+                    ResourceType.Unknown)
+                    animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
+                        .data);
+                else
+                {
+                    animated.Delay.Add(100);
+                    Console.WriteLine("Delay not found, using default of 100");
+                }
             }
-
-            var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
+        }
+        
+        // Blend Animation
+        if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/a0").resourceType !=
+            ResourceType.Unknown)
+        {
+            obj.AddComponent(new BlendAnimation());
+            var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/origin").data;
+            var blend = obj.GetComponent<BlendAnimation>();
             transform.Origin = origin;
-            animated.Positions.Add(new Vector2(x, y));
-            animated.Origins.Add(origin);
-            animated.Frames.Add(resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data as Texture2D);
-            animated.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay")
-                .data);
-            if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").resourceType !=
-                ResourceType.Unknown)
-                animated.StartAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
-            if (resource.GetItem("Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType !=
-                ResourceType.Unknown)
-                animated.EndAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1")
-                    .data);
+            transform.Position = new Vector2(x, y);
+            for (int j = 0; j < nodeCount; j++)
+            {
+                blend.Frames.Add((Texture2D)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data);
+                blend.StartAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
+                blend.EndAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").data);
+                blend.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").data);
+            }
         }
     }
 
@@ -310,10 +340,11 @@ public class Scene
         var resource = Context.GetSubsystem<ResourceSystem>();
         var worldPath = $"Map/Map/Map{worldId[0]}/{worldId}.img";
         var portalCount = resource.GetNodeCount($"{worldPath}/portal");
-        
+
         for (int i = 0; i < portalCount; i++)
         {
             var name = (string)resource.GetItem($"{worldPath}/portal/{i}/pn").data;
+            var portalType = (int)resource.GetItem($"{worldPath}/portal/{i}/pt").data;
             var script = (string)resource.GetItem($"{worldPath}/portal/{i}/script").data;
             var x = (int)resource.GetItem($"{worldPath}/portal/{i}/x").data;
             var y = (int)resource.GetItem($"{worldPath}/portal/{i}/y").data;
@@ -321,12 +352,35 @@ public class Scene
             var targetPortal = (string)resource.GetItem($"{worldPath}/portal/{i}/tn").data; // The portal you end up on
             var portal = CreateEntity($"portal_{name}", "Portal");
             var transform = portal.GetComponent<Transform>();
-            
+            PortalType enumType = PortalType.Visible;
+
+            switch (portalType)
+            {
+                case 2:
+                case 4:
+                case 7:
+                    enumType = PortalType.Visible;
+                    break;
+                case 3:
+                case 9:
+                case 0x0C:
+                case 0x0D:
+                    enumType = PortalType.VisibleOnContact;
+                    portal.IsEnabled = false;
+                    break;
+                case 10:
+                case 0x0B:
+                    enumType = PortalType.ScriptedHidden;
+                    portal.IsEnabled = false;
+                    break;
+            }
+
             portal.Layer = RenderLayer.Foreground;
             transform.Position = new Vector2(x, y);
-            portal.AddComponent(new Portal()
+            portal.AddComponent(new PortalInfo()
             {
                 Name = name,
+                PortalType = enumType,
                 ScriptName = script,
                 TargetMapId = targetMap,
                 TargetPortalName = targetPortal,

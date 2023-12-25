@@ -1,24 +1,25 @@
+using System.IO.MemoryMappedFiles;
 using System.Text;
 
 namespace MapleSyrup.Resources.Nx;
 
 public class NxBuffer
 {
-    private ReadOnlyMemory<byte> dataBlock;
     private int dataIndex = 0;
     private int endOfFile;
+    private readonly MemoryMappedViewStream stream;
 
-    public NxBuffer(ref byte[] fileData)
+    public NxBuffer(ref MemoryMappedViewStream viewStream)
     {
-        dataBlock = fileData;
-        endOfFile = fileData.Length;
+        stream = viewStream;
+        endOfFile = (int) stream.Capacity;
     }
 
     public ReadOnlySpan<byte> ReadBytes(int len, int offset)
     {
-        if (len <= 0)
-            return null;
-        var span = dataBlock.Slice(offset, len).Span;
+        var span = new byte[len];
+        stream.Seek(offset, SeekOrigin.Begin);
+        _ = stream.Read(span, 0, len);
         dataIndex += len;
         
         return span;

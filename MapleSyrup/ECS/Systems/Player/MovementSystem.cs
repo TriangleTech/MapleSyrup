@@ -4,7 +4,7 @@ using MapleSyrup.ECS.Components;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework.Input;
 
-namespace MapleSyrup.ECS.Systems;
+namespace MapleSyrup.ECS.Systems.Player;
 
 public class MovementSystem
 {

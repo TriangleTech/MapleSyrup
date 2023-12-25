@@ -1,12 +1,12 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace MapleSyrup.ECS.Systems;
+namespace MapleSyrup.ECS.Systems.Map;
 
 public class TileObjSystem
 {
@@ -55,6 +55,17 @@ public class TileObjSystem
                 spriteBatch.Draw(item.Texture, transform.Position, null, Color.White, 0f, transform.Origin, 1f,
                     SpriteEffects.None, 0f);
             }
+            else if (entities[i].HasComponent<BlendAnimation>())
+            {
+                var transform = entities[i].GetComponent<Transform>();
+                var blend = entities[i].GetComponent<BlendAnimation>();
+                var currentFrame = blend.Frames[blend.CurrentFrame];
+                blend.Color.A = (byte)blend.StartingAlpha;
+
+                spriteBatch.Draw(currentFrame, transform.Position, null, blend.Color, 0f,
+                    transform.Origin, 1f,
+                    SpriteEffects.None, 0f);
+            }
         }
 
         spriteBatch.End();
@@ -65,19 +76,28 @@ public class TileObjSystem
     {
         var scene = Context.GetSubsystem<SceneSystem>();
         var entities = scene.GetEntitiesByTag("MapItem");
-        
+
         for (var i = 0; i < entities.Count; i++)
         {
-            if (!entities[i].IsEnabled && !entities[i].HasComponent<AnimatedMapItem>())
+            if (!entities[i].IsEnabled)
                 continue;
-            var item = entities[i].GetComponent<AnimatedMapItem>();
-            Task.Run(() => UpdateAnimation(ref item));
+
+            if (entities[i].HasComponent<AnimatedMapItem>())
+            {
+                var item = entities[i].GetComponent<AnimatedMapItem>();
+                Task.Run(() => UpdateFrameAnimation(ref item));
+            }
+            else if (entities[i].HasComponent<BlendAnimation>())
+            {
+                var item = entities[i].GetComponent<BlendAnimation>();
+                Task.Run(() => UpdateBlendAnimation(ref item));
+            }
         }
-        
+
         entities.Clear(); // TODO: This is a hack to prevent memory leak
     }
 
-    private void UpdateAnimation(ref AnimatedMapItem item)
+    private void UpdateFrameAnimation(ref AnimatedMapItem item)
     {
         var time = Context.GetSubsystem<TimeSystem>();
         if (item.CurrentFrame >= item.Frames.Count - 1)
@@ -94,6 +114,49 @@ public class TileObjSystem
         else
         {
             item.CurrentDelay -= (int)time.DeltaTime;
+        }
+    }
+
+    private void UpdateBlendAnimation(ref BlendAnimation blend)
+    {
+        var time = Context.GetSubsystem<TimeSystem>();
+        if (blend.CurrentFrame >= blend.Frames.Count - 1)
+        {
+            blend.CurrentFrame = 0;
+            blend.CurrentDelay = blend.Delay[0];
+            blend.StartingAlpha = blend.StartAlpha[0];
+            blend.EndingAlpha = blend.EndAlpha[0];
+        }
+        
+        if (blend.StartingAlpha >= 255)
+        {
+            blend.StartingAlpha = 255;
+            blend.EndingAlpha = 0;
+        }
+        else if (blend.StartingAlpha <= 0)
+        {
+            blend.StartingAlpha = 0;
+            blend.EndingAlpha = 255;
+        }
+
+        if (blend.CurrentDelay <= 0 && blend.StartingAlpha == blend.EndingAlpha)
+        {
+            blend.CurrentFrame += 1;
+            blend.CurrentDelay = blend.Delay[blend.CurrentFrame];
+            blend.StartingAlpha = blend.StartAlpha[blend.CurrentFrame];
+            blend.EndingAlpha = blend.EndAlpha[blend.CurrentFrame];
+        }
+        else
+        {
+            blend.CurrentDelay -= (int)time.DeltaTime;
+            if (blend.StartingAlpha < blend.EndingAlpha)
+            {
+                blend.StartingAlpha++;
+            }
+            else if (blend.StartingAlpha > blend.EndingAlpha)
+            {
+                blend.StartingAlpha--;
+            }
         }
     }
 }

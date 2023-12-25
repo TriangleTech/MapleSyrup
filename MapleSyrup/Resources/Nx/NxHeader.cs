@@ -1,9 +1,7 @@
 namespace MapleSyrup.Resources.Nx;
 
-public class NxHeader
+public record struct NxHeader
 {
-    private byte[] PKG4_MAGIC = { 0x5B, 0x4B, 0x47, 0x34 };
-
     private int magic;
     private int nodeCount;
     private long nodeOffset;

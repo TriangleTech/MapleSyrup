@@ -1,9 +1,9 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Subsystems;
 
-namespace MapleSyrup.ECS.Systems;
+namespace MapleSyrup.ECS.Systems.Map;
 
 public class CloudSystem
 {

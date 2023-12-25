@@ -14,6 +14,8 @@ public class NxFile : IDisposable
     private IMemoryOwner<string> stringData;
     private IMemoryOwner<long> bitmapOffsetTable;
     private IMemoryOwner<long> audioOffSetTable;
+    private MemoryMappedFile file;
+    private string rootName;
     
     public NxNode BaseNode => nodeData.Memory.Span[0];
 
@@ -23,6 +25,7 @@ public class NxFile : IDisposable
     /// <param name="path">Path to the NX File</param>
     public NxFile(string path)
     {
+        rootName = Path.GetFileNameWithoutExtension(path);
         ParseFile(path);
     }
 
@@ -33,8 +36,9 @@ public class NxFile : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ParseFile(string path)
     {
-        byte[] data = File.ReadAllBytes(path);
-        reader = new NxBuffer(ref data);
+        file = MemoryMappedFile.CreateFromFile(path, FileMode.Open);
+        var view = file.CreateViewStream();
+        reader = new NxBuffer(ref view);
 
         var magic = reader.ReadInt();
         if (magic != 0x34474B50)
@@ -42,7 +46,7 @@ public class NxFile : IDisposable
             Console.WriteLine("Failed to obtain PKG4 magic");
             Environment.Exit(-1);
         }
-
+        
         ParseHeader();
         stringOffsetTable = MemoryPool<long>.Shared.Rent(header.GetStringCount());
         bitmapOffsetTable = MemoryPool<long>.Shared.Rent(header.GetBitmapCount());
@@ -237,6 +241,7 @@ public class NxFile : IDisposable
         stringOffsetTable.Dispose();
         stringData.Dispose();
         nodeData.Dispose();
+        file.Dispose();
         GC.Collect();
     }
 

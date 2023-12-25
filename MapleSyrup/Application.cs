@@ -45,7 +45,7 @@ public class Application : Game
         context.GetSubsystem<ResourceSystem>().SetBackend(ResourceBackend.Nx);
 
         var scene = context.GetSubsystem<SceneSystem>();
-        scene.LoadScene("000060000");
+        scene.LoadScene("100000000");
         spriteBatch = new SpriteBatch(GraphicsDevice);
         base.LoadContent();
     }

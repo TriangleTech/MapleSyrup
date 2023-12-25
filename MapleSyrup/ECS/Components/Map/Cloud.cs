@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Map;
 
 public class Cloud : Component
 {

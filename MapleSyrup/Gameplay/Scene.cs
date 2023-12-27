@@ -69,7 +69,7 @@ public class Scene
         worldId = id;
         var root = CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
-        root.AddComponent(new Camera());
+        root.AddComponent(new Camera(Context.GraphicsDevice.Viewport));
         
         LoadWorldInfo();
         LoadBackground();
@@ -146,12 +146,16 @@ public class Scene
             var f = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/back/{i}/f").data;
             var ani = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/back/{i}/ani").data;
 
+            if (bS == string.Empty)
+                continue;
+            
             if (ani == 0)
             {
                 var origin = (Vector2)resource.GetItem($"Map/Back/{bS}.img/back/{no}/origin").data;
                 var background = CreateEntity($"background_{i}", "Background");
-                background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
                 var transform = background.GetComponent<Transform>();
+                background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                background.ZIndex = 0;
                 transform.Position = new Vector2(x, y);
                 transform.Origin = origin;
                 background.AddComponent(new BackgroundItem()
@@ -165,6 +169,7 @@ public class Scene
                     Cy = cy,
                     Alpha = a,
                     Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    Shift = new Vector2(rx, ry),
                 });
             }
             else
@@ -257,8 +262,14 @@ public class Scene
                 }
                 else
                 {
-                    // TODO: Handle seats later
-                    LoadAnimatedObject(ref obj, nodeCount, oS, l0, l1, l2, x, y);
+                    // TODO: Handle Obstacles
+                    if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/obstacle").resourceType !=
+                        ResourceType.Unknown)
+                        DestroyEntity(obj);
+                    else
+                    {
+                        LoadAnimatedObject(ref obj, nodeCount, oS, l0, l1, l2, x, y);
+                    }
                 }
             }
 
@@ -328,8 +339,10 @@ public class Scene
             for (int j = 0; j < nodeCount; j++)
             {
                 blend.Frames.Add((Texture2D)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}").data);
-                blend.StartAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
-                blend.EndAlpha.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").data);
+                blend.Alpha.Add((byte)(int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a0").data);
+                if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").resourceType !=
+                    ResourceType.Unknown)
+                    blend.Alpha.Add((byte)(int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/a1").data);
                 blend.Delay.Add((int)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/delay").data);
             }
         }

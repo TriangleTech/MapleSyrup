@@ -3,6 +3,7 @@ using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
 using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Subsystems;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -28,9 +29,10 @@ public class TileObjSystem
         var scene = Context.GetSubsystem<SceneSystem>();
         var entities = scene.GetEntitiesByTag("MapItem");
         var camera = scene.GetRoot().GetComponent<Camera>();
-
+        var info = scene.GetRoot().GetComponent<WorldInfo>();
+        
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
+            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix(Vector2.One));
         for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled)
@@ -124,10 +126,11 @@ public class TileObjSystem
         {
             blend.CurrentFrame = 0;
             blend.CurrentDelay = blend.Delay[0];
-            blend.StartingAlpha = blend.StartAlpha[0];
-            blend.EndingAlpha = blend.EndAlpha[0];
+            blend.StartingAlpha = blend.Alpha[0];
+            blend.EndingAlpha = blend.Alpha[1];
         }
-        
+        // A weird hack to prevent the alpha from going out of bounds
+        // TODO: Find a better way to do this
         if (blend.StartingAlpha >= 255)
         {
             blend.StartingAlpha = 255;
@@ -141,14 +144,13 @@ public class TileObjSystem
 
         if (blend.CurrentDelay <= 0 && blend.StartingAlpha == blend.EndingAlpha)
         {
-            blend.CurrentFrame += 1;
+            blend.CurrentFrame++;
             blend.CurrentDelay = blend.Delay[blend.CurrentFrame];
-            blend.StartingAlpha = blend.StartAlpha[blend.CurrentFrame];
-            blend.EndingAlpha = blend.EndAlpha[blend.CurrentFrame];
+            blend.StartingAlpha = blend.Alpha[blend.CurrentFrame];
+            blend.EndingAlpha = blend.StartingAlpha == 255 ? (byte)0 : (byte)255;
         }
         else
         {
-            blend.CurrentDelay -= (int)time.DeltaTime;
             if (blend.StartingAlpha < blend.EndingAlpha)
             {
                 blend.StartingAlpha++;
@@ -157,6 +159,8 @@ public class TileObjSystem
             {
                 blend.StartingAlpha--;
             }
+            
+            blend.CurrentDelay -= (int)time.DeltaTime;
         }
     }
 }

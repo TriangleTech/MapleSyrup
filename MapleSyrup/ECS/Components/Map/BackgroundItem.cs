@@ -13,7 +13,7 @@ public class BackgroundItem : Component
     public SpriteEffects Flipped = SpriteEffects.None;
     public BackgroundType Type;
     public Vector2 Shift = Vector2.Zero;
-    public Vector2 Speed = Vector2.Zero;
+    public Vector2 Speed = Vector2.One;
     public int Cx = 0;
     public int Cy = 0;
     public int Rx = 0;

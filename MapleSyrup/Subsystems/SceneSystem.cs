@@ -79,6 +79,26 @@ public class SceneSystem : ISubsystem
     {
         return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).Where(x => x.HasComponent<T>() && x.HasComponent<TU>()).ToList();
     }
+
+    public float FarLeftX()
+    {
+        return Current.Entities.Min(x => x.GetComponent<Transform>().Position.X);
+    }
+    
+    public float FarRightX()
+    {
+        return Current.Entities.Max(x => x.GetComponent<Transform>().Position.X);
+    }
+    
+    public float FarTopY()
+    {
+        return Current.Entities.Min(x => x.GetComponent<Transform>().Position.Y);
+    }
+
+    public float FarBottomY()
+    {
+        return Current.Entities.Max(x => x.GetComponent<Transform>().Position.Y);
+    }
     
     public Entity GetPortalByName(string name)
     {

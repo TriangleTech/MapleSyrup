@@ -10,10 +10,7 @@ public class NxStringNode : NxNode
     }
 
     public string GetString()
-    {
-        if (value == string.Empty)
-            throw new Exception("[NxStringNode] Attempted to retrieve empty string value.");
-        
+    { 
         return value;
     }
 }

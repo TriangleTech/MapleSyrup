@@ -15,7 +15,6 @@ public class Application : Game
 {
     private GraphicsDeviceManager graphicsDeviceManager;
     private GameContext context;
-    private SpriteBatch spriteBatch;
     
     public Application()
     {
@@ -30,7 +29,6 @@ public class Application : Game
     protected override void Initialize()
     {
         context.AddSubsystem<EventSystem>();
-        context.AddSubsystem<GraphicsSystem>();
         context.AddSubsystem<ResourceSystem>();
         context.AddSubsystem<TimeSystem>();
         context.AddSubsystem<SceneSystem>();
@@ -46,7 +44,7 @@ public class Application : Game
 
         var scene = context.GetSubsystem<SceneSystem>();
         scene.LoadScene("100000000");
-        spriteBatch = new SpriteBatch(GraphicsDevice);
+        
         base.LoadContent();
     }
 

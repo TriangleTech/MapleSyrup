@@ -2,9 +2,11 @@ using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
 using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.Gameplay.World;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.ECS.Systems.Map;
 
@@ -39,10 +41,21 @@ public class BackgroundSystem
             var background = entities[i].GetComponent<BackgroundItem>();
             var transform = entities[i].GetComponent<Transform>();
             
-            var posX = background.Rx * 0.01f;
+            var posX = background.Rx * 0.05f;
+            var posY = background.Ry * 0.05f;
             
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.AnisotropicWrap,
-                DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix(new Vector2(posX , 1)));
+            switch (background.Type)
+            {
+                case BackgroundType.HorizontalTiled:
+                    background.SourceRect = new Rectangle(0, 0, info.Bounds.Width, background.Texture.Height);
+                    break;
+            }
+
+            Matrix matrix = Matrix.CreateTranslation(new Vector3(camera.Position.X * (background.Rx * 0.01f) + camera.Viewport.Width / 2f, 
+                camera.Position.Y * (background.Ry * 0.01f) + (camera.Viewport.Height / 2f), 0));
+            
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                DepthStencilState.Default, RasterizerState.CullNone, null, matrix);
             
             spriteBatch.Draw(background.Texture, transform.Position, null, background.Color,
                 transform.Rotation, transform.Origin, transform.Scale, background.Flipped, 0f);
@@ -57,6 +70,7 @@ public class BackgroundSystem
     {
         var scene = Context.GetSubsystem<SceneSystem>();
         var entities = scene.GetEntitiesByTag("Background");
+        var camera = scene.GetRoot().GetComponent<Camera>();
         
         for (int i = 0; i < entities.Count; i++)
         {
@@ -73,17 +87,7 @@ public class BackgroundSystem
     {
         var scene = Context.GetSubsystem<SceneSystem>();
         var camera = scene.GetRoot().GetComponent<Camera>();
-        var info = scene.GetRoot().GetComponent<WorldInfo>();
         var time = Context.GetSubsystem<TimeSystem>();
         
-        if (transform.Position.Y >= info.Bounds.Top)
-            transform.Position.Y = Math.Clamp(transform.Position.Y, info.Bounds.Top, info.Bounds.Bottom);
-        else if (transform.Position.Y <= info.Bounds.Bottom)
-            transform.Position.Y = Math.Clamp(transform.Position.Y, info.Bounds.Top, info.Bounds.Bottom);
-
-        if (transform.Position.X >= info.Bounds.Left)
-            transform.Position.X = Math.Clamp(transform.Position.X, info.Bounds.Left, info.Bounds.Right);
-        else if (transform.Position.X <= info.Bounds.Right)
-            transform.Position.X = Math.Clamp(transform.Position.X, info.Bounds.Left, info.Bounds.Right);
     }
 }

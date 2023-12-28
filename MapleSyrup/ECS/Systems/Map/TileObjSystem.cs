@@ -32,7 +32,7 @@ public class TileObjSystem
         var info = scene.GetRoot().GetComponent<WorldInfo>();
         
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix(Vector2.One));
+            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix());
         for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled)

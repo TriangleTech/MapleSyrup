@@ -43,6 +43,7 @@ public class Scene
         var newEntity = new Entity(newId, name, tag);
         newEntity.AddComponent(new Transform());
         Entities.Add(newEntity);
+        
         return newEntity;
     }
 
@@ -58,6 +59,11 @@ public class Scene
         {
             // TODO: Clear scene and do transition
         }
+        
+        worldId = id;
+        var root = CreateEntity("root", "Scene");
+        root.AddComponent(new WorldInfo());
+        root.AddComponent(new Camera(Context.GraphicsDevice.Viewport));
 
         // The order these are added is the order they are updated and rendered
         entitySystems.Add(new BackgroundSystem(Context));
@@ -65,16 +71,11 @@ public class Scene
         entitySystems.Add(new TileObjSystem(Context));
         entitySystems.Add(new CameraSystem(Context));
         entitySystems.Add(new MovementSystem(Context));
-
-        worldId = id;
-        var root = CreateEntity("root", "Scene");
-        root.AddComponent(new WorldInfo());
-        root.AddComponent(new Camera(Context.GraphicsDevice.Viewport));
         
-        LoadWorldInfo();
         LoadBackground();
         LoadTiles();
         LoadObjects();
+        LoadWorldInfo();
 
         var events = Context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnSceneCreated);
@@ -124,7 +125,16 @@ public class Scene
             info.Bounds = new Rectangle(info.VrLeft, info.VrTop, info.VrRight - info.VrLeft,
                 info.VrBottom - info.VrTop);
         }
-        // TODO: Generate World Bounds if VrTop, VrLeft, VrBottom, VrRight are not set
+        else
+        {
+            var scene = Context.GetSubsystem<SceneSystem>();
+            var left = scene.FarLeftX();
+            var right = scene.FarRightX();
+            var top = scene.FarTopY();
+            var bottom = scene.FarBottomY();
+            
+            info.Bounds = new Rectangle((int)left, (int)top, (int)(right - left), (int)(bottom - top));
+        }
     }
 
     private void LoadBackground()
@@ -169,7 +179,6 @@ public class Scene
                     Cy = cy,
                     Alpha = a,
                     Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                    Shift = new Vector2(rx, ry),
                 });
             }
             else

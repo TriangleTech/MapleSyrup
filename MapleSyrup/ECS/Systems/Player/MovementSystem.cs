@@ -26,19 +26,19 @@ public class MovementSystem
         
         if (keyboard.IsKeyDown(Keys.W))
         {
-            camera.Position.Y -= 3f;
+            camera.Position.Y -= 0.5f * time.DeltaTime;
         }
         if (keyboard.IsKeyDown(Keys.S))
         {
-            camera.Position.Y += 3f;
+            camera.Position.Y += 0.5f * time.DeltaTime;
         }
         if (keyboard.IsKeyDown(Keys.A))
         {
-            camera.Position.X -= 3f;
+            camera.Position.X -= 0.5f * time.DeltaTime;
         }
         if (keyboard.IsKeyDown(Keys.D))
         {
-            camera.Position.X += 3f;
+            camera.Position.X += 0.5f * time.DeltaTime;
         }
     }
 }

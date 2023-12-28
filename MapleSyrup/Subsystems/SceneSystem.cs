@@ -26,8 +26,9 @@ public class SceneSystem : ISubsystem
     public void LoadScene(string worldId)
     {
         var scene = new Scene(Context);
-        scene.LoadScene(worldId);
+        
         Current = scene;
+        Current.LoadScene(worldId);
         
         var events = Context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnSceneCreated);
@@ -44,6 +45,8 @@ public class SceneSystem : ISubsystem
         var events = Context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnSceneUnloaded);
     }
+    
+    #region Entities
 
     public Entity GetRoot()
     {
@@ -79,10 +82,14 @@ public class SceneSystem : ISubsystem
     {
         return Current.Entities.OrderBy(x => x.Layer).ThenBy(x => x.ZIndex).Where(x => x.HasComponent<T>() && x.HasComponent<TU>()).ToList();
     }
+    
+    #endregion
+    
+    #region Boundary
 
     public float FarLeftX()
     {
-        return Current.Entities.Min(x => x.GetComponent<Transform>().Position.X);
+        return Current.Entities.Where(x => x != null).Min(x => x.GetComponent<Transform>().Position.X);
     }
     
     public float FarRightX()
@@ -100,6 +107,10 @@ public class SceneSystem : ISubsystem
         return Current.Entities.Max(x => x.GetComponent<Transform>().Position.Y);
     }
     
+    #endregion
+    
+    #region Portal
+    
     public Entity GetPortalByName(string name)
     {
         return Current.Entities.Find(x => x.HasComponent<PortalInfo>() && x.GetComponent<PortalInfo>().Name == name);
@@ -109,4 +120,6 @@ public class SceneSystem : ISubsystem
     {
         return Current.Entities.Find(x => x.HasComponent<PortalInfo>() && x.GetComponent<PortalInfo>().PortalId == id);
     }
+    
+    #endregion
 }

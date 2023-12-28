@@ -21,9 +21,9 @@ public class Camera : Component
         Origin = new Vector2(Viewport.Width / 2f, Viewport.Height / 2f);
     }
     
-    public Matrix GetViewMatrix(Vector2 parallax)
+    public Matrix GetViewMatrix()
     {
-        return Matrix.CreateTranslation(new Vector3(-Position.X * parallax.X, -Position.Y * parallax.Y, 0)) *
+        return Matrix.CreateTranslation(new Vector3(-Position.X, -Position.Y, 0)) *
                Matrix.CreateTranslation(new Vector3(-Origin, 0.0f)) *
                Matrix.CreateRotationZ(Rotation) *
                Matrix.CreateScale(Zoom, Zoom, 1) *

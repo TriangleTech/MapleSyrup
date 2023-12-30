@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.Resources;
@@ -72,6 +73,7 @@ public class ResourceSystem : ISubsystem
         }
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Texture2D LoadTexture(string name)
     {
         if (textures.TryGetValue(name, out var lookup))
@@ -94,6 +96,7 @@ public class ResourceSystem : ISubsystem
         return textures[name];
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Texture2D LoadNxTexture(string name)
     {
         var split = name.Split('/');
@@ -111,6 +114,7 @@ public class ResourceSystem : ISubsystem
         throw new NotImplementedException();
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetNodeCount(string path)
     {
         switch (resourceBackend)
@@ -124,6 +128,7 @@ public class ResourceSystem : ISubsystem
         }
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetNxNodeCount(string path)
     {
         var split = path.Split('/');
@@ -139,6 +144,7 @@ public class ResourceSystem : ISubsystem
         throw new NotImplementedException();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (ResourceType resourceType, object data) GetItem(string path)
     {
         switch (resourceBackend)
@@ -152,6 +158,7 @@ public class ResourceSystem : ISubsystem
         }
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private (ResourceType, object) GetNxItem(string path)
     {
         var split = path.Split('/');

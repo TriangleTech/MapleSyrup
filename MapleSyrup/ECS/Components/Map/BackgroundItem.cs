@@ -13,6 +13,9 @@ public class BackgroundItem : Component
     public SpriteEffects Flipped = SpriteEffects.None;
     public BackgroundType Type;
     public Rectangle SourceRect;
+    public Matrix Parallax;
+    public float Offset = 0f;
+    public float Scale;
     public int Cx = 0;
     public int Cy = 0;
     public int Rx = 0;

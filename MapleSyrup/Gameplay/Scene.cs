@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Components;
 using MapleSyrup.ECS.Components.Map;
-using MapleSyrup.ECS.Systems;
 using MapleSyrup.ECS.Systems.Map;
 using MapleSyrup.ECS.Systems.Player;
 using MapleSyrup.Gameplay.World;
@@ -16,7 +16,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.Gameplay;
 
-public class Scene 
+public class Scene
 {
     private readonly GameContext Context;
     public readonly List<Entity> Entities;
@@ -43,7 +43,7 @@ public class Scene
         var newEntity = new Entity(newId, name, tag);
         newEntity.AddComponent(new Transform());
         Entities.Add(newEntity);
-        
+
         return newEntity;
     }
 
@@ -52,14 +52,14 @@ public class Scene
         entity.Components.Clear();
         Entities.Where(x => x.Id == entity.Id).ToList().ForEach(x => Entities.Remove(x));
     }
-    
+
     public void LoadScene(string id)
     {
         if (worldId != string.Empty)
         {
             // TODO: Clear scene and do transition
         }
-        
+
         worldId = id;
         var root = CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
@@ -69,12 +69,14 @@ public class Scene
         entitySystems.Add(new BackgroundSystem(Context));
         entitySystems.Add(new CloudSystem(Context));
         entitySystems.Add(new TileObjSystem(Context));
+        entitySystems.Add(new PortalSystem(Context));
         entitySystems.Add(new CameraSystem(Context));
         entitySystems.Add(new MovementSystem(Context));
-        
+
         LoadBackground();
         LoadTiles();
         LoadObjects();
+        LoadPortals();
         LoadWorldInfo();
 
         var events = Context.GetSubsystem<EventSystem>();
@@ -128,11 +130,11 @@ public class Scene
         else
         {
             var scene = Context.GetSubsystem<SceneSystem>();
-            var left = scene.FarLeftX();
-            var right = scene.FarRightX();
-            var top = scene.FarTopY();
-            var bottom = scene.FarBottomY();
-            
+            var left = scene.FarLeft;
+            var right = scene.FarRight;
+            var top = scene.FarTop;
+            var bottom = scene.FarBottom;
+
             info.Bounds = new Rectangle((int)left, (int)top, (int)(right - left), (int)(bottom - top));
         }
     }
@@ -158,28 +160,93 @@ public class Scene
 
             if (bS == string.Empty)
                 continue;
-            
+
             if (ani == 0)
             {
                 var origin = (Vector2)resource.GetItem($"Map/Back/{bS}.img/back/{no}/origin").data;
-                var background = CreateEntity($"background_{i}", "Background");
-                var transform = background.GetComponent<Transform>();
-                background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
-                background.ZIndex = 0;
-                transform.Position = new Vector2(x, y);
-                transform.Origin = origin;
-                background.AddComponent(new BackgroundItem()
+                //var background = CreateEntity($"background_{i}", "Background");
+                //var transform = background.GetComponent<Transform>();
+
+                switch ((BackgroundType)type)
                 {
-                    Color = Color.White,
-                    Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D,
-                    Rx = rx,
-                    Ry = ry,
-                    Type = (BackgroundType)type,
-                    Cx = cx,
-                    Cy = cy,
-                    Alpha = a,
-                    Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                });
+                    case BackgroundType.Default:
+                        var background = CreateEntity($"background_{i}", "Background");
+                        var transform = background.GetComponent<Transform>();
+                        background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                        background.ZIndex = 0;
+                        transform.Position = new Vector2(x, y);
+                        transform.Origin = origin;
+                        background.AddComponent(new BackgroundItem()
+                        {
+                            Color = Color.White,
+                            Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D,
+                            Rx = rx,
+                            Ry = ry,
+                            Type = (BackgroundType)type,
+                            Cx = cx,
+                            Cy = cy,
+                            Alpha = a,
+                            Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                        });
+                        break;
+                    case BackgroundType.HorizontalTiling:
+                        break;
+                    case BackgroundType.HorizontalScrolling:
+                        var back = CreateEntity($"background_{i}", "Background");
+                        var backT = back.GetComponent<Transform>();
+                        back.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                        back.ZIndex = 0;
+                        backT.Position = new Vector2(x, y);
+                        backT.Origin = origin;
+                        back.AddComponent(new BackgroundItem()
+                        {
+                            Color = Color.White,
+                            Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D,
+                            Rx = rx,
+                            Ry = ry,
+                            Type = (BackgroundType)type,
+                            Cx = cx,
+                            Cy = cy,
+                            Alpha = a,
+                            Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                        });
+
+                        for (int j = 1; j < 2; j++)
+                        {
+                            Entity scrolling = CreateEntity($"background_{i}_tiled", "Background");
+                            var eTransform = scrolling.GetComponent<Transform>();
+                            scrolling.AddComponent(new BackgroundItem());
+                            scrolling.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                            scrolling.ZIndex = 0;
+                            scrolling.AddComponent(new BackgroundItem());
+                            var backItem = scrolling.GetComponent<BackgroundItem>();
+                            backItem.Color = Color.White;
+                            backItem.Texture = resource.GetItem($"Map/Back/{bS}.img/back/{no}").data as Texture2D;
+                            backItem.Rx = rx;
+                            backItem.Ry = ry;
+                            backItem.Type = (BackgroundType)type;
+                            backItem.Cx = cx;
+                            backItem.Cy = cy;
+                            backItem.Alpha = a;
+                            backItem.Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                            backItem.Offset = (back.GetComponent<BackgroundItem>().Texture.Width * j);
+
+                            eTransform.Position = new Vector2(x + backItem.Offset, y);
+                            eTransform.Origin = origin;
+
+                            Debug.WriteLine("Tiled Entity Created");
+                        }
+
+                        break;
+                    case BackgroundType.HorizontalScrollingHVTiling:
+                        break;
+                    case BackgroundType.VerticalTiling:
+                        break;
+                    case BackgroundType.VerticalScrolling:
+                        break;
+                    case BackgroundType.VerticalScrollingHVTiling:
+                        break;
+                }
             }
             else
             {
@@ -213,11 +280,11 @@ public class Scene
                 var tile = CreateEntity($"tile_{i}", "MapItem");
                 tile.Layer = (RenderLayer)layer + 1;
                 tile.ZIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
-                
+
                 var transform = tile.GetComponent<Transform>();
                 transform.Position = new Vector2(x, y);
                 transform.Origin = origin;
-                
+
                 tile.AddComponent(new MapItem()
                 {
                     Texture = resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}").data as Texture2D,
@@ -262,7 +329,7 @@ public class Scene
                 {
                     var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/origin").data;
                     transform.Origin = origin;
-                    
+
                     obj.AddComponent(new MapItem()
                     {
                         Texture = resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0").data as Texture2D,
@@ -286,18 +353,19 @@ public class Scene
         } while (layer < 8);
     }
 
-    private void LoadAnimatedObject(ref Entity obj, int nodeCount, string oS, string l0, string l1, string l2, int x, int y)
+    private void LoadAnimatedObject(ref Entity obj, int nodeCount, string oS, string l0, string l1, string l2, int x,
+        int y)
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
         var transform = obj.GetComponent<Transform>();
         transform.Position = new Vector2(x, y);
-        
+
         // TODO: Handle seats
         if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
             ResourceType.Directory)
         {
             DestroyEntity(obj);
-            Console.WriteLine("Seat Detected, Skipping...");
+            Debug.WriteLine("Seat Detected, Skipping...");
             return;
         }
 
@@ -306,17 +374,17 @@ public class Scene
             ResourceType.Integer)
         {
             DestroyEntity(obj);
-            Console.WriteLine("Blend Detected, Skipping...");
+            Debug.WriteLine("Blend Detected, Skipping...");
             return;
         }
-        
+
         // Frame Animation
         if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/a0").resourceType ==
             ResourceType.Unknown)
         {
             obj.AddComponent(new AnimatedMapItem());
             var animated = obj.GetComponent<AnimatedMapItem>();
-            
+
             for (int j = 0; j < nodeCount; j++)
             {
                 var origin = (Vector2)resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/{j}/origin").data;
@@ -331,11 +399,11 @@ public class Scene
                 else
                 {
                     animated.Delay.Add(100);
-                    Console.WriteLine("Delay not found, using default of 100");
+                    Debug.WriteLine("Delay not found, using default of 100");
                 }
             }
         }
-        
+
         // Blend Animation
         if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/0/a0").resourceType !=
             ResourceType.Unknown)
@@ -374,40 +442,73 @@ public class Scene
             var targetPortal = (string)resource.GetItem($"{worldPath}/portal/{i}/tn").data; // The portal you end up on
             var portal = CreateEntity($"portal_{name}", "Portal");
             var transform = portal.GetComponent<Transform>();
-            PortalType enumType = PortalType.Visible;
+            portal.AddComponent(new PortalInfo()
+            {
+                Name = name,
+                ScriptName = script,
+                TargetMapId = targetMap,
+                TargetPortalName = targetPortal,
+                PortalId = i
+            });
 
             switch (portalType)
             {
                 case 2:
                 case 4:
                 case 7:
-                    enumType = PortalType.Visible;
+                    portal.GetComponent<PortalInfo>().PortalType = PortalType.Visible;
                     break;
+                case 0:
+                case 1:
                 case 3:
                 case 9:
                 case 0x0C:
                 case 0x0D:
-                    enumType = PortalType.VisibleOnContact;
+                    portal.GetComponent<PortalInfo>().PortalType = PortalType.Hidden;
                     portal.IsEnabled = false;
                     break;
+                case 6: // wtf is this??? In map 100000000 it spawns like 4 random portals
                 case 10:
                 case 0x0B:
-                    enumType = PortalType.ScriptedHidden;
+                    portal.GetComponent<PortalInfo>().PortalType = PortalType.ScriptedHidden;
                     portal.IsEnabled = false;
+                    break;
+                default:
+                    Console.WriteLine($"Unknown Portal Type Detected: {portalType}");
                     break;
             }
 
             portal.Layer = RenderLayer.Foreground;
             transform.Position = new Vector2(x, y);
-            portal.AddComponent(new PortalInfo()
+            portal.AddComponent(new Portal());
+            var animation = portal.GetComponent<Portal>();
+
+            // TODO: When physics are complete, add portal hidden and portal scripted hidden
+            switch (portal.GetComponent<PortalInfo>().PortalType)
             {
-                Name = name,
-                PortalType = enumType,
-                ScriptName = script,
-                TargetMapId = targetMap,
-                TargetPortalName = targetPortal,
-                PortalId = i
-            });
+                case PortalType.Visible:
+                    for (var j = 0; j < 8; j++)
+                    {
+                        animation.Frames.Add((Texture2D)resource.GetItem($"Map/MapHelper.img/portal/game/pv/{j}").data);
+                        animation.Origins.Add(
+                            (Vector2)resource.GetItem($"Map/MapHelper.img/portal/game/pv/{j}/origin").data);
+                    }
+
+                    portal.GetComponent<Portal>().IsHidden = false;
+                    break;
+                case PortalType.Hidden:
+                    portal.GetComponent<Portal>().IsHidden = true;
+                    DestroyEntity(portal);
+                    break;
+                case PortalType.ScriptedHidden:
+                    portal.GetComponent<Portal>().IsHidden = true;
+                    DestroyEntity(portal);
+                    break;
+                default: // This should never happen.
+                    DestroyEntity(portal);
+                    Debug.WriteLine("Something went wrong, portal entity destroyed.");
+                    break;
+            }
         }
     }
 

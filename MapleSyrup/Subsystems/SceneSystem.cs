@@ -87,25 +87,17 @@ public class SceneSystem : ISubsystem
     
     #region Boundary
 
-    public float FarLeftX()
-    {
-        return Current.Entities.Where(x => x != null).Min(x => x.GetComponent<Transform>().Position.X);
-    }
+    public float FarLeft => Current.Entities.Where(x=> !x.HasComponent<BackgroundItem>()).Min(x => x.GetComponent<Transform>().Position.X);
     
-    public float FarRightX()
-    {
-        return Current.Entities.Max(x => x.GetComponent<Transform>().Position.X);
-    }
     
-    public float FarTopY()
-    {
-        return Current.Entities.Min(x => x.GetComponent<Transform>().Position.Y);
-    }
+    public float FarRight => Current.Entities.Where(x=> !x.HasComponent<BackgroundItem>()).Max(x => x.GetComponent<Transform>().Position.X);
+    
+    
+    public float FarTop => Current.Entities.Where(x=> !x.HasComponent<BackgroundItem>()).Min(x => x.GetComponent<Transform>().Position.Y);
+    
 
-    public float FarBottomY()
-    {
-        return Current.Entities.Max(x => x.GetComponent<Transform>().Position.Y);
-    }
+    public float FarBottom => Current.Entities.Where(x=> !x.HasComponent<BackgroundItem>()).Max(x => x.GetComponent<Transform>().Position.Y);
+    
     
     #endregion
     

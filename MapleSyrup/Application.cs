@@ -6,6 +6,7 @@ using MapleSyrup.Resources.Nx;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using SDL2;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -15,6 +16,7 @@ public class Application : Game
 {
     private GraphicsDeviceManager graphicsDeviceManager;
     private GameContext context;
+    private bool isFullscreen = false;
     
     public Application()
     {
@@ -50,6 +52,28 @@ public class Application : Game
 
     protected override void Update(GameTime gameTime)
     {
+        var keyboard = Keyboard.GetState();
+
+        if (keyboard.IsKeyDown(Keys.F5))
+        {
+            if (!isFullscreen)
+            {
+                graphicsDeviceManager.PreferredBackBufferWidth = 1920;
+                graphicsDeviceManager.PreferredBackBufferHeight = 1080;
+                graphicsDeviceManager.IsFullScreen = true;
+                graphicsDeviceManager.ApplyChanges();
+                isFullscreen = true;
+            }
+            else
+            {
+                graphicsDeviceManager.PreferredBackBufferWidth = 800;
+                graphicsDeviceManager.PreferredBackBufferHeight = 600;
+                graphicsDeviceManager.IsFullScreen = false;
+                graphicsDeviceManager.ApplyChanges();
+                isFullscreen = false;
+            }
+        }
+
         var events = context.GetSubsystem<EventSystem>();
         var eventData = new EventData()
         {
@@ -59,14 +83,15 @@ public class Application : Game
         
         var scene = context.GetSubsystem<SceneSystem>().Current;
         var entities = scene.Entities.FindAll(x => x.IsEnabled);
+        var camera = scene.Entities[0].GetComponent<Camera>();
 
-        SDL.SDL_SetWindowTitle(this.Window.Handle, $"MapleSyrup - Number of Entities Visible {entities.Count}");
+        SDL.SDL_SetWindowTitle(this.Window.Handle, $"MapleSyrup - Number of Entities Visible {entities.Count} X: {camera.Position.X} Y: {camera.Position.Y}");
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(new Color(0x33, 0x66, 0xCC));
         
         var events = context.GetSubsystem<EventSystem>();
         events.Publish(EventType.OnRender);

@@ -3,7 +3,7 @@ using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.ECS.Systems.Map;
 using MapleSyrup.ECS.Systems.Player;
 using MapleSyrup.Gameplay.World;
@@ -37,22 +37,6 @@ public class Scene
         events.Subscribe(this, EventType.OnUpdate, OnUpdate);
     }
 
-    public Entity CreateEntity(string name, string tag = "entity")
-    {
-        var newId = entityCount++;
-        var newEntity = new Entity(newId, name, tag);
-        newEntity.AddComponent(new Transform());
-        Entities.Add(newEntity);
-
-        return newEntity;
-    }
-
-    public void DestroyEntity(Entity entity)
-    {
-        entity.Components.Clear();
-        Entities.Where(x => x.Id == entity.Id).ToList().ForEach(x => Entities.Remove(x));
-    }
-
     public void LoadScene(string id)
     {
         if (worldId != string.Empty)
@@ -60,8 +44,9 @@ public class Scene
             // TODO: Clear scene and do transition
         }
 
+        var scene = Context.GetSubsystem<SceneSystem>();
         worldId = id;
-        var root = CreateEntity("root", "Scene");
+        var root = scene.CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
         root.AddComponent(new Camera(Context.GraphicsDevice.Viewport));
 
@@ -142,6 +127,8 @@ public class Scene
     private void LoadBackground()
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
+        var scene = Context.GetSubsystem<SceneSystem>();
+
         for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/back"); i++)
         {
             var no = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/back/{i}/no").data;
@@ -170,7 +157,7 @@ public class Scene
                 switch ((BackgroundType)type)
                 {
                     case BackgroundType.Default:
-                        var background = CreateEntity($"background_{i}", "Background");
+                        var background = scene.CreateEntity($"background_{i}", "Background");
                         var transform = background.GetComponent<Transform>();
                         background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
                         background.ZIndex = 0;
@@ -192,7 +179,7 @@ public class Scene
                     case BackgroundType.HorizontalTiling:
                         break;
                     case BackgroundType.HorizontalScrolling:
-                        var back = CreateEntity($"background_{i}", "Background");
+                        var back = scene.CreateEntity($"background_{i}", "Background");
                         var backT = back.GetComponent<Transform>();
                         back.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
                         back.ZIndex = 0;
@@ -213,7 +200,7 @@ public class Scene
 
                         for (int j = 1; j < 2; j++)
                         {
-                            Entity scrolling = CreateEntity($"background_{i}_tiled", "Background");
+                            Entity scrolling = scene.CreateEntity($"background_{i}_tiled", "Background");
                             var eTransform = scrolling.GetComponent<Transform>();
                             scrolling.AddComponent(new BackgroundItem());
                             scrolling.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
@@ -259,6 +246,7 @@ public class Scene
     {
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
+        var scene = Context.GetSubsystem<SceneSystem>();
         var tileSet = (string)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/0/info/tS").data;
 
         do
@@ -277,7 +265,7 @@ public class Scene
                 var z = (int)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/z").data;
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile/{i}/zM").data;
                 var origin = (Vector2)resource.GetItem($"Map/Tile/{tileSet}.img/{u}/{no}/origin").data;
-                var tile = CreateEntity($"tile_{i}", "MapItem");
+                var tile = scene.CreateEntity($"tile_{i}", "MapItem");
                 tile.Layer = (RenderLayer)layer + 1;
                 tile.ZIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
 
@@ -299,6 +287,7 @@ public class Scene
     {
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
+        var scene = Context.GetSubsystem<SceneSystem>();
 
         do
         {
@@ -315,7 +304,7 @@ public class Scene
                 var zM = (int)resource.GetItem($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj/{i}/zM").data;
                 var nodeCount = resource.GetNodeCount($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}");
 
-                var obj = CreateEntity($"obj_{i}", "MapItem");
+                var obj = scene.CreateEntity($"obj_{i}", "MapItem");
                 obj.Layer = (RenderLayer)layer + 1;
                 obj.ZIndex = (int)(30000 * layer + z) - 1073739824;
                 var transform = obj.GetComponent<Transform>();
@@ -341,7 +330,7 @@ public class Scene
                     // TODO: Handle Obstacles
                     if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/obstacle").resourceType !=
                         ResourceType.Unknown)
-                        DestroyEntity(obj);
+                        scene.DestroyEntity(obj);
                     else
                     {
                         LoadAnimatedObject(ref obj, nodeCount, oS, l0, l1, l2, x, y);
@@ -357,6 +346,7 @@ public class Scene
         int y)
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
+        var scene = Context.GetSubsystem<SceneSystem>();
         var transform = obj.GetComponent<Transform>();
         transform.Position = new Vector2(x, y);
 
@@ -364,7 +354,7 @@ public class Scene
         if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/seat").resourceType ==
             ResourceType.Directory)
         {
-            DestroyEntity(obj);
+            scene.DestroyEntity(obj);
             Debug.WriteLine("Seat Detected, Skipping...");
             return;
         }
@@ -373,7 +363,7 @@ public class Scene
         if (resource.GetItem($"Map/Obj/{oS}.img/{l0}/{l1}/{l2}/blend").resourceType ==
             ResourceType.Integer)
         {
-            DestroyEntity(obj);
+            scene.DestroyEntity(obj);
             Debug.WriteLine("Blend Detected, Skipping...");
             return;
         }
@@ -428,6 +418,7 @@ public class Scene
     private void LoadPortals()
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
+        var scene = Context.GetSubsystem<SceneSystem>();
         var worldPath = $"Map/Map/Map{worldId[0]}/{worldId}.img";
         var portalCount = resource.GetNodeCount($"{worldPath}/portal");
 
@@ -440,7 +431,7 @@ public class Scene
             var y = (int)resource.GetItem($"{worldPath}/portal/{i}/y").data;
             var targetMap = (int)resource.GetItem($"{worldPath}/portal/{i}/tm").data; // The map it leads to
             var targetPortal = (string)resource.GetItem($"{worldPath}/portal/{i}/tn").data; // The portal you end up on
-            var portal = CreateEntity($"portal_{name}", "Portal");
+            var portal = scene.CreateEntity($"portal_{name}", "Portal");
             var transform = portal.GetComponent<Transform>();
             portal.AddComponent(new PortalInfo()
             {
@@ -498,14 +489,14 @@ public class Scene
                     break;
                 case PortalType.Hidden:
                     portal.GetComponent<Portal>().IsHidden = true;
-                    DestroyEntity(portal);
+                    scene.DestroyEntity(portal);
                     break;
                 case PortalType.ScriptedHidden:
                     portal.GetComponent<Portal>().IsHidden = true;
-                    DestroyEntity(portal);
+                    scene.DestroyEntity(portal);
                     break;
                 default: // This should never happen.
-                    DestroyEntity(portal);
+                    scene.DestroyEntity(portal);
                     Debug.WriteLine("Something went wrong, portal entity destroyed.");
                     break;
             }
@@ -531,10 +522,12 @@ public class Scene
 
     public void Shutdown()
     {
+        var scene = Context.GetSubsystem<SceneSystem>();
+
         for (var index = 0; index < Entities.Count; index++)
         {
             var entity = Entities[index];
-            DestroyEntity(entity);
+            scene.DestroyEntity(entity);
         }
 
         Entities.Clear();

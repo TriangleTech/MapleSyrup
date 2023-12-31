@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 
-namespace MapleSyrup.ECS.Components.Map;
+namespace MapleSyrup.Gameplay.World;
 
-public class Foothold : Component
+public class Foothold 
 {
     public int FootholdId;
     public int Layer;

@@ -1,17 +1,18 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.Gameplay.World;
 
 namespace MapleSyrup.ECS;
 
-public class Entity : IComparable<RenderLayer>, IEquatable<RenderLayer>
+public class Entity 
 {
     protected Entity Parent;
     public readonly int Id;
     public readonly string Name;
     public readonly string Tag;
-    public readonly List<Component> Components;
+    public readonly List<object> Components;
     public bool IsEnabled;
     public bool IsDestroyed;
     public RenderLayer Layer;
@@ -22,63 +23,32 @@ public class Entity : IComparable<RenderLayer>, IEquatable<RenderLayer>
         Id = id;
         Name = name;
         Tag = tag;
-        Components = new List<Component>();
+        Components = new();
         IsEnabled = true;
         IsDestroyed = false;
     }
     
-    public void AddComponent(Component component)
+    public void AddComponent(object component)
     {
         if (component == null)
             return;
-        if (component.Parent != null)
-            throw new Exception("Component already has a parent");
-        component.Parent = this;
         Components.Add(component);
     }
 
-    public T GetComponent<T>() where T : Component
+    public T GetComponent<T>()
     {
         return (T)Components.Find(x => x is T);
     }
     
-    public bool HasComponent<T>() where T : Component
+    public bool HasComponent<T>()
     {
         return Components.Exists(x => x is T);
     }
     
-    public void RemoveComponent(Component component)
+    public void RemoveComponent(object component)
     {
         if (component == null)
             return;
-        if (component.Parent != this)
-            throw new Exception("Component does not belong to this entity");
-        component.Parent = null;
         Components.Remove(component);
-    }
-    
-    public void SetParent(Entity parent)
-    {
-        if (parent == null)
-            return;
-        if (parent == this)
-            throw new Exception("Cannot set parent to self");
-        if (Parent != null)
-            throw new Exception("Entity already has a parent");
-        Parent = parent;
-    }
-
-    public int CompareTo(RenderLayer other)
-    {
-        if (Layer == other)
-            return 0;
-        if (Layer < other)
-            return -1;
-        return 1;
-    }
-
-    public bool Equals(RenderLayer other)
-    {
-        return Layer == other;
     }
 }

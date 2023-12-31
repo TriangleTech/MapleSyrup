@@ -2,9 +2,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace MapleSyrup.ECS.Components.Map;
+namespace MapleSyrup.Gameplay.World;
 
-public class AnimatedMapItem : Component
+public class AnimatedMapItem
 {
     public List<Vector2> Positions = new();
     public List<Vector2> Origins = new();

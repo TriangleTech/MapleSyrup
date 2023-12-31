@@ -14,4 +14,7 @@ public enum EventType
     OnSceneUnloaded,
     OnSceneUpdate,
     OnSceneRender,
+    
+    // Player Events
+    OnPlayerCreated,
 }

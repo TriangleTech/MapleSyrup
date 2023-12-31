@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MapleSyrup.ECS.Components.Map;
+namespace MapleSyrup.Gameplay.World;
 
-public class Portal : Component
+public class Portal
 {
     public List<Vector2> Origins = new();
     public List<Texture2D> Frames = new();

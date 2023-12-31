@@ -1,7 +1,8 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.ECS.Components.Common;
+using MapleSyrup.Gameplay.World;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

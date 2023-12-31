@@ -83,9 +83,8 @@ public class Application : Game
         
         var scene = context.GetSubsystem<SceneSystem>().Current;
         var entities = scene.Entities.FindAll(x => x.IsEnabled);
-        var camera = scene.Entities[0].GetComponent<Camera>();
 
-        SDL.SDL_SetWindowTitle(this.Window.Handle, $"MapleSyrup - Number of Entities Visible {entities.Count} X: {camera.Position.X} Y: {camera.Position.Y}");
+        SDL.SDL_SetWindowTitle(this.Window.Handle, $"MapleSyrup - Number of Entities Visible {entities.Count}");
         base.Update(gameTime);
     }
 

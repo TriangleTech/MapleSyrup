@@ -1,7 +1,8 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.ECS.Components.Common;
+using MapleSyrup.Gameplay.World;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,20 +27,20 @@ public class CameraSystem
         var scene = Context.GetSubsystem<SceneSystem>();
         var camera = scene.Current.Entities[0].GetComponent<Camera>();
         var info = scene.Current.Entities[0].GetComponent<WorldInfo>();
-        var leftMost = scene.FarLeft + 10f;
-        var rightMost = scene.FarRight - camera.Viewport.Width;
-        var topMost = scene.FarTop - 100f;
-        var bottomMost = scene.FarBottom - camera.Viewport.Height;
+        var left = scene.FarLeft + 10f;
+        var right = scene.FarRight - camera.Viewport.Width;
+        var top = scene.FarTop - 100f;
+        var bottom = scene.FarBottom - camera.Viewport.Height;
         
-        if (camera.Position.X <= leftMost)
-            camera.Position.X = MathHelper.Clamp(camera.Position.X, leftMost, leftMost); 
-        if (camera.Position.X >= rightMost)
-            camera.Position.X = MathHelper.Clamp(camera.Position.X, rightMost, rightMost);
+        if (camera.Position.X <= left)
+            camera.Position.X = MathHelper.Clamp(camera.Position.X, left, left); 
+        if (camera.Position.X >= right)
+            camera.Position.X = MathHelper.Clamp(camera.Position.X, right, right);
 
-        if (camera.Position.Y <= topMost)
-            camera.Position.Y = MathHelper.Clamp(camera.Position.Y, topMost, topMost);
-        if (camera.Position.Y >= bottomMost)
-            camera.Position.Y = MathHelper.Clamp(camera.Position.Y, bottomMost, bottomMost);
+        if (camera.Position.Y <= top)
+            camera.Position.Y = MathHelper.Clamp(camera.Position.Y, top, top);
+        if (camera.Position.Y >= bottom)
+            camera.Position.Y = MathHelper.Clamp(camera.Position.Y, bottom, bottom);
 
         if (camera.EnabledCulling)
         {

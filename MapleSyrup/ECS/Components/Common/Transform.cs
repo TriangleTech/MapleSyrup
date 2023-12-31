@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.ECS.Components.Common;
 
-public class Transform : Component
+public class Transform 
 {
     public Vector2 Position = Vector2.Zero;
     public Vector2 Origin = Vector2.Zero;

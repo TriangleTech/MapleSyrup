@@ -1,7 +1,7 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.Gameplay.World;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
@@ -29,8 +29,7 @@ public class BackgroundSystem
     {
         var scene = Context.GetSubsystem<SceneSystem>();
         var entities = scene.GetEntitiesByTag("Background");
-
-
+        
         for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled || !entities[i].HasComponent<BackgroundItem>())

@@ -21,7 +21,6 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
-      <Content Include="Resources\reWz\UsefulThings\.git" />
     </ItemGroup>
 
     <ItemGroup>
@@ -34,9 +33,5 @@
 
     <ItemGroup>
       <ProjectReference Include="..\FNA\FNA.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="ECS\Components\Common\" />
     </ItemGroup>
 </Project>

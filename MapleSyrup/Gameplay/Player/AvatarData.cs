@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 
-namespace MapleSyrup.ECS.Components.Player;
+namespace MapleSyrup.Gameplay.Player;
 
-public class AvatarLook : Component
+public class AvatarData
 {
     public byte Gender;
     public int Skin;
@@ -35,7 +35,7 @@ public class AvatarLook : Component
     public int TamingMobAction;
     public bool DelayedLoad;
     public float AlertRemain;
-    //public int MoveAction = TSingleton<CWvsContext>::ms_pInstance->m_bDirectionMode != 0 | 6;
+    //public int MoveAction = DirectionMode != 0 | 6;
     public int OneTimeAction;
     public int DefaultEmotion = 0;
     public int ChairHeight = 0;

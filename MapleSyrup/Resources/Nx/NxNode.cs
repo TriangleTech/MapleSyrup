@@ -5,13 +5,13 @@ namespace MapleSyrup.Resources.Nx;
 /// <summary>
 /// Container for the Node Type and is used by the other node types
 /// </summary>
-public class NxNode : INxNode
+public class NxNode
 {
     private string nodeName;
     private int firstChildId;
     private int childCount;
     private NodeType nodeType;
-    private Dictionary<string, INxNode> children;
+    private Dictionary<string, NxNode> children;
 
     /// <summary>
     /// Initializes the Node 
@@ -26,7 +26,7 @@ public class NxNode : INxNode
         firstChildId = childId;
         childCount = count;
         nodeType = nType;
-        children = new Dictionary<string, INxNode>(childCount);
+        children = new Dictionary<string, NxNode>(childCount);
     }
     
     /// <summary>
@@ -34,11 +34,11 @@ public class NxNode : INxNode
     /// </summary>
     /// <param name="name">Name of the Node</param>
     /// <exception cref="Exception">Throws an exception if the Node doesn't exist within the Node or its children</exception>
-    public INxNode this[string name]
+    public NxNode this[string name]
     {
         get
         {
-            if (children.TryGetValue(name, out INxNode? child))
+            if (children.TryGetValue(name, out NxNode child))
                 return child;
             
             //var innerChild = CheckChildren(name);
@@ -57,7 +57,7 @@ public class NxNode : INxNode
     /// <param name="name">Name of the node we're looking for</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public INxNode? CheckChildren(string name)
+    public NxNode CheckChildren(string name)
     {
         foreach (NxNode child in children.Values)
         {
@@ -68,25 +68,15 @@ public class NxNode : INxNode
         return null;
     }
 
-    public void AddChild(INxNode node)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void PopulateChildren(Span<INxNode> nodes)
-    {
-        throw new NotImplementedException();
-    }
-
     /// <summary>
     /// Attempts to get the child from the node, if it doesn't exist within this child, it checks the child's child.
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public INxNode GetChild(string name)
+    public NxNode GetChild(string name)
     {
-        if (children.TryGetValue(name, out INxNode? child))
+        if (children.TryGetValue(name, out NxNode child))
             return child;
         throw new NullReferenceException();
     }
@@ -164,7 +154,7 @@ public class NxNode : INxNode
 
     public int FirstChildId => firstChildId;
 
-    public Dictionary<string, INxNode> Children => children;
+    public Dictionary<string, NxNode> Children => children;
 
     /// <summary>
     /// Number of Child Nodes within the Node.

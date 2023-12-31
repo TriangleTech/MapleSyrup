@@ -1,6 +1,6 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.ECS.Components.Map;
+using MapleSyrup.Gameplay.World;
 using MapleSyrup.Subsystems;
 
 namespace MapleSyrup.ECS.Systems.Map;

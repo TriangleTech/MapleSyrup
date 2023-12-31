@@ -1,8 +1,8 @@
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace MapleSyrup.ECS.Components;
+namespace MapleSyrup.Gameplay.World;
 
-public class WorldInfo : Component
+public class WorldInfo
 {
     public string WorldId;
     public bool IsTown;

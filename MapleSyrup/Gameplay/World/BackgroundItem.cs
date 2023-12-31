@@ -1,12 +1,11 @@
-using MapleSyrup.Gameplay.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace MapleSyrup.ECS.Components.Map;
+namespace MapleSyrup.Gameplay.World;
 
-public class BackgroundItem : Component
+public class BackgroundItem
 {
     public Texture2D Texture;
     public Color Color = Color.White;

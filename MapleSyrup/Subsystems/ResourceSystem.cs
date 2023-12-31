@@ -5,8 +5,6 @@ using MapleSyrup.Core.Event;
 using MapleSyrup.Resources;
 using MapleSyrup.Resources.Nx;
 using Microsoft.Xna.Framework.Graphics;
-using reWZ;
-using reWZ.WZProperties;
 
 namespace MapleSyrup.Subsystems;
 
@@ -15,7 +13,7 @@ public class ResourceSystem : ISubsystem
     public GameContext Context { get; private set; }
     private Dictionary<string, Texture2D> textures;
     private Dictionary<string, NxFile> nxFiles;
-    private Dictionary<string, WZFile> wzFiles;
+    private Dictionary<string, object> wzFiles;
     private ResourceBackend resourceBackend;
     
     public void Initialize(GameContext context)
@@ -52,7 +50,8 @@ public class ResourceSystem : ISubsystem
         {
             case ResourceBackend.Nx:
                 nxFiles = new();
-                nxFiles["Map"] = new NxFile("D:/v62/Map.nx"); 
+                nxFiles["Map"] = new NxFile("D:/v62/Map.nx");
+                nxFiles["Character"] = new NxFile("D:/v62/Character.nx");
                 //LoadNxFiles();
                 break;
             case ResourceBackend.Wz:

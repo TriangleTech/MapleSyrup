@@ -1,10 +1,11 @@
+using MapleSyrup.ECS.Components.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.ECS.Components;
 
-public class Camera : Component
+public class Camera
 {
     public Vector2 Position = Vector2.Zero;
     public Vector2 Origin = Vector2.One;

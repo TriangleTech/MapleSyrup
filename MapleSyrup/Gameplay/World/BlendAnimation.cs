@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace MapleSyrup.ECS.Components.Map;
+namespace MapleSyrup.Gameplay.World;
 
-public class BlendAnimation : Component
+public class BlendAnimation 
 {
     public List<Texture2D> Frames = new();
     public List<byte> Alpha = new();

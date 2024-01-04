@@ -14,7 +14,7 @@ public class TimeSystem : ISubsystem
     {
         Context = context;
         var events = Context.GetSubsystem<EventSystem>();
-        events.Subscribe(this, EventType.OnUpdate, OnUpdateTime);
+        events.Subscribe(this, "ENGINE_UPDATE", OnUpdateTime);
     }
     
     private void OnUpdateTime(EventData eventData)

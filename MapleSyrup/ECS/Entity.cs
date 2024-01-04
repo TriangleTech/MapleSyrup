@@ -1,45 +1,45 @@
+using System.Runtime.CompilerServices;
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Common;
-using MapleSyrup.Gameplay.World;
+using MapleSyrup.Gameplay.Map;
+using MapleSyrup.Graphics;
+using MapleSyrup.Subsystems;
 
 namespace MapleSyrup.ECS;
 
-public class Entity 
+public class Entity
 {
-    protected Entity Parent;
+    private readonly GameContext Context;
+    private readonly List<object> Components;
     public readonly int Id;
     public readonly string Name;
     public readonly string Tag;
-    public readonly List<object> Components;
     public bool IsEnabled;
-    public bool IsDestroyed;
     public RenderLayer Layer;
     public int ZIndex;
     
-    public Entity(int id, string name, string tag)
+    public Entity(GameContext context, int id, string name, string tag)
     {
         Id = id;
         Name = name;
         Tag = tag;
         Components = new();
         IsEnabled = true;
-        IsDestroyed = false;
+        Context = context;
     }
     
     public void AddComponent(object component)
     {
-        if (component == null)
-            return;
         Components.Add(component);
     }
 
-    public T GetComponent<T>()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T? GetComponent<T>()
     {
-        return (T)Components.Find(x => x is T);
+        return (T?)Components.Find(x => x is T);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasComponent<T>()
     {
         return Components.Exists(x => x is T);
@@ -47,8 +47,16 @@ public class Entity
     
     public void RemoveComponent(object component)
     {
-        if (component == null)
-            return;
         Components.Remove(component);
+    }
+
+    public void SetVisibility(bool enabled)
+    {
+        IsEnabled = enabled;
+    }
+
+    public void Destroy()
+    {
+        Components.Clear();
     }
 }

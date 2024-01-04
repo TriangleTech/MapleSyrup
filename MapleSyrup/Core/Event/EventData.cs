@@ -1,14 +1,24 @@
 namespace MapleSyrup.Core.Event;
 
-public record EventData
+/// <summary>
+/// Contains the data used to communicate with the subscriber.
+/// </summary>
+public readonly struct EventData
 {
-    public readonly Dictionary<string, object> Data;
+    /// <summary>
+    /// Contains the data being transmitted.
+    /// </summary>
+    private readonly Dictionary<string, object> Data;
     
     public EventData()
     {
         Data = new();
     }
     
+    /// <summary>
+    /// Obtain or assigned a key with a value.
+    /// </summary>
+    /// <param name="key"></param>
     public object this[string key]
     {
         get => Data[key];

@@ -6,50 +6,50 @@ namespace MapleSyrup.Subsystems;
 public class EventSystem : ISubsystem
 {
     public GameContext Context { get; private set; }
-    private readonly Dictionary<EventType, Dictionary<object, Action<EventData>>> subscribers = new();
+    private readonly Dictionary<string, Dictionary<object, Action<EventData>>> subscribers = new();
 
     public void Initialize(GameContext context)
     {
         Context = context;
     }
     
-    public void Subscribe(object sender, EventType eventType, Action<EventData> callback)
+    public void Subscribe(object sender, string triggerEvent, Action<EventData> callback)
     {
-        if (!subscribers.ContainsKey(eventType))
+        if (!subscribers.ContainsKey(triggerEvent))
         {
-            subscribers.Add(eventType, new());
+            subscribers.Add(triggerEvent, new());
         }
         
-        if (!subscribers[eventType].ContainsKey(sender))
+        if (!subscribers[triggerEvent].ContainsKey(sender))
         {
-            subscribers[eventType].Add(sender, callback);
+            subscribers[triggerEvent].Add(sender, callback);
         }
     }
     
-    public void Unsubscribe(object sender, EventType eventType)
+    public void Unsubscribe(object sender, string triggerEvent)
     {
-        if (!subscribers.ContainsKey(eventType))
+        if (!subscribers.ContainsKey(triggerEvent))
             return;
-        if (!subscribers[eventType].ContainsKey(sender))
+        if (!subscribers[triggerEvent].ContainsKey(sender))
             return;
-        subscribers[eventType].Remove(sender);
+        subscribers[triggerEvent].Remove(sender);
     }
     
-    public void Publish(EventType eventType)
+    public void Publish(string triggerEvent)
     {
-        if (!subscribers.ContainsKey(eventType))
+        if (!subscribers.ContainsKey(triggerEvent))
             return;
-        foreach (var subscriber in subscribers[eventType])
+        foreach (var subscriber in subscribers[triggerEvent])
         {
-            subscriber.Value.Invoke(null);
+            subscriber.Value.Invoke(new EventData());
         }
     }
     
-    public void Publish(EventType eventType, EventData eventData)
+    public void Publish(string triggerEvent, EventData eventData)
     {
-        if (!subscribers.ContainsKey(eventType))
+        if (!subscribers.ContainsKey(triggerEvent))
             return;
-        foreach (var subscriber in subscribers[eventType])
+        foreach (var subscriber in subscribers[triggerEvent])
         {
             subscriber.Value.Invoke(eventData);
         }

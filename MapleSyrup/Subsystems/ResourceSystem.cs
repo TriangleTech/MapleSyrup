@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.Resources;
-using MapleSyrup.Resources.Nx;
+using MapleSyrup.Resource;
+using MapleSyrup.Resource.Nx;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.Subsystems;
@@ -144,7 +144,7 @@ public class ResourceSystem : ISubsystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (ResourceType resourceType, object data) GetItem(string path)
+    private (ResourceType resourceType, object data) GetItem(string path)
     {
         switch (resourceBackend)
         {
@@ -190,5 +190,36 @@ public class ResourceSystem : ISubsystem
     private (ResourceType, object) GetWzItem(string path)
     {
         throw new NotImplementedException();
+    }
+
+    public (ResourceType resourceType, object data) GetMapInfo(string path)
+    {
+        return GetItem($"Map/Map/Map{path[0]}/{path}");
+    }
+
+    public (ResourceType resourceType, object data) GetBackground(string path)
+    {
+        return GetItem($"Map/Back/{path}");
+    }
+
+    public (ResourceType resourceType, object data) GetTile(string path)
+    {
+        return GetItem($"Map/Tile/{path}");
+    }
+
+    public (ResourceType resourceType, object data) GetObject(string path)
+    {
+        return GetItem($"Map/Obj/{path}");
+    }
+
+    public (ResourceType resourceType, object data) GetCharItem(string path)
+    {
+
+        return GetItem($"Character/{path}");
+    }
+
+    public (ResourceType resourceType, object data) GetMapHelper(string path)
+    {
+        return GetItem($"Map/MapHelper.img/{path}");
     }
 }

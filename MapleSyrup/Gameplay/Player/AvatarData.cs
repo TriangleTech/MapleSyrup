@@ -1,68 +1,6 @@
-using Microsoft.Xna.Framework;
-
 namespace MapleSyrup.Gameplay.Player;
 
 public class AvatarData
 {
-    public byte Gender;
-    public int Skin;
-    public int Face;
-    public int WeaponSticker;
-    public int HairEquip;
-    public int[] Pets = new int[3];
-    public bool ForcingAppearance;
-    public int WeaponId;
-    public int SubWeaponId;
-    public int ShieldId;
-    public int WalkType;
-    public int StandType;
-    public int AttackActionType;
-    public int WeaponAfterImage;
-    public bool Blinking;
-    public int NextBlink;
-    public bool ResetExpression;
-    public int MorphTemplateId;
-    public int GhostIndex;
-    public int MechanicMode;
-    public bool RocketBoostStart;
-    public bool RocketBoostLoop;
-    public bool ForcedInvisible;
-    public int RidingVehicleId;
-    public int RidingChairId;
-    public Vector2 BodyRelMove;
-    public bool TamingMobTired;
-    public int TamingMobOneTimeAction;
-    public int TamingMobAction;
-    public bool DelayedLoad;
-    public float AlertRemain;
-    //public int MoveAction = DirectionMode != 0 | 6;
-    public int OneTimeAction;
-    public int DefaultEmotion = 0;
-    public int ChairHeight = 0;
-    public Vector2 RawOrigin;
-    public Vector2 Origin;
-    public Vector2 FaceOrigin;
-    public Vector2 BodyOrigin;
-    public Vector2 MuzzleOrigin;
-    public Vector2 TMNavelOrigin;
-    public Vector2 TMHeadOrigin;
-    public Vector2 TMMuzzleOrigin;
-    public int LayerFace;
-    public int LayerOverFace;
-    public int LayerUnderFace;
-    public int LayerShadowPartner;
-    public int LayerOverCharacter;
-    public int LayerUnderCharacter;
-    public int LayerOverlay;
-    public int LayerMuzzle;
-    public int LayerBarrier;
-    public int LayerCyclone;
-    public int LayerAR01;
-    public Vector2 Position;
-    public Vector2 PositionPrev;
-    public float Scale;
-    public bool Flip;
-    public int LastDayOfWeek;
-    public float LevitationFlowTime;
-    public float LevitationLastUpdateTime;
+    
 }

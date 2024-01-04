@@ -1,8 +1,6 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.ECS.Components;
-using MapleSyrup.Resources;
-using MapleSyrup.Resources.Nx;
+using MapleSyrup.Resource;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,7 +32,6 @@ public class Application : Game
         context.AddSubsystem<ResourceSystem>();
         context.AddSubsystem<TimeSystem>();
         context.AddSubsystem<SceneSystem>();
-        
         SDL.SDL_SetWindowTitle(Window.Handle, "MapleSyrup");
         
         base.Initialize();
@@ -43,9 +40,10 @@ public class Application : Game
     protected override void LoadContent()
     {
         context.GetSubsystem<ResourceSystem>().SetBackend(ResourceBackend.Nx);
-
         var scene = context.GetSubsystem<SceneSystem>();
         scene.LoadScene("100000000");
+
+        _ = scene.CreateTestPlayer();
         
         base.LoadContent();
     }
@@ -79,7 +77,7 @@ public class Application : Game
         {
             ["GameTime"] = gameTime
         };
-        events.Publish(EventType.OnUpdate, eventData);
+        events.Publish("ENGINE_UPDATE", eventData);
         
         var scene = context.GetSubsystem<SceneSystem>().Current;
         var entities = scene.Entities.FindAll(x => x.IsEnabled);
@@ -93,7 +91,7 @@ public class Application : Game
         GraphicsDevice.Clear(new Color(0x33, 0x66, 0xCC));
         
         var events = context.GetSubsystem<EventSystem>();
-        events.Publish(EventType.OnRender);
+        events.Publish("ENGINE_RENDER");
         base.Draw(gameTime);
     }
 

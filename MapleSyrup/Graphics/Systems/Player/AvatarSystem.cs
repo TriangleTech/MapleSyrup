@@ -63,29 +63,47 @@ public class AvatarSystem
     private void OnRender(EventData eventData)
     {
         var scene = Context.GetSubsystem<SceneSystem>();
-        var entities = scene.GetEntitiesByTag("Player");
+        var entities = scene.GetPlayerByName("TestPlayer");
         var camera = scene.Root.GetComponent<Camera>();
         
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
+        //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
+            //DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
+        
+            var look = entities.GetComponent<AvatarLook>();
+            var transform = entities.GetComponent<Transform>();
 
-        for (int i = 0; i < entities.Count; i++)
-        {
-            if (!entities[i].IsEnabled)
-                continue;
-            var look = entities[i].GetComponent<AvatarLook>();
-            var transform = entities[i].GetComponent<Transform>();
+            var bodyMatrix = Matrix.CreateTranslation(-camera.Position.X, -camera.Position.Y, 0f)
+                             * Matrix.CreateTranslation(-look.Origin["body"].X, -look.Origin["body"].Y, 0f)
+                             * Matrix.CreateScale(new Vector3(1f, 1f, 0f))
+                             * Matrix.CreateRotationZ(0f)
+                             * Matrix.CreateTranslation(look.Origin["body"].X, look.Origin["body"].Y, 0f);
+
+            var armMatrix = Matrix.CreateTranslation(new Vector3(-camera.Position.X, -camera.Position.Y, 0f))
+                            * Matrix.CreateTranslation(-look.Origin["arm"].X, -look.Origin["arm"].Y, 0f)
+                            * Matrix.CreateScale(new Vector3(1f, 1f, 0f))
+                            * Matrix.CreateRotationZ(0f)
+                            * Matrix.CreateTranslation(-look.Map["arm_navel"].X, -look.Map["arm_navel"].Y, 0f)
+                            * Matrix.CreateTranslation(look.Origin["arm"].X, look.Origin["arm"].Y, 0f);
+            
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                DepthStencilState.Default, RasterizerState.CullNone, null, bodyMatrix);
             
             spriteBatch.Draw(look.Layers["body"], transform.Position, null, Color.White, 0f,
-                Vector2.One, 1f, SpriteEffects.None, 0f);
+                Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            
+            spriteBatch.End();
+            
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                DepthStencilState.Default, RasterizerState.CullNone, null, armMatrix);
 
             spriteBatch.Draw(look.Layers["arm"], transform.Position, null, Color.White, 0f,
-                Vector2.One, 1f, SpriteEffects.None, 0f);
+                Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            
+            spriteBatch.End();
             //spriteBatch.Draw(look.Layers["head"], look.Position["body"] * look.Position["head"], null, Color.White, 0f,
                 //Vector2.Zero, 1f, SpriteEffects.None, 0f);
-        }
         
-        spriteBatch.End();
+        //spriteBatch.End();
     }
 
     private void OnUpdate(EventData eventData)

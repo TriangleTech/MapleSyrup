@@ -200,7 +200,10 @@ public class SceneSystem : ISubsystem
 
         look.Origin["body"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/body/origin").data;
         look.Origin["arm"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/arm/origin").data;
+        look.Origin["head"] = (Vector2)resource.GetCharItem("00012000.img/stand1/0/head/origin").data;
+        
         look.Map["arm_navel"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/arm/map/navel").data;
+        look.Map["head_neck"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/body/map/neck").data;
         
         Current.Entities.Add(testPlayer);
         events.Publish("PLAYER_ON_SPAWN");

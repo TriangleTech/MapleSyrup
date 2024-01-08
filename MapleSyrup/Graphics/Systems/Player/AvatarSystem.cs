@@ -67,23 +67,22 @@ public class AvatarSystem
         var camera = scene.Root.GetComponent<Camera>();
         
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix());
+            DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
 
         for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled)
-                return;
+                continue;
             var look = entities[i].GetComponent<AvatarLook>();
             var transform = entities[i].GetComponent<Transform>();
             
-            spriteBatch.Draw(look.Layers["body"], transform.Position + look.Position["body"], null, Color.White, 0f,
-                Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(look.Layers["body"], transform.Position, null, Color.White, 0f,
+                Vector2.One, 1f, SpriteEffects.None, 0f);
 
-            spriteBatch.Draw(look.Layers["arm"], look.Position["body"] + look.Position["arm"], null, Color.White, 0f,
-                Vector2.Zero, 1f, SpriteEffects.None, 0f);
-            
-            spriteBatch.Draw(look.Layers["head"], look.Position["body"] + look.Position["head"], null, Color.White, 0f,
-                Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(look.Layers["arm"], transform.Position, null, Color.White, 0f,
+                Vector2.One, 1f, SpriteEffects.None, 0f);
+            //spriteBatch.Draw(look.Layers["head"], look.Position["body"] * look.Position["head"], null, Color.White, 0f,
+                //Vector2.Zero, 1f, SpriteEffects.None, 0f);
         }
         
         spriteBatch.End();

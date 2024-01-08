@@ -64,7 +64,7 @@ public class MapSystem
         var camera = scene.Root.GetComponent<Camera>();
         
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix());
+            DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
         for (int i = 0; i < entities.Count; i++)
         {
             if (!entities[i].IsEnabled)

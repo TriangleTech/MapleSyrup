@@ -48,14 +48,14 @@ public class Scene
         worldId = id;
         var root = scene.CreateEntity("root", "Scene");
         root.AddComponent(new WorldInfo());
-        root.AddComponent(new Camera(Context.GraphicsDevice.Viewport));
+        root.AddComponent(new Camera(Context));
 
         // The order these are added is the order they are updated and rendered
         entitySystems.Add(new MapSystem(Context));
         entitySystems.Add(new PortalSystem(Context));
         entitySystems.Add(new AvatarSystem(Context));
         entitySystems.Add(new CameraSystem(Context));
-        entitySystems.Add(new MovementSystem(Context));
+        entitySystems.Add(new PlayerMovement(Context));
 
         LoadBackground();
         LoadTiles();
@@ -67,13 +67,16 @@ public class Scene
         events.Publish("SCENE_CREATED");
     }
 
+    #region Load Methods
+    
     private void LoadWorldInfo()
     {
-        if (Entities[0].Tag != "Scene")
-            throw new Exception("Why is the root entity not tagged as Scene?");
-
         var info = Entities[0].GetComponent<WorldInfo>();
         var resource = Context.GetSubsystem<ResourceSystem>();
+        
+        if (info == null)
+            throw new Exception();
+            
         if (resource.GetMapInfo($"{worldId}.img/info/town").resourceType != ResourceType.Unknown)
             info.IsTown = (int)resource.GetMapInfo($"{worldId}.img/info/town").data == 1;
         if (resource.GetMapInfo($"{worldId}.img/info/swim").resourceType != ResourceType.Unknown)
@@ -478,13 +481,15 @@ public class Scene
                     portal.GetComponent<Portal>().IsHidden = true;
                     scene.DestroyEntity(portal);
                     break;
-                default: // This should never happen.
+                default:
                     scene.DestroyEntity(portal);
                     Debug.WriteLine("Something went wrong, portal entity destroyed.");
                     break;
             }
         }
     }
+    
+    #endregion
 
     private void OnUpdate(EventData eventData)
     {

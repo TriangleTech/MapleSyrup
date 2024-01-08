@@ -34,9 +34,9 @@ public class Entity
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T? GetComponent<T>()
+    public T GetComponent<T>()
     {
-        return (T?)Components.Find(x => x is T);
+        return (T?)Components.Find(x => x is T) ?? throw new NullReferenceException();
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

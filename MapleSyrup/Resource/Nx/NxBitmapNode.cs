@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using K4os.Compression.LZ4;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace MapleSyrup.Resource.Nx;
 
@@ -60,14 +62,8 @@ public class NxBitmapNode : NxNode
         using var img = GetBitmap();
         using var stream = new MemoryStream();
         img.Save(stream, new PngEncoder());
-
         var tex = Texture2D.FromStream(device, stream);
+        
         return tex;
-    }
-
-    public void Save()
-    {
-        var img = GetBitmap();
-        img.SaveAsPng(new FileStream("/home/beray/mapledev/banana.png", FileMode.CreateNew));
     }
 }

@@ -30,7 +30,7 @@ public class PortalSystem
         var entities = scene.GetEntitiesByTag("Portal");
         
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, camera.GetViewMatrix());
+            DepthStencilState.Default, RasterizerState.CullNone, null, camera.Transform);
 
         for (var i = 0; i < entities.Count; i++)
         {

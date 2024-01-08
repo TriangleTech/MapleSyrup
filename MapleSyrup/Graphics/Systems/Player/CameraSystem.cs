@@ -1,36 +1,38 @@
 using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
-using MapleSyrup.Gameplay.Map;
 using MapleSyrup.Subsystems;
 using Microsoft.Xna.Framework;
-using Color = Microsoft.Xna.Framework.Color;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MapleSyrup.Graphics.Systems.Player;
 
-public class CameraSystem 
+public class CameraSystem
 {
     private readonly GameContext Context;
     
-    public CameraSystem(GameContext context) 
+    public CameraSystem(GameContext context)
     {
         Context = context;
-        var events = Context.GetSubsystem<EventSystem>();
+
+        var events = context.GetSubsystem<EventSystem>();
+        events.Subscribe(this, "PLAYER_ON_MOVE", OnPlayerMove);
         events.Subscribe(this, "SCENE_UPDATE", OnUpdate);
     }
 
-    private void OnUpdate(EventData eventData)
+    private void OnPlayerMove(EventData eventData)
     {
         var scene = Context.GetSubsystem<SceneSystem>();
-        var camera = scene.Current.Entities[0].GetComponent<Camera>();
-        var info = scene.Current.Entities[0].GetComponent<WorldInfo>();
+        var camera = scene.Root.GetComponent<Camera>();
         var left = scene.FarLeft + 10f;
         var right = scene.FarRight - camera.Viewport.Width;
         var top = scene.FarTop - 100f;
         var bottom = scene.FarBottom - camera.Viewport.Height;
+        var player = scene.GetPlayerByName("TestPlayer");
+        var transform = player.GetComponent<Transform>();
+
+        camera.Position.X = transform.Position.X - camera.Origin.X;
         
         if (camera.Position.X <= left)
-            camera.Position.X = MathHelper.Clamp(camera.Position.X, left, left); 
+            camera.Position.X = MathHelper.Clamp(camera.Position.X, left, 0);
         if (camera.Position.X >= right)
             camera.Position.X = MathHelper.Clamp(camera.Position.X, right, right);
 
@@ -39,7 +41,14 @@ public class CameraSystem
         if (camera.Position.Y >= bottom)
             camera.Position.Y = MathHelper.Clamp(camera.Position.Y, bottom, bottom);
 
-        if (camera.EnabledCulling)
+    }
+
+    private void OnUpdate(EventData eventData)
+    {
+        var scene = Context.GetSubsystem<SceneSystem>();
+        var camera = scene.Root.GetComponent<Camera>();
+        
+        if (camera.EnableCulling)
         {
             var entities = scene.Current.Entities.Where(x => !x.HasComponent<ParallaxBackground>()).ToList();
             for (int i = 0; i < entities.Count; i++)
@@ -54,9 +63,9 @@ public class CameraSystem
                         entities[i].SetVisibility(false);
                         break;
                     case var _ when entities[i].GetComponent<Transform>().Position.Y <
-                                          camera.Position.Y - camera.Viewport.Height - 175f ||
-                                          entities[i].GetComponent<Transform>().Position.Y >
-                                          camera.Position.Y + camera.Viewport.Height + 175f:
+                                    camera.Position.Y - camera.Viewport.Height - 175f ||
+                                    entities[i].GetComponent<Transform>().Position.Y >
+                                    camera.Position.Y + camera.Viewport.Height + 175f:
                         entities[i].SetVisibility(false);
                         break;
                     default:
@@ -65,5 +74,7 @@ public class CameraSystem
                 }
             }
         }
+        
+        camera.UpdateMatrix();
     }
 }

@@ -187,20 +187,19 @@ public class SceneSystem : ISubsystem
         testPlayer.AddComponent(new Transform());
         testPlayer.AddComponent(new AvatarLook());
 
-        _ = testPlayer.GetComponent<Transform>().Position = Vector2.Zero;
+        _ = testPlayer.GetComponent<Transform>().Position = new Vector2(0, 55);
         
         var look = testPlayer.GetComponent<AvatarLook>();
         look.Layers["arm"] = resource.GetCharItem("00002000.img/stand1/0/arm").data as Texture2D;
         look.Layers["body"] = resource.GetCharItem("00002000.img/stand1/0/body").data as Texture2D;
         look.Layers["head"] = resource.GetCharItem("00012000.img/stand1/0/head").data as Texture2D;
         
-        look.Position["body"] = Vector2.Zero;
-        look.Position["arm"] = Vector2.Zero;
-        look.Position["head"] = Vector2.Zero;
+        look.Position["body"] = new Vector2(0, 0);
+        look.Position["arm"] = new Vector2(0, 0);
+        look.Position["head"] = new Vector2(0, 0);
 
-        //look.Origin["body"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/body/origin").data;
-        //look.Origin["arm"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/arm/origin").data;
-        //look.Origin["head"] = (Vector2)resource.GetCharItem("00012000.img/stand1/0/head/origin").data;
+        look.Origin["body"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/body/origin").data;
+        look.Origin["arm"] = (Vector2)resource.GetCharItem("00002000.img/stand1/0/arm/origin").data;
         
         Current.Entities.Add(testPlayer);
         events.Publish("PLAYER_ON_SPAWN");

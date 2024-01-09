@@ -41,9 +41,27 @@ public class ResourceSystem : ISubsystem
 
     public void Shutdown()
     {
-
+        textureCache.Clear();
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                foreach (var (_, nxFile) in nxFiles)
+                {
+                    nxFile.Dispose();
+                }
+                nxFiles.Clear();
+                break;
+        }
     }
 
+    /// <summary>
+    /// Checks if the specified path contains the node, and returns the data if it does.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="Exception"></exception>
     public bool Contains(string path, out object? data)
     {
         switch (resourceBackend)
@@ -57,6 +75,14 @@ public class ResourceSystem : ISubsystem
         throw new Exception("Resource Backend not set");
     }
 
+    /// <summary>
+    /// Searches the NX File for the specified path.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="data"></param>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
     private bool SearchNxPath(string path, out object? data, out int count)
     {
         var split = path.Split("/");
@@ -105,6 +131,13 @@ public class ResourceSystem : ISubsystem
         return false;
     }
 
+    /// <summary>
+    /// Retrieves a texture from the cache or loads it from memory.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="Exception"></exception>
     private Texture2D? GetTexture(string path)
     {
         if (textureCache.TryGetValue(path, out var tex))
@@ -114,9 +147,9 @@ public class ResourceSystem : ISubsystem
         {
             case ResourceBackend.Nx:
                 SearchNxPath(path, out var texture, out _);
-                if (texture is not Texture2D)
+                if (texture is not Texture2D data)
                     return null;
-                return texture as Texture2D;
+                return data;
             case ResourceBackend.Wz:
                 throw new NotImplementedException();
         }
@@ -124,21 +157,41 @@ public class ResourceSystem : ISubsystem
         throw new Exception("Failed to retrieve texture");
     }
 
+    /// <summary>
+    /// Gets a background texture
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public Texture2D? GetBackground(string path)
     {
         return GetTexture($"Map/Back/{path}");
     }
 
+    /// <summary>
+    /// Gets a Map Object texture
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public Texture2D? GetMapObject(string path)
     {
         return GetTexture($"Map/Obj{path}");
     }
 
+    /// <summary>
+    /// Gets a tile texture
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public Texture2D? GetTile(string path)
     {
         return GetTexture($"Map/Tile/{path}");
     }
 
+    /// <summary>
+    /// Loads all the map data (i.e. tileSets, x, y) within a Map Image.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public VariantSet<object> LoadMapData(string path)
     {
         var truePath = $"Map/Map/Map{path[0]}/{path}";
@@ -180,6 +233,11 @@ public class ResourceSystem : ISubsystem
         return variant;
     }
     
+    /// <summary>
+    /// Loads the Map information in the "info" node of the Map Image.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public VariantSet<object> LoadMapInfo(string path)
     {
         var truePath = $"Map/Map/Map{path[0]}/{path}/info";
@@ -220,6 +278,11 @@ public class ResourceSystem : ISubsystem
         return variant;
     }
 
+    /// <summary>
+    /// Returns the amount of backgrounds in an Map Image.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public int GetBackgroundCount(string path)
     {
         switch (resourceBackend)
@@ -231,35 +294,54 @@ public class ResourceSystem : ISubsystem
 
         return -1;
     }
-
-
-    public int GetObjectCount(string path)
+    
+    /// <summary>
+    /// Returns the amount of objects in a Map Image.
+    /// </summary>
+    /// <param name="img">Image</param>
+    /// <returns></returns>
+    public int GetObjectCount(string img)
     {
         switch (resourceBackend)
         {
             case ResourceBackend.Nx:
-                SearchNxPath($"Map/Map/Map{path[0]}/{path}/obj", out _, out var count);
+                SearchNxPath($"Map/Map/Map{img[0]}/{img}/obj", out _, out var count);
                 return count;
         }
         return -1;
     }
 
-    public int GetTileCount(string path)
+    /// <summary>
+    /// Returns the amount of tiles within a Map Image.
+    /// </summary>
+    /// <param name="img">Image path</param>
+    /// <returns></returns>
+    public int GetTileCount(string img)
     {
         switch (resourceBackend)
         {
             case ResourceBackend.Nx:
-                SearchNxPath($"Map/Map/Map{path[0]}/{path}/tile", out _, out var count);
+                SearchNxPath($"Map/Map/Map{img[0]}/{img}/tile", out _, out var count);
                 return count;
         }
 
         return -1;
     }
 
+    /// <summary>
+    /// Searches and obtains the origin of the item.
+    /// </summary>
+    /// <param name="fullPath">Full path to the origin. Must include Wz/Nx file.</param>
+    /// <returns></returns>
     public Vector2? GetOrigin(string fullPath)
     {
-        SearchNxPath($"{fullPath}/origin", out var origin, out _);
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                SearchNxPath($"{fullPath}/origin", out var origin, out _);
+                return (Vector2)origin;
+        }
 
-        return (Vector2)origin;
+        return Vector2.Zero;
     }
 }

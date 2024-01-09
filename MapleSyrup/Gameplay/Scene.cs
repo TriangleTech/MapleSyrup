@@ -52,10 +52,10 @@ public class Scene
 
         // The order these are added is the order they are updated and rendered
         entitySystems.Add(new MapSystem(Context));
-        entitySystems.Add(new PortalSystem(Context));
-        entitySystems.Add(new AvatarSystem(Context));
-        entitySystems.Add(new CameraSystem(Context));
-        entitySystems.Add(new PlayerMovement(Context));
+        //entitySystems.Add(new PortalSystem(Context));
+        //entitySystems.Add(new AvatarSystem(Context));
+        //entitySystems.Add(new CameraSystem(Context));
+        //entitySystems.Add(new PlayerMovement(Context));
 
         LoadBackground();
         LoadTiles();
@@ -76,7 +76,10 @@ public class Scene
         
         if (info == null)
             throw new Exception();
-            
+
+        var mapInfo = resource.LoadMapInfo($"{worldId}.img");
+        
+        /*
         if (resource.GetMapInfo($"{worldId}.img/info/town").resourceType != ResourceType.Unknown)
             info.IsTown = (int)resource.GetMapInfo($"{worldId}.img/info/town").data == 1;
         if (resource.GetMapInfo($"{worldId}.img/info/swim").resourceType != ResourceType.Unknown)
@@ -104,7 +107,7 @@ public class Scene
             info.MoveLimit = (int)resource.GetMapInfo($"{worldId}.img/info/moveLimit").data;
         if (resource.GetMapInfo($"{worldId}.img/info/mapMark").resourceType !=
             ResourceType.Unknown)
-            info.MapMark = (string)resource.GetMapInfo($"{worldId}.img/info/mapMark").data;
+            info.MapMark = (string)resource.GetMapInfo($"{worldId}.img/info/mapMark").data;*/
         
         var scene = Context.GetSubsystem<SceneSystem>();
         var left = scene.FarLeft;
@@ -119,9 +122,11 @@ public class Scene
     {
         var resource = Context.GetSubsystem<ResourceSystem>();
         var scene = Context.GetSubsystem<SceneSystem>();
+        var backgroundData = resource.LoadMapData($"{worldId}.img/back");
 
-        for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/back"); i++)
+        for (int i = 0; i < resource.GetBackgroundCount($"{worldId}.img"); i++)
         {
+            /*
             var no = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/no").data;
             var x = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/x").data;
             var y = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/y").data;
@@ -134,84 +139,39 @@ public class Scene
             var a = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/a").data;
             var front = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/front").data;
             var f = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/f").data;
-            var ani = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/ani").data;
+            var ani = (int)resource.GetMapInfo($"{worldId}.img/back/{i}/ani").data;*/
 
-            if (bS == string.Empty)
+            if ((string)backgroundData[$"{i}"]["bS"] == string.Empty)
                 continue;
 
-            if (ani == 0)
+            if ((int)backgroundData[$"{i}"]["ani"] == 0)
             {
-                var origin = (Vector2)resource.GetBackground($"{bS}.img/back/{no}/origin").data;
-                switch ((BackgroundType)type)
+                var origin = (Vector2)resource.GetOrigin($"Map/Back/{backgroundData[$"{i}"]["bS"]}.img/back/{backgroundData[$"{i}"]["no"]}");
+                switch ((BackgroundType)backgroundData[$"{i}"]["type"])
                 {
                     case BackgroundType.Default:
                         var background = scene.CreateEntity($"background_{i}", "Background");
                         var transform = background.GetComponent<Transform>();
-                        background.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
+                        background.Layer = (int)backgroundData[$"{i}"]["front"] == 1 ? RenderLayer.Foreground : RenderLayer.Background;
                         background.ZIndex = 0;
-                        transform.Position = new Vector2(x, y);
+                        transform.Position = new Vector2((int)backgroundData[$"{i}"]["x"], (int)backgroundData[$"{i}"]["y"]);
                         transform.Origin = origin;
                         background.AddComponent(new ParallaxBackground()
                         {
                             Color = Color.White,
-                            Texture = resource.GetBackground($"{bS}.img/back/{no}").data as Texture2D,
-                            Rx = rx,
-                            Ry = ry,
-                            Type = (BackgroundType)type,
-                            Cx = cx,
-                            Cy = cy,
-                            Alpha = a,
-                            Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                            Texture = resource.GetBackground($"{backgroundData[$"{i}"]["bS"]}.img/back/{backgroundData[$"{i}"]["no"]}"),
+                            Rx = (int)backgroundData[$"{i}"]["rx"],
+                            Ry = (int)backgroundData[$"{i}"]["ry"],
+                            Type = (BackgroundType)backgroundData[$"{i}"]["type"],
+                            Cx = (int)backgroundData[$"{i}"]["cx"],
+                            Cy = (int)backgroundData[$"{i}"]["cy"],
+                            Alpha = (int)backgroundData[$"{i}"]["a"],
+                            Flipped = (int)backgroundData[$"{i}"]["f"] == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
                         });
                         break;
                     case BackgroundType.HorizontalTiling:
                         break;
                     case BackgroundType.HorizontalScrolling:
-                        var back = scene.CreateEntity($"background_{i}", "Background");
-                        var backT = back.GetComponent<Transform>();
-                        back.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
-                        back.ZIndex = 0;
-                        backT.Position = new Vector2(x, y);
-                        backT.Origin = origin;
-                        back.AddComponent(new ParallaxBackground()
-                        {
-                            Color = Color.White,
-                            Texture = resource.GetBackground($"{bS}.img/back/{no}").data as Texture2D,
-                            Rx = rx,
-                            Ry = ry,
-                            Type = (BackgroundType)type,
-                            Cx = cx,
-                            Cy = cy,
-                            Alpha = a,
-                            Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                        });
-
-                        for (int j = 1; j < 2; j++)
-                        {
-                            Entity scrolling = scene.CreateEntity($"background_{i}_tiled", "Background");
-                            var eTransform = scrolling.GetComponent<Transform>();
-                            scrolling.AddComponent(new ParallaxBackground());
-                            scrolling.Layer = front == 1 ? RenderLayer.Foreground : RenderLayer.Background;
-                            scrolling.ZIndex = 0;
-                            scrolling.AddComponent(new ParallaxBackground());
-                            var backItem = scrolling.GetComponent<ParallaxBackground>();
-                            backItem.Color = Color.White;
-                            backItem.Texture = resource.GetBackground($"{bS}.img/back/{no}").data as Texture2D;
-                            backItem.Rx = rx;
-                            backItem.Ry = ry;
-                            backItem.Type = (BackgroundType)type;
-                            backItem.Cx = cx;
-                            backItem.Cy = cy;
-                            backItem.Alpha = a;
-                            backItem.Flipped = f == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                            backItem.Offset = (back.GetComponent<ParallaxBackground>().Texture.Width * j);
-
-                            eTransform.Position = new Vector2(x + backItem.Offset, y);
-                            eTransform.Origin = origin;
-
-                            Debug.WriteLine("Tiled Entity Created");
-                        }
-
                         break;
                     case BackgroundType.HorizontalScrollingHVTiling:
                         break;
@@ -235,12 +195,19 @@ public class Scene
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
         var scene = Context.GetSubsystem<SceneSystem>();
-        var tileSet = (string)resource.GetMapInfo($"{worldId}.img/0/info/tS").data;
+        //var tileSet = (string)resource.GetMapInfo($"{worldId}.img/0/info/tS").data;
 
         do
         {
-            for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/tile"); i++)
+            for (int i = 0; i < resource.GetTileCount($"{worldId}.img/{layer}"); i++)
             {
+                var tileData = resource.LoadMapData($"{worldId}.img/{layer}/tile");
+                if (resource.Contains($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/info/tS", out var tS))
+                    tileData[$"{layer}"]["tS"] = (string)tS;
+                else 
+                    tileData[$"{layer}"]["tS"] = tileData[$"{0}"]["tS"];
+                
+                /*
                 if (tileSet == string.Empty ||
                     resource.GetMapInfo($"{worldId}.img/{layer}/info/tS").resourceType !=
                     ResourceType.Unknown)
@@ -251,19 +218,23 @@ public class Scene
                 var u = (string)resource.GetMapInfo($"{worldId}.img/{layer}/tile/{i}/u").data;
                 var no = (int)resource.GetMapInfo($"{worldId}.img/{layer}/tile/{i}/no").data;
                 var z = (int)resource.GetTile($"{tileSet}.img/{u}/{no}/z").data;
-                var zM = (int)resource.GetMapInfo($"{worldId}.img/{layer}/tile/{i}/zM").data;
-                var origin = (Vector2)resource.GetTile($"{tileSet}.img/{u}/{no}/origin").data;
+                var zM = (int)resource.GetMapInfo($"{worldId}.img/{layer}/tile/{i}/zM").data;*/
+                _ = resource.Contains(
+                    $"Map/Tile/{tileData[$"{layer}"]["tS"]}.img/{tileData[$"{i}"]["u"]}/{tileData[$"{i}"]["no"]}/z",
+                    out var z);
+                tileData[$"{i}"]["z"] = z;
+                var origin = (Vector2)resource.GetOrigin($"Map/Tile/{tileData[$"{layer}"]["tS"]}.img/{tileData[$"{i}"]["u"]}/{tileData[$"{i}"]["no"]}");
                 var tile = scene.CreateEntity($"tile_{i}", "MapItem");
                 tile.Layer = (RenderLayer)layer + 1;
-                tile.ZIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
+                tile.ZIndex = (int)tileData[$"{i}"]["z"] + 10 * (3000 * (layer + 1) - (int)tileData[$"{i}"]["zM"]) - 1073721834;
 
                 var transform = tile.GetComponent<Transform>();
-                transform.Position = new Vector2(x, y);
+                transform.Position = new Vector2((int)tileData[$"{i}"]["x"], (int)tileData[$"{i}"]["y"]);
                 transform.Origin = origin;
 
                 tile.AddComponent(new Sprite()
                 {
-                    Texture = resource.GetTile($"{tileSet}.img/{u}/{no}").data as Texture2D,
+                    Texture = resource.GetTile($"{tileData[$"{layer}"]["tS"]}.img/{tileData[$"{i}"]["u"]}/{tileData[$"{i}"]["no"]}"),
                 });
             }
 
@@ -276,7 +247,7 @@ public class Scene
         var layer = 0;
         var resource = Context.GetSubsystem<ResourceSystem>();
         var scene = Context.GetSubsystem<SceneSystem>();
-
+/*
         do
         {
             for (int i = 0; i < resource.GetNodeCount($"Map/Map/Map{worldId[0]}/{worldId}.img/{layer}/obj"); i++)
@@ -327,12 +298,13 @@ public class Scene
             }
 
             layer++;
-        } while (layer < 8);
+        } while (layer < 8);*/
     }
 
     private void LoadAnimatedObject(ref Entity obj, int nodeCount, string oS, string l0, string l1, string l2, int x,
         int y)
     {
+        /*
         var resource = Context.GetSubsystem<ResourceSystem>();
         var scene = Context.GetSubsystem<SceneSystem>();
         var transform = obj.GetComponent<Transform>();
@@ -398,11 +370,12 @@ public class Scene
                     blend.Alpha.Add((byte)(int)resource.GetObject($"{oS}.img/{l0}/{l1}/{l2}/{j}/a1").data);
                 blend.Delay.Add((int)resource.GetObject($"{oS}.img/{l0}/{l1}/{l2}/{j}/delay").data);
             }
-        }
+        }*/
     }
 
     private void LoadPortals()
     {
+        /*
         var resource = Context.GetSubsystem<ResourceSystem>();
         var scene = Context.GetSubsystem<SceneSystem>();
         var worldPath = $"Map/Map/Map{worldId[0]}/{worldId}.img";
@@ -486,7 +459,7 @@ public class Scene
                     Debug.WriteLine("Something went wrong, portal entity destroyed.");
                     break;
             }
-        }
+        }*/
     }
     
     #endregion

@@ -1,9 +1,8 @@
 using MapleSyrup.Core;
-using MapleSyrup.State;
 
 namespace MapleSyrup.Graphics.GUI;
 
-public class UIPanel : IStateMachine
+public class UIPanel 
 {
     private readonly GameContext Context;
     private List<UINode> nodes;

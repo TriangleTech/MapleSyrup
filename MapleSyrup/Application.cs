@@ -39,7 +39,6 @@ public class Application : Game
 
     protected override void LoadContent()
     {
-        context.GetSubsystem<ResourceSystem>().SetBackend(ResourceBackend.Nx);
         var scene = context.GetSubsystem<SceneSystem>();
         scene.LoadScene("100000000");
 

@@ -4,6 +4,8 @@ using MapleSyrup.Core;
 using MapleSyrup.Core.Event;
 using MapleSyrup.Resource;
 using MapleSyrup.Resource.Nx;
+using MapleSyrup.Utilities;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.Subsystems;
@@ -11,215 +13,253 @@ namespace MapleSyrup.Subsystems;
 public class ResourceSystem : ISubsystem
 {
     public GameContext Context { get; private set; }
-    private Dictionary<string, Texture2D> textures;
-    private Dictionary<string, NxFile> nxFiles;
-    private Dictionary<string, object> wzFiles;
+    private readonly Dictionary<string, Texture2D> textureCache;
+    private readonly Dictionary<string, NxFile> nxFiles;
     private ResourceBackend resourceBackend;
-    
+
+    public ResourceSystem()
+    {
+        textureCache = new();
+        nxFiles = new();
+        resourceBackend = ResourceBackend.Nx;
+    }
+
     public void Initialize(GameContext context)
     {
         Context = context;
-        textures = new();
+        nxFiles["Map"] = new NxFile("D:/v62/Map.nx");
+        //LoadNxFiles();
+    }
+
+    private void LoadNxFiles()
+    {
+        var files = Directory.GetFiles("D:/v62/", ".nx");
+
+        foreach (var file in files)
+            nxFiles[Path.GetFileNameWithoutExtension(file)] = new NxFile(file);
     }
 
     public void Shutdown()
     {
-        textures.Clear();
-        textures = null;
-        switch (resourceBackend)
-        {
-            case ResourceBackend.Nx:
-                foreach (var (_, nxFile) in nxFiles)
-                {
-                    nxFile.Dispose();
-                }
-                nxFiles.Clear();
-                nxFiles = null;
-                break;
-            case ResourceBackend.Wz:
-                wzFiles.Clear();
-                wzFiles = null;
-                break;
-        }
-    }
-    
-    public void SetBackend(ResourceBackend type)
-    {
-        resourceBackend = type;
-        switch (resourceBackend)
-        {
-            case ResourceBackend.Nx:
-                nxFiles = new();
-                nxFiles["Map"] = new NxFile("D:/v62/Map.nx");
-                nxFiles["Character"] = new NxFile("D:/v62/Character.nx");
-                //LoadNxFiles();
-                break;
-            case ResourceBackend.Wz:
-                wzFiles = new();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
-        }
-    }
-    
-    private void LoadNxFiles()
-    {
-        var files = Directory.GetFiles("D:/v62/", "*.nx", SearchOption.AllDirectories);
-        foreach (var file in files)
-        {
-            var nxFile = new NxFile(file);
-            nxFiles.Add(Path.GetFileNameWithoutExtension(file), nxFile);
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Texture2D LoadTexture(string name)
-    {
-        if (textures.TryGetValue(name, out var lookup))
-            return lookup;
-        
-        Texture2D texture;
-        switch (resourceBackend)
-        {
-            case ResourceBackend.Nx:
-                texture = LoadNxTexture(name);
-                break;
-            case ResourceBackend.Wz:
-                texture = LoadWzTexture(name);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
-        }
-        
-        textures.Add(name, texture);
-        return textures[name];
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Texture2D LoadNxTexture(string name)
-    {
-        var split = name.Split('/');
-        var nxFile = nxFiles[split[0]];
-        var node = nxFile.ResolvePath(name);
-        if (node.Name != split.Last())
-            return null;
-        var texture = node.To<NxBitmapNode>().GetTexture(Context.GraphicsDevice);
-        
-        return texture;
-    }
-    
-    private Texture2D LoadWzTexture(string name)
-    {
-        throw new NotImplementedException();
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetNodeCount(string path)
-    {
-        switch (resourceBackend)
-        {
-            case ResourceBackend.Nx:
-                return GetNxNodeCount(path);
-            case ResourceBackend.Wz:
-                return GetWzNodeCount(path);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int GetNxNodeCount(string path)
-    {
-        var split = path.Split('/');
-        var nxFile = nxFiles[split[0]];
-        var node = nxFile.ResolvePath(path);
-        if (node.Name != split.Last())
-            return 0;
-        return node.Children.Count;
-    }
-    
-    private int GetWzNodeCount(string path)
-    {
-        throw new NotImplementedException();
+
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private (ResourceType resourceType, object data) GetItem(string path)
+    public bool Contains(string path, out object? data)
     {
         switch (resourceBackend)
         {
             case ResourceBackend.Nx:
-                return GetNxItem(path);
+                return SearchNxPath(path, out data, out _);
             case ResourceBackend.Wz:
-                return GetWzItem(path);
-            default:    
-                throw new ArgumentOutOfRangeException(nameof(resourceBackend), resourceBackend, null);
+                throw new NotImplementedException();
         }
+
+        throw new Exception("Resource Backend not set");
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private (ResourceType, object) GetNxItem(string path)
+
+    private bool SearchNxPath(string path, out object? data, out int count)
     {
-        var split = path.Split('/');
+        var split = path.Split("/");
         var nxFile = nxFiles[split[0]];
-        var node = nxFile.ResolvePath(path);
-        if (node.Name != split.Last())
-            return (ResourceType.Unknown, null);
-        
-        switch (node.NodeType)
+        var root = nxFile.BaseNode;
+
+        for (int i = 1; i < split.Length; i++)
         {
-            case NodeType.Bitmap:
-                return (ResourceType.Image, LoadTexture(path));
-            case NodeType.Vector:
-                return (ResourceType.Vector, node.GetData<NxVectorNode>());
+            root = root[split[i]];
+        }
+        
+        switch (root.NodeType)
+        {
             case NodeType.Audio:
-                return (ResourceType.Audio, node.GetData<NxAudioNode>());
-            case NodeType.String:
-                return (ResourceType.String, node.GetData<NxStringNode>());
-            case NodeType.Int64:
-                return (ResourceType.Integer, node.GetData<NxIntNode>());
+                throw new NotImplementedException();
+            case NodeType.Bitmap:
+                data = root.To<NxBitmapNode>().GetTexture(Context.GraphicsDevice);
+                count = root.ChildCount;
+                return true;
             case NodeType.Double:
-                return (ResourceType.Double, node.GetData<NxDoubleNode>());
+                data = root.To<NxDoubleNode>().GetDouble();
+                count = root.ChildCount;
+                return true;
+            case NodeType.Int64:
+                data = root.To<NxIntNode>().GetInt();
+                count = root.ChildCount;
+                return true;
+            case NodeType.String:
+                data = root.To<NxStringNode>().GetString();
+                count = root.ChildCount;
+                return true;
+            case NodeType.Vector:
+                data = root.To<NxVectorNode>().GetVector();
+                count = root.ChildCount;
+                return true;
             case NodeType.NoData:
-                return (ResourceType.Directory, null);
+                data = null;
+                count = root.ChildCount;
+                break;
             default:
-                return (ResourceType.Unknown, null);
+                data = null;
+                count = 0;
+                return false;
         }
+
+        return false;
+    }
+
+    private Texture2D? GetTexture(string path)
+    {
+        if (textureCache.TryGetValue(path, out var tex))
+            return tex;
+
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                SearchNxPath(path, out var texture, out _);
+                if (texture is not Texture2D)
+                    return null;
+                return texture as Texture2D;
+            case ResourceBackend.Wz:
+                throw new NotImplementedException();
+        }
+
+        throw new Exception("Failed to retrieve texture");
+    }
+
+    public Texture2D? GetBackground(string path)
+    {
+        return GetTexture($"Map/Back/{path}");
+    }
+
+    public Texture2D? GetMapObject(string path)
+    {
+        return GetTexture($"Map/Obj{path}");
+    }
+
+    public Texture2D? GetTile(string path)
+    {
+        return GetTexture($"Map/Tile/{path}");
+    }
+
+    public VariantSet<object> LoadMapData(string path)
+    {
+        var truePath = $"Map/Map/Map{path[0]}/{path}";
+        var nxFile = nxFiles["Map"];
+        var root = nxFile.BaseNode;
+        var split = truePath.Split("/");
+        var variant = new VariantSet<object>();
+
+        for (int i = 1; i < split.Length; i++)
+        {
+            root = root[split[i]];
+        }
+        
+        foreach (var nextChild in root.Children.Values)
+        foreach (var lastChild in nextChild.Children.Values)
+        {
+            if (resourceBackend == ResourceBackend.Nx)
+            {
+                switch (lastChild.NodeType)
+                {
+                    case NodeType.Double:
+                        variant[nextChild.Name][lastChild.Name] = lastChild.To<NxDoubleNode>().GetDouble();
+                        break;
+                    case NodeType.Int64:
+                        variant[nextChild.Name][lastChild.Name] = lastChild.To<NxIntNode>().GetInt();
+                        break;
+                    case NodeType.String:
+                        variant[nextChild.Name][lastChild.Name] = lastChild.To<NxStringNode>().GetString();
+                        break;
+                    case NodeType.Vector:
+                        variant[nextChild.Name][lastChild.Name] = lastChild.To<NxVectorNode>().GetVector();
+                        break;
+                    case NodeType.NoData:
+                        break;
+                }
+            }
+        }
+        
+        return variant;
     }
     
-    private (ResourceType, object) GetWzItem(string path)
+    public VariantSet<object> LoadMapInfo(string path)
     {
-        throw new NotImplementedException();
+        var truePath = $"Map/Map/Map{path[0]}/{path}/info";
+        var nxFile = nxFiles["Map"];
+        var root = nxFile.BaseNode;
+        var split = truePath.Split("/");
+        var variant = new VariantSet<object>();
+
+        for (int i = 1; i < split.Length; i++)
+        {
+            root = root[split[i]];
+        }
+
+        foreach(var node in root.Children.Values)
+        {
+            if (resourceBackend == ResourceBackend.Nx)
+            {
+                switch (node.NodeType)
+                {
+                    case NodeType.Double:
+                        variant["info"][node.Name] = node.To<NxDoubleNode>().GetDouble();
+                        break;
+                    case NodeType.Int64:
+                        variant["info"][node.Name] = node.To<NxIntNode>().GetInt();
+                        break;
+                    case NodeType.String:
+                        variant["info"][node.Name] = node.To<NxStringNode>().GetString();
+                        break;
+                    case NodeType.Vector:
+                        variant["info"][node.Name] = node.To<NxVectorNode>().GetVector();
+                        break;
+                    case NodeType.NoData:
+                        break;
+                }
+            }
+        }
+
+        return variant;
     }
 
-    public (ResourceType resourceType, object data) GetMapInfo(string path)
+    public int GetBackgroundCount(string path)
     {
-        return GetItem($"Map/Map/Map{path[0]}/{path}");
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                SearchNxPath($"Map/Map/Map{path[0]}/{path}/back", out _, out var count);
+                return count;
+        }
+
+        return -1;
     }
 
-    public (ResourceType resourceType, object data) GetBackground(string path)
+
+    public int GetObjectCount(string path)
     {
-        return GetItem($"Map/Back/{path}");
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                SearchNxPath($"Map/Map/Map{path[0]}/{path}/obj", out _, out var count);
+                return count;
+        }
+        return -1;
     }
 
-    public (ResourceType resourceType, object data) GetTile(string path)
+    public int GetTileCount(string path)
     {
-        return GetItem($"Map/Tile/{path}");
+        switch (resourceBackend)
+        {
+            case ResourceBackend.Nx:
+                SearchNxPath($"Map/Map/Map{path[0]}/{path}/tile", out _, out var count);
+                return count;
+        }
+
+        return -1;
     }
 
-    public (ResourceType resourceType, object data) GetObject(string path)
+    public Vector2? GetOrigin(string fullPath)
     {
-        return GetItem($"Map/Obj/{path}");
-    }
+        SearchNxPath($"{fullPath}/origin", out var origin, out _);
 
-    public (ResourceType resourceType, object data) GetCharItem(string path)
-    {
-
-        return GetItem($"Character/{path}");
-    }
-
-    public (ResourceType resourceType, object data) GetMapHelper(string path)
-    {
-        return GetItem($"Map/MapHelper.img/{path}");
+        return (Vector2)origin;
     }
 }

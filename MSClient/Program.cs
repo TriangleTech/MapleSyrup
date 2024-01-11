@@ -2,5 +2,5 @@
 
 using MapleSyrup;
 
-using var game = new Application();
+using var game = new Scene();
 game.Run();

@@ -3,6 +3,14 @@ MapleSyrup is a emulation client for MapleStory written in C#. This project is p
 educational purposes and is highly recommended not to be used for commercial purposes. Use
 at your own risk.
 
+**Note**: Take a look at the branches, sometimes I will be working on a feature or change that may
+break the whole client, so I send it to an experimental branch. All branch names will be
+*experimental_* + the features I am doing.
+
+As of **01/10/2024** I am working on experimental_overhaul, it's much cleaner, in my opinion.
+
+I will remove this note once work on the branch is complete.
+
 ## Features
 Currently these are the features of the client with more to be added:
 

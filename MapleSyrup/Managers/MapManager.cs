@@ -24,6 +24,7 @@ public class MapManager : IManager
             _current.Unload();
         
         _current = new MapleMap(GenerateId(mapId), _locator);
+        _current.Load();
 
         return _current;
     }

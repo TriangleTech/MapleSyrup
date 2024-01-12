@@ -1,4 +1,4 @@
-namespace MapleSyrup.EC;
+namespace MapleSyrup.EC.Components;
 
 [Flags]
 public enum ComponentFlag

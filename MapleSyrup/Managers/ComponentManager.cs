@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using MapleSyrup.EC;
+using MapleSyrup.EC.Components;
 
 namespace MapleSyrup.Managers;
 
@@ -18,20 +19,18 @@ public class ComponentManager : IManager
         _locator = locator;
     }
 
-    public T Create<T>(Entity entity) where T: IComponent
+    public T Create<T>(IEntity entity) where T: IComponent
     {
-        var component = Activator.CreateInstance<T>();
-        if (entity & component)
+        if (_components.Any(x => x.Parent == entity && x is T))
             return Get<T>(entity);
-        
-        entity.ComponentFlag |= component.Flag;
-        component.Parent = entity;
+        var component = Activator.CreateInstance(typeof(T), entity) as IComponent;
+        entity.CFlags |= component.Flag;
         _components.Add(component);
 
-        return component;
+        return (T)component;
     }
 
-    public T Get<T>(Entity entity) where T : IComponent
+    public T? Get<T>(IEntity entity) where T : IComponent
     {
         var component = _components.Find(comp => comp.Parent == entity && comp is T);
 

@@ -35,4 +35,8 @@
     <ItemGroup>
       <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Managers\ComponentManager.cs" />
+    </ItemGroup>
 </Project>

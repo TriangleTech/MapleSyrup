@@ -35,6 +35,11 @@ public class ResourceManager : IManager
     
     public void Shutdown()
     {
+        foreach (var (_, texture) in _textureCache)
+        {
+            texture.Dispose();
+        }
+
         _textureCache.Clear();
         switch (_resourceBackend)
         {

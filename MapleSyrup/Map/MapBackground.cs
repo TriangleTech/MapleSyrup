@@ -6,17 +6,18 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.Map;
 
-public class Background : IEntity
+public class MapBackground : IEntity
 {
+    private ManagerLocator _locator;
+    
     public string Name { get; set; }
     public EntityFlag Flags { get; set; }
-    public ComponentFlag CFlags { get; }
+    public ComponentFlag CFlags { get; set; }
     public TransformComponent Transform { get; }
     public ParallaxComponent Parallax { get; }
     public RenderLayer Layer { get; set; } = RenderLayer.Background;
-    private ManagerLocator _locator;
     
-    public Background(ref ManagerLocator locator)
+    public MapBackground(ManagerLocator locator)
     {
         _locator = locator;
         Flags = EntityFlag.Active | EntityFlag.Background;

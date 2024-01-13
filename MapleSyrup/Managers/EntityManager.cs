@@ -1,5 +1,6 @@
 using MapleSyrup.EC;
 using MapleSyrup.Event;
+using MapleSyrup.Map;
 
 namespace MapleSyrup.Managers;
 
@@ -21,9 +22,26 @@ public class EntityManager : IManager
     {
         var _event = _locator.GetManager<EventManager>();
         var entity = Activator.CreateInstance(typeof(T), _locator) as IEntity;
-        _event.Dispatch(EventFlag.OnEntityCreated, ref entity);
+        _event.Dispatch(EventFlag.OnEntityCreated, entity);
 
         return (T)entity;
+    }
+    
+    public T Create<T>(string name, string tag) where T : IEntity
+    {
+        var _event = _locator.GetManager<EventManager>();
+        var entity = Activator.CreateInstance(typeof(T), _locator, name, tag) as IEntity;
+        _event.Dispatch(EventFlag.OnEntityCreated, entity);
+        return (T)entity;
+    }
+
+    public MapBackground CreateBackground()
+    {
+        var _event = _locator.GetManager<EventManager>();
+        var entity = new MapBackground(_locator);
+        _event.Dispatch(EventFlag.OnEntityCreated, entity);
+
+        return entity;
     }
 
     /// <summary>
@@ -35,7 +53,7 @@ public class EntityManager : IManager
         var _event = _locator.GetManager<EventManager>();
         if (entity & EntityFlag.Active)
             entity.Flags &= ~EntityFlag.Active;
-        _event.Dispatch(EventFlag.OnEntityRemoved, ref entity);
+        _event.Dispatch(EventFlag.OnEntityRemoved, entity);
     }
 
     public void Shutdown()

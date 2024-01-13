@@ -5,7 +5,7 @@ namespace MapleSyrup.EC.Components;
 public class TransformComponent : IComponent
 {
     public IEntity Parent { get; }
-    public ComponentFlag Flag { get; } = ComponentFlag.Transform;
+    public ComponentFlag Flag { get; }
     
     public Vector2 Position;
     public Vector2 Origin;
@@ -13,6 +13,7 @@ public class TransformComponent : IComponent
 
     public TransformComponent(IEntity parent)
     {
+        Flag = ComponentFlag.Transform;
         Parent = parent;
         Position = Vector2.Zero;
         Origin = Vector2.Zero;

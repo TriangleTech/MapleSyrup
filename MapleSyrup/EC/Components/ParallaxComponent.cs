@@ -6,28 +6,28 @@ namespace MapleSyrup.EC.Components;
 
 public class ParallaxComponent : IComponent
 {
+    private Matrix _parallax;
+    
     public IEntity Parent { get; }
     public ComponentFlag Flag { get; }
-    
-    public Vector2 Position;
-    public Vector2 Origin;
     public int Rx, Ry;
     public BackgroundType Type;
-    public Matrix Parallax;
     public Texture2D? Texture;
 
     public ParallaxComponent(IEntity parent)
     {
+        Flag = ComponentFlag.Parallax;
         Parent = parent;
+        _parallax = Matrix.Identity;
     }
     
     public Matrix GetMatrix()
     {
-        return Parallax;
+        return _parallax;
     }
 
     public void UpdateMatrix()
     {
-        Parallax = Matrix.Identity;
+        _parallax = Matrix.Identity;
     }
 }

@@ -17,14 +17,16 @@ public interface IEntity
     
     /// <summary>
     /// Contains the <see cref="EntityFlag"/> registered to the Entity.
+    /// You are allow to add or remove flags as need.
     /// </summary>
     public EntityFlag Flags { get; set; }
     
     /// <summary>
     /// Contains the <see cref="ComponentFlag"/> registered to the Entity.
     /// Each flag determines what components are inside the Entity.
+    /// You are allow to add or remove flags as need.
     /// </summary>
-    public ComponentFlag CFlags { get; }
+    public ComponentFlag CFlags { get; set; }
     
     /// <summary>
     /// The primary component for positioning

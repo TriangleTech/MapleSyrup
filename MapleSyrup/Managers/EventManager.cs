@@ -9,10 +9,10 @@ namespace MapleSyrup.Managers;
 public class EventManager : IManager
 {
     private ManagerLocator? _locator;
-    private object eventLock = new();
-    private List<IEventListener> _eventListeners;
-    private Queue<EventFlag> _eventQueue;
-    private Queue<(EventFlag flag, IEntity entity)> _specificEvent;
+    private readonly object eventLock = new();
+    private readonly List<IEventListener> _eventListeners;
+    private readonly Queue<EventFlag> _eventQueue;
+    private readonly Queue<(EventFlag flag, IEntity entity)> _specificEvent;
 
     public EventManager()
     {
@@ -41,11 +41,10 @@ public class EventManager : IManager
         }
     }
 
-    public void Dispatch(EventFlag flag, ref IEntity entity)
+    public void Dispatch(EventFlag flag, IEntity entity)
     {
         lock (eventLock)
         {
-            Console.WriteLine($"Dispatching Event: {flag.ToString()}");
             _specificEvent.Enqueue((flag, entity));
         }
     }
@@ -56,17 +55,9 @@ public class EventManager : IManager
         {
             lock (eventLock)
             {
-                if (_eventQueue.Count > 0)
-                {
-                    var flag = _eventQueue.Dequeue();
-                    for (int i = 0; i < _eventListeners.Count; i++)
-                    {
-                        if (!(_eventListeners[i] & flag))
-                            continue;
-                        _eventListeners[i].ProcessEvent(flag);
-                    }
-                }
-
+                // while specific events take priority, I don't think an else if is 
+                // a good idea. But without it the shaders get recompiled every frame.
+                // TODO: Do something about this later.
                 if (_specificEvent.Count > 0)
                 {
                     var _event = _specificEvent.Dequeue();
@@ -75,6 +66,16 @@ public class EventManager : IManager
                         if (!(_eventListeners[i] & _event.flag))
                             continue;
                         _eventListeners[i].ProcessEvent(_event.flag, _event.entity);
+                    }
+                }
+                else if (_eventQueue.Count > 0)
+                {
+                    var flag = _eventQueue.Dequeue();
+                    for (int i = 0; i < _eventListeners.Count; i++)
+                    {
+                        if (!(_eventListeners[i] & flag))
+                            continue;
+                        _eventListeners[i].ProcessEvent(flag);
                     }
                 }
             }

@@ -15,7 +15,7 @@ public class MapObj : IEntity
     public RenderLayer Layer { get; set; } = RenderLayer.TileObj0;
     public TransformComponent Transform { get; }
     public AnimationComponent Animation { get; set; }
-    public Texture2D Texture;
+    public Texture2D Texture { get; set; }
     
     public MapObj(ref ManagerLocator locator)
     {

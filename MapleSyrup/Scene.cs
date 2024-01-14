@@ -67,6 +67,8 @@ public class Scene : Game, IEventListener
             if (!(_sorted[i] & EntityFlag.Active))
                 continue;
             _map.UpdateBackground(_sorted[i]);
+            _map.UpdateObj(_sorted[i], gameTime);
+            _map.UpdatePortal(_sorted[i], gameTime);
         }
 
         base.Update(gameTime);
@@ -87,6 +89,7 @@ public class Scene : Game, IEventListener
         {
             _map.RenderTile(_spriteBatch, _sorted[i]);
             _map.RenderObj(_spriteBatch, _sorted[i]);
+            _map.RenderPortal(_spriteBatch, _sorted[i]);
         }
         _spriteBatch.End();
         
@@ -101,7 +104,7 @@ public class Scene : Game, IEventListener
                 _sorted = _entities.OrderBy(x => x.Layer).ThenBy(x => x.Transform.zIndex).ToList();
                 break;
             case EventFlag.OnMapLoaded:
-                Console.WriteLine("Loaded");
+                Console.WriteLine("Fully Loaded");
                 _loaded = true;
                 _sorted = _entities.OrderBy(x => x.Layer).ThenBy(x => x.Transform.zIndex).ToList();
                 break;

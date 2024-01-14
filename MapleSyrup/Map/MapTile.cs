@@ -14,7 +14,7 @@ public class MapTile : IEntity
     public ComponentFlag CFlags { get; set; }
     public TransformComponent Transform { get; }
     public RenderLayer Layer { get; set; } = RenderLayer.TileObj0;
-    public Texture2D Texture;
+    public Texture2D Texture { get; set; }
     
     public MapTile(ref ManagerLocator locator)
     {

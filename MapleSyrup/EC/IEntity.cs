@@ -1,6 +1,7 @@
 using MapleSyrup.EC.Components;
 using MapleSyrup.Map;
 using MapleSyrup.Managers;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.EC;
 
@@ -37,6 +38,8 @@ public interface IEntity
     /// The layer the entity sits on.
     /// </summary>
     public RenderLayer Layer { get; set; }
+    
+    public Texture2D Texture { get; set; }
     
     /// <summary>
     /// Easier way to determine what flags are contained in the entity

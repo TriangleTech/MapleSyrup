@@ -8,8 +8,5 @@ public enum EntityFlag
     MapTile = 1 << 2,
     MapObject = 1 << 3,
     AniObj = 1 << 4,
-    Effect = 1 << 5,
-    Foreground = 1 << 6,
-    Player = 1 << 7,
-    PlayerControlled = 1 << 8,
+    Portal = 1 << 5,
 }

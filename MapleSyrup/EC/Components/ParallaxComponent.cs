@@ -12,7 +12,6 @@ public class ParallaxComponent : IComponent
     public ComponentFlag Flag { get; }
     public int Rx, Ry;
     public BackgroundType Type;
-    public Texture2D? Texture;
 
     public ParallaxComponent(IEntity parent)
     {

@@ -16,7 +16,8 @@ public class MapBackground : IEntity
     public TransformComponent Transform { get; }
     public ParallaxComponent Parallax { get; }
     public RenderLayer Layer { get; set; } = RenderLayer.Background;
-    
+    public Texture2D Texture { get; set; }
+
     public MapBackground(ManagerLocator locator)
     {
         _locator = locator;

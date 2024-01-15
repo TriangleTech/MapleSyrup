@@ -61,7 +61,7 @@ public class Scene : Game, IEventListener
         _event.Register(this);
         _map = map.Create(10000);
         _avatar = new Avatar(_locator);
-        _avatar.Transform.Position = new Vector2(10, 10);
+        _avatar.Transform.Position = new Vector2(0, 0);
         
         base.LoadContent();
     }
@@ -88,7 +88,6 @@ public class Scene : Game, IEventListener
         base.Update(gameTime);
     }
 
-    private bool test = true;
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.DarkGray);

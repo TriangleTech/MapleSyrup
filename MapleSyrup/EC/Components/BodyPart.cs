@@ -12,7 +12,7 @@ public class BodyPart : IComponent
     public BodyType BodyType { get; }
 
     private Vector2 _origin;
-    private Vector2 _invertedOrigin;
+    private Vector2 _transform;
     private Matrix _matrix;
     private List<(int frame, Vector2 origin, Texture2D texture)> _frames;
     private Dictionary<(int frame, BodyMap map), Vector2> _maps;
@@ -30,42 +30,48 @@ public class BodyPart : IComponent
         Flag = ComponentFlag.BodyPart;
     }
 
-    public void UpdateMatrix()
+    public void UpdateMatrix(BodyPart body)
     {
         switch (BodyType)
         {
             case BodyType.Body:
-                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0)) *
-                          Matrix.CreateTranslation(new Vector3(-_origin, 0.0f)) *
-                          Matrix.CreateRotationZ(0f) *
-                          Matrix.CreateScale(1f, 1f, 0f) *
-                          Matrix.CreateTranslation(new Vector3(_origin, 0.0f));
-                _invertedOrigin = _origin;
+                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0f)) *
+                          Matrix.CreateTranslation(new Vector3(Parent.Transform.Position, 0f));
+
+                _transform = Vector2.Transform(_origin, _matrix);
                 break;
             case BodyType.Arm:
-                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0)) *
+                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0f)) *
                           Matrix.CreateTranslation(new Vector3(-_origin, 0f)) *
-                          Matrix.CreateScale(1f, 1f, 0f) *
-                          Matrix.CreateRotationZ(0f) *
-                          Matrix.CreateTranslation(new Vector3(_maps[(_currentFrame, BodyMap.Navel)], 0f)) *
+                          Matrix.CreateTranslation(new Vector3(body.GetMap(BodyMap.Navel), 0f)) *
+                          Matrix.CreateTranslation(new Vector3(-GetMap(BodyMap.Navel), 0f)) *
                           Matrix.CreateTranslation(new Vector3(_origin, 0f));
-                _invertedOrigin = Vector2.Transform(Vector2.Zero, _matrix);
+                _transform = Vector2.Transform(body.GetOrigin(), _matrix);
                 break;
             case BodyType.Head:
-                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0)) *
+                _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0f)) *
                           Matrix.CreateTranslation(new Vector3(-_origin, 0f)) *
-                          Matrix.CreateRotationZ(0f) *
-                          Matrix.CreateTranslation(new Vector3(-_maps[(_currentFrame, BodyMap.NeckBody)], 0f)) *
-                          Matrix.CreateScale(1f, 1f, 0f) *
+                          Matrix.CreateTranslation(new Vector3(GetMap(BodyMap.NeckBody), 0f)) *
+                          Matrix.CreateTranslation(new Vector3(GetMap(BodyMap.Neck) / 2f, 0f)) *
                           Matrix.CreateTranslation(new Vector3(_origin, 0f));
-                _invertedOrigin = Vector2.Transform(Vector2.Zero, _matrix);
+                _transform = Vector2.Transform(body.GetOrigin(), _matrix);
                 break;
         }
     }
 
+    public Vector2 GetMap(BodyMap map)
+    {
+        return _maps[(_currentFrame, map)];
+    }
+
+    public Vector2 GetTransform()
+    {
+        return _transform;
+    }
+
     public Vector2 GetOrigin()
     {
-        return _invertedOrigin;
+        return _origin;
     }
     
     public void AddFrame(int frame, Vector2 _origin, Texture2D texture)
@@ -90,11 +96,11 @@ public class BodyPart : IComponent
             _currentFrame = 0;
             _origin = _frames[0].origin;
             Texture = _frames[0].texture;
+        } else {
+            _currentFrame++;
+            _origin = _frames[_currentFrame].origin;
+            Texture = _frames[_currentFrame].texture;
         }
-        
-        _currentFrame++;
-        _origin = _frames[_currentFrame].origin;
-        Texture = _frames[_currentFrame].texture;
     }
 
     public bool Advance(float timeDelta)

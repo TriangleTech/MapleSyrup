@@ -56,11 +56,11 @@ public class Avatar : IEntity
         if (!_bodyStates.ContainsKey(_currentState))
             UpdateState(_currentState);
         
-        spriteBatch.Draw(_bodyStates[_currentState].Texture, Transform.Position, null, Color.White, 0f,
+        spriteBatch.Draw(_bodyStates[_currentState].Texture, _bodyStates[_currentState].GetTransform(), null, Color.White, 0f,
             _bodyStates[_currentState].GetOrigin(), 1f, SpriteEffects.None, 0f);
-        spriteBatch.Draw(_armStates[_currentState].Texture, Transform.Position, null, Color.White, 0f,
+        spriteBatch.Draw(_armStates[_currentState].Texture, _armStates[_currentState].GetTransform(), null, Color.White, 0f,
             _armStates[_currentState].GetOrigin(), 1f, SpriteEffects.None, 0f);
-        spriteBatch.Draw(_headStates[_currentState].Texture, Transform.Position, null, Color.White, 0f,
+        spriteBatch.Draw(_headStates[_currentState].Texture, _headStates[_currentState].GetTransform(), null, Color.White, 0f,
             _headStates[_currentState].GetOrigin(), 1f, SpriteEffects.None, 0f);
     }
 
@@ -73,16 +73,15 @@ public class Avatar : IEntity
         if (_headStates[_currentState].Advance(gameTime.ElapsedGameTime.Milliseconds))
             _headStates[_currentState].NextFrame();
         
-        _bodyStates[_currentState].UpdateMatrix();
-        _armStates[_currentState].UpdateMatrix();
-        _headStates[_currentState].UpdateMatrix();
+        _bodyStates[_currentState].UpdateMatrix(_bodyStates[_currentState]);
+        _armStates[_currentState].UpdateMatrix(_bodyStates[_currentState]);
+        _headStates[_currentState].UpdateMatrix(_bodyStates[_currentState]);
         Camera.UpdateMatrix(this);
     }
 
     public void TestInput()
     {
         var keyboard = Keyboard.GetState();
-
         if (keyboard.IsKeyDown(Keys.Left))
         {
             _previousState = _currentState;

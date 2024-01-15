@@ -20,7 +20,8 @@ public class CameraComponent : IComponent
     public void UpdateMatrix(IEntity target)
     {
         _matrix = Matrix.CreateTranslation(new Vector3(-target.Transform.Position.X,
-            -target.Transform.Position.Y, 0f));
+            -target.Transform.Position.Y, 0f)) *
+                  Matrix.CreateTranslation(new Vector3(800 / 2f, 600 / 2f, 0f));
     }
 
     public void Clear()

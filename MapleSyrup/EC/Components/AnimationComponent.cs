@@ -39,11 +39,12 @@ public class AnimationComponent : IComponent
             Parent.Transform.Position = _frames[0].position;
             Parent.Transform.Origin = _frames[0].origin;
             Parent.Texture = _frames[0].texture;
+        } else {
+            _currentFrame++;
+            Parent.Transform.Position = _frames[_currentFrame].position;
+            Parent.Transform.Origin = _frames[_currentFrame].origin;
+            Parent.Texture = _frames[_currentFrame].texture;
         }
-        _currentFrame++;
-        Parent.Transform.Position = _frames[_currentFrame].position;
-        Parent.Transform.Origin = _frames[_currentFrame].origin;
-        Parent.Texture = _frames[_currentFrame].texture;
     }
 
     public bool Advance(float timeDelta)

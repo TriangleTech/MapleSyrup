@@ -9,4 +9,5 @@ public enum EntityFlag
     MapObject = 1 << 3,
     AniObj = 1 << 4,
     Portal = 1 << 5,
+    PlayerControlled = 1 << 6,
 }

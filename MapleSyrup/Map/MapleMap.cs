@@ -89,41 +89,10 @@ public class MapleMap : IEventListener
                 background.Parallax.Ry = (int)backgroundData[$"{i}", "ry"];
                 background.Texture = resource.GetBackground(
                     $"{backgroundData[$"{i}", "bS"]}.img/back/{backgroundData[$"{i}", "no"]}");
-
-                /*switch ((BackgroundType)backgroundData[$"{i}", "type"])
-                {
-                    case BackgroundType.Default:
-                        var background = entity.Create<MapBackground>();
-                        background.Layer = (int)backgroundData[$"{i}", "front"] == 1
-                            ? RenderLayer.Foreground
-                            : RenderLayer.Background;
-                        background.Parallax.Type = (BackgroundType)backgroundData[$"{i}", "type"];
-                        background.Transform.zIndex = 0;
-                        background.Transform.Position = new Vector2((int)backgroundData[$"{i}", "x"],
-                            (int)backgroundData[$"{i}", "y"]);
-                        background.Transform.Origin = origin;
-                        background.Parallax.Rx = (int)backgroundData[$"{i}", "rx"];
-                        background.Parallax.Ry = (int)backgroundData[$"{i}", "ry"];
-                        background.Parallax.Texture = resource.GetBackground(
-                            $"{backgroundData[$"{i}", "bS"]}.img/back/{backgroundData[$"{i}", "no"]}");
-                        break;
-                    case BackgroundType.HorizontalTiling:
-                        break;
-                    case BackgroundType.HorizontalScrolling:
-                        break;
-                    case BackgroundType.HorizontalScrollingHVTiling:
-                        break;
-                    case BackgroundType.VerticalTiling:
-                        break;
-                    case BackgroundType.VerticalScrolling:
-                        break;
-                    case BackgroundType.VerticalScrollingHVTiling:
-                        break;
-                }*/
             }
             else
             {
-                //var animationCount = resource.GetNodeCount($"Map/Back/{bS}.img/ani/{no}");
+                
             }
         }
     }
@@ -205,7 +174,7 @@ public class MapleMap : IEventListener
                     if (resource.Contains(
                             $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/obstacle",
                             out _))
-                        obj.Flags &= ~EntityFlag.Active; // let's just deactivate it for now.
+                        entity.Remove(obj);
                     else
                     {
                         LoadAnimatedObject(ref obj, nodeCount, i, objData);
@@ -237,7 +206,7 @@ public class MapleMap : IEventListener
                 $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/seat",
                 out _))
         {
-            obj.Flags &= ~EntityFlag.Active; // let's just deactivate it for now.
+            entity.Remove(obj);
             return;
         }
 
@@ -246,7 +215,7 @@ public class MapleMap : IEventListener
                 $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/blend",
                 out _))
         {
-            obj.Flags &= ~EntityFlag.Active; // let's just deactivate it for now.
+            entity.Remove(obj);
             return;
         }
 
@@ -257,16 +226,20 @@ public class MapleMap : IEventListener
         {
             obj.Texture = resource.GetMapObject(
                 $"{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/0");
+           
             for (int j = 0; j < nodeCount; j++)
             {
                 var origin = (Vector2)resource.GetOrigin(
                     $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/{j}");
                 obj.Animation.AddFrame(new Vector2(x, y), origin, resource.GetMapObject(
                     $"{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/{j}"));
+                
                 if (resource.Contains(
                         $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/{j}/delay",
                         out var delay))
+                {
                     obj.Animation.AddDelay((int)delay);
+                }
                 else
                 {
                     obj.Animation.AddDelay(100);
@@ -280,7 +253,7 @@ public class MapleMap : IEventListener
                 $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/0/a0",
                 out _))
         {
-            obj.Flags &= ~EntityFlag.Active; // let's just deactivate it for now.
+            entity.Remove(obj);
             /*
             obj.AddComponent(new BlendAnimation());
             var origin = (Vector2)resource.GetOrigin(
@@ -331,6 +304,10 @@ public class MapleMap : IEventListener
             portal.TargetMap = targetMap;
             portal.TargetPortal = targetPortal;
             portal.PortalId = i;
+            portal.Transform.Position = new(x, y);
+            portal.Transform.Origin = (Vector2)resource.GetOrigin($"Map/MapHelper.img/portal/game/pv/0");
+            portal.Layer = RenderLayer.Foreground;
+            portal.Animation.AddDelay(100);
 
             switch (portalType)
             {
@@ -338,6 +315,13 @@ public class MapleMap : IEventListener
                 case 4:
                 case 7:
                     portal.Type = PortalType.Visible;
+                    portal.Texture = resource.GetPortal($"pv/0");
+                    for (var j = 0; j < 8; j++)
+                    {
+                        var origin = (Vector2)resource.GetOrigin($"Map/MapHelper.img/portal/game/pv/{j}");
+                        portal.Animation.AddFrame(portal.Transform.Position, origin, resource.GetPortal($"pv/{j}"));
+                        portal.Animation.AddDelay(100);
+                    }
                     break;
                 case 0:
                 case 1:
@@ -347,39 +331,17 @@ public class MapleMap : IEventListener
                 case 0x0D:
                     portal.Type = PortalType.Hidden;
                     portal.Flags &= ~EntityFlag.Active; // TODO: Change this so it has a hidden flag
+                    entity.Remove(portal);
                     break;
                 case 6: // wtf is this??? In map 100000000 it spawns 4 random portals
                 case 10:
                 case 0x0B:
                     portal.Type = PortalType.ScriptedHidden;
                     portal.Flags &= ~EntityFlag.Active; // TODO: Change this so it has a scripted hidden flag
+                    entity.Remove(portal);
                     break;
                 default:
                     Console.WriteLine($"Unknown Portal Type Detected: {portalType}");
-                    break;
-            }
-
-            portal.Layer = RenderLayer.Foreground;
-            portal.Transform.Position = new Vector2(x, y);
-            portal.Animation.AddDelay(100);
-
-            // TODO: When physics are complete, add portal hidden and portal scripted hidden
-            switch (portal.Type)
-            {
-                case PortalType.Visible:
-                    portal.Texture = resource.GetPortal($"pv/0");
-                    for (var j = 0; j < 8; j++)
-                    {
-                        var origin = (Vector2)resource.GetOrigin($"Map/MapHelper.img/portal/game/pv/{j}");
-                        portal.Animation.AddFrame(portal.Transform.Position, origin, resource.GetPortal($"pv/{j}"));
-                        portal.Animation.AddDelay(100);
-                    }
-                    break;
-                case PortalType.Hidden:
-                    break;
-                case PortalType.ScriptedHidden:
-                    break;
-                default:
                     break;
             }
         }

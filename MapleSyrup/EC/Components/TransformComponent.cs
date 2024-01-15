@@ -19,4 +19,9 @@ public class TransformComponent : IComponent
         Origin = Vector2.Zero;
         zIndex = 0;
     }
+
+    public void Clear()
+    {
+        
+    }
 }

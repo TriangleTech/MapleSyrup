@@ -26,4 +26,9 @@ public class MapBackground : IEntity
         Transform = new(this);
         Parallax = new ParallaxComponent(this);
     }
+
+    public void CleanUp()
+    {
+        Texture.Dispose();
+    }
 }

@@ -57,4 +57,11 @@ public class AnimationComponent : IComponent
         _delay -= (int)timeDelta;
         return false;
     }
+
+    public void Clear()
+    {
+        foreach (var (_, _, frame) in _frames)
+            frame.Dispose();
+        _delays.Clear();
+    }
 }

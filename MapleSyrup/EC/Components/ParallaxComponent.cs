@@ -29,4 +29,9 @@ public class ParallaxComponent : IComponent
     {
         _parallax = Matrix.Identity;
     }
+
+    public void Clear()
+    {
+        
+    }
 }

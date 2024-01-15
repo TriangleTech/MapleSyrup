@@ -1,4 +1,7 @@
+using MapleSyrup.EC;
+using MapleSyrup.EC.Components;
 using MapleSyrup.Nx;
+using MapleSyrup.Player;
 using MapleSyrup.Utilities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,6 +26,7 @@ public class ResourceManager : IManager
     {
         _locator = locator;
         _nxFiles["Map"] = new NxFile("D:/v41/Map.nx"); // Couldn't find v40 :(
+        _nxFiles["Character"] = new NxFile("D:/v41/Character.nx");
         //LoadNxFiles();
     }
 
@@ -382,6 +386,103 @@ public class ResourceManager : IManager
         return Vector2.Zero;
     }
 
+    public BodyPart LoadBodyPart(IEntity entity, AvatarState state, BodyType type)
+    {
+        var player = entity as Avatar;
+        var part = new BodyPart(player, type);
+        var stateName = state.ToString();
+
+        switch (type)
+        {
+            case BodyType.Arm:
+                var armNode = _nxFiles["Character"][$"00002{player.SkinId}.img"][stateName];
+                part.Texture = armNode["0"]["arm"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice);
+                
+                foreach (var frameNode in armNode)
+                {
+                    var frame = Convert.ToInt32(frameNode.Name);
+                    part.AddFrame(frame, 
+                        armNode[frameNode.Name]["arm"]["origin"].To<NxVectorNode>().GetVector(), 
+                        armNode[frameNode.Name]["arm"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice));
+                    part.AddBodyMap(frame, 
+                        BodyMap.Navel, 
+                        armNode[frameNode.Name]["arm"]["map"]["navel"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame,
+                        BodyMap.Hand,
+                        armNode[frameNode.Name]["arm"]["map"]["hand"].To<NxVectorNode>().GetVector());
+                    if (frameNode.HasChild("delay"))
+                        part.AddDelay(frameNode["delay"].To<NxIntNode>().GetInt());
+                    else
+                    {
+                        part.AddDelay(150);
+                    }
+                }
+                break;
+            case BodyType.Body:
+                var bodyNode = _nxFiles["Character"][$"00002{player.SkinId}.img"][stateName];
+                part.Texture = bodyNode["0"]["body"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice);
+
+                foreach (var frameNode in bodyNode)
+                {
+                    var frame = Convert.ToInt32(frameNode.Name);
+                    part.AddFrame(frame, 
+                        bodyNode[frameNode.Name]["body"]["origin"].To<NxVectorNode>().GetVector(), 
+                        bodyNode[frameNode.Name]["body"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice));
+                    part.AddBodyMap(frame, 
+                        BodyMap.Navel, 
+                        bodyNode[frameNode.Name]["body"]["map"]["navel"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame, 
+                        BodyMap.Neck, 
+                        bodyNode[frameNode.Name]["body"]["map"]["neck"].To<NxVectorNode>().GetVector());
+                    
+                    if (frameNode.HasChild("delay"))
+                        part.AddDelay(frameNode["delay"].To<NxIntNode>().GetInt());
+                    else
+                    {
+                        part.AddDelay(150);
+                    }
+                }
+                break;
+            case BodyType.Head:
+                var frontNode = _nxFiles["Character"][$"00012{player.SkinId}.img"]["front"];
+                var headNode = _nxFiles["Character"][$"00012{player.SkinId}.img"][stateName];
+                var body = _nxFiles["Character"][$"00002{player.SkinId}.img"][stateName];
+                part.Texture = headNode["0"]["head"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice);
+                
+                foreach (var frameNode in headNode)
+                {
+                    var frame = Convert.ToInt32(frameNode.Name);
+                    part.AddFrame(frame, 
+                        headNode[frameNode.Name]["head"]["origin"].To<NxVectorNode>().GetVector(), 
+                        headNode[frameNode.Name]["head"].To<NxBitmapNode>().GetTexture(_locator.GraphicsDevice));
+                    part.AddBodyMap(frame,
+                        BodyMap.NeckBody,
+                        body[frameNode.Name]["body"]["map"]["neck"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame, 
+                        BodyMap.Neck, 
+                        frontNode["head"]["map"]["neck"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame, 
+                        BodyMap.EarOverHead, 
+                        frontNode["head"]["map"]["earOverHead"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame, 
+                        BodyMap.EarBelowHead, 
+                        frontNode["head"]["map"]["earBelowHead"].To<NxVectorNode>().GetVector());
+                    part.AddBodyMap(frame, 
+                        BodyMap.Brow, 
+                        frontNode["head"]["map"]["brow"].To<NxVectorNode>().GetVector());
+                    
+                    if (frameNode.HasChild("delay"))
+                        part.AddDelay(frameNode["delay"].To<NxIntNode>().GetInt());
+                    else
+                    {
+                        part.AddDelay(100);
+                    }
+                }
+                break;
+        }
+
+        return part;
+    }
 
     #endregion
 }

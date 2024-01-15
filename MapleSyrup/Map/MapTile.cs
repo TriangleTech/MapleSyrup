@@ -16,11 +16,16 @@ public class MapTile : IEntity
     public RenderLayer Layer { get; set; } = RenderLayer.TileObj0;
     public Texture2D Texture { get; set; }
     
-    public MapTile(ref ManagerLocator locator)
+    public MapTile(ManagerLocator locator)
     {
         _locator = locator;
         Flags = EntityFlag.Active | EntityFlag.MapTile;
         CFlags = ComponentFlag.Transform;
         Transform = new(this);
+    }
+
+    public void CleanUp()
+    {
+        Texture.Dispose();
     }
 }

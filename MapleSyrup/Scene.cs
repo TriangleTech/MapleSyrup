@@ -1,10 +1,15 @@
 using System.Diagnostics;
+using ImGuiNET;
 using MapleSyrup.EC;
 using MapleSyrup.Event;
 using MapleSyrup.Managers;
 using MapleSyrup.Map;
+using MapleSyrup.Player;
+using MapleSyrup.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SDL2;
+using Num = System.Numerics;
 
 namespace MapleSyrup;
 
@@ -17,6 +22,7 @@ public class Scene : Game, IEventListener
     private MapleMap _map;
     private SpriteBatch _spriteBatch;
     private bool _loaded;
+    private Avatar _avatar;
     
     public EventFlag Flags { get; }
     public bool Loaded => _loaded;
@@ -42,6 +48,7 @@ public class Scene : Game, IEventListener
         _locator.RegisterManager(new EntityManager());
         _locator.RegisterManager(new MapManager());
         _locator.Initialize();
+        SDL.SDL_SetWindowTitle(Window.Handle, "MapleSyrup - Status: LOADING...");
         
         base.Initialize();
     }
@@ -53,6 +60,8 @@ public class Scene : Game, IEventListener
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _event.Register(this);
         _map = map.Create(10000);
+        _avatar = new Avatar(_locator);
+        _avatar.Transform.Position = new Vector2(10, 10);
         
         base.LoadContent();
     }
@@ -61,19 +70,25 @@ public class Scene : Game, IEventListener
     {
         var _event = _locator.GetManager<EventManager>();
         _event.PollEvents();
-        
-        for (int i = 0; i < _sorted.Count; i++)
+
+        Task.Run(() =>
         {
-            if (!(_sorted[i] & EntityFlag.Active))
-                continue;
-            _map.UpdateBackground(_sorted[i]);
-            _map.UpdateObj(_sorted[i], gameTime);
-            _map.UpdatePortal(_sorted[i], gameTime);
-        }
+            for (int i = 0; i < _sorted.Count; i++)
+            {
+                if (!(_sorted[i] & EntityFlag.Active))
+                    continue;
+                _map.UpdateBackground(_sorted[i]);
+                _map.UpdateObj(_sorted[i], gameTime);
+                _map.UpdatePortal(_sorted[i], gameTime);
+            }
+            _avatar.UpdatePlayer(gameTime);
+            _avatar.TestInput();
+        });
 
         base.Update(gameTime);
     }
 
+    private bool test = true;
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.DarkGray);
@@ -84,13 +99,14 @@ public class Scene : Game, IEventListener
         
         _map.RenderBackground(_spriteBatch, _sorted);
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, Matrix.Identity);
+            DepthStencilState.Default, RasterizerState.CullNone, null, _avatar.Camera.GetMatrix());
         for (int i = 0; i < _sorted.Count; i++)
         {
             _map.RenderTile(_spriteBatch, _sorted[i]);
             _map.RenderObj(_spriteBatch, _sorted[i]);
             _map.RenderPortal(_spriteBatch, _sorted[i]);
         }
+        _avatar.DrawPlayer(_spriteBatch);
         _spriteBatch.End();
         
         base.Draw(gameTime);
@@ -107,6 +123,7 @@ public class Scene : Game, IEventListener
                 Console.WriteLine("Fully Loaded");
                 _loaded = true;
                 _sorted = _entities.OrderBy(x => x.Layer).ThenBy(x => x.Transform.zIndex).ToList();
+                SDL.SDL_SetWindowTitle(Window.Handle, "MapleSyrup - Status: LOADED");
                 break;
         }
     }
@@ -135,6 +152,11 @@ public class Scene : Game, IEventListener
     protected override void UnloadContent()
     {
         _spriteBatch.Dispose();
+        _avatar.CleanUp();
+        foreach (var entity in _entities)
+        {
+            entity.CleanUp();
+        }
         _entities.Clear();
         _locator.Shutdown();
         base.UnloadContent();

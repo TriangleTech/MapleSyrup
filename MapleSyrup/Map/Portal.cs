@@ -21,7 +21,7 @@ public class Portal : IEntity
     public string Script { get; set; }
     private ManagerLocator _locator;
 
-    public Portal(ref ManagerLocator locator)
+    public Portal(ManagerLocator locator)
     {
         _locator = locator;
         Flags = EntityFlag.Active | EntityFlag.Portal;
@@ -31,4 +31,10 @@ public class Portal : IEntity
     }
 
     public bool Scripted => Script != string.Empty;
+
+    public void CleanUp()
+    {
+        Texture.Dispose();
+        Animation.Clear();
+    }
 }

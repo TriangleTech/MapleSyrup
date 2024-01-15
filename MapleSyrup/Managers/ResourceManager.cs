@@ -439,7 +439,7 @@ public class ResourceManager : IManager
                         part.AddDelay(frameNode["delay"].To<NxIntNode>().GetInt());
                     else
                     {
-                        part.AddDelay(150);
+                        part.AddDelay(500);
                     }
                 }
                 break;
@@ -475,7 +475,7 @@ public class ResourceManager : IManager
                         part.AddDelay(frameNode["delay"].To<NxIntNode>().GetInt());
                     else
                     {
-                        part.AddDelay(100);
+                        part.AddDelay(500);
                     }
                 }
                 break;

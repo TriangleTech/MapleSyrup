@@ -52,7 +52,7 @@ public class BodyPart : IComponent
                 _matrix = Matrix.CreateTranslation(new Vector3(-Parent.Transform.Position, 0f)) *
                           Matrix.CreateTranslation(new Vector3(-_origin, 0f)) *
                           Matrix.CreateTranslation(new Vector3(GetMap(BodyMap.NeckBody), 0f)) *
-                          Matrix.CreateTranslation(new Vector3(GetMap(BodyMap.Neck) / 2f, 0f)) *
+                          Matrix.CreateTranslation(new Vector3(-GetMap(BodyMap.Neck), 0f)) *
                           Matrix.CreateTranslation(new Vector3(_origin, 0f));
                 _transform = Vector2.Transform(body.GetOrigin(), _matrix);
                 break;

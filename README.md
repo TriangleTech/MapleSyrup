@@ -11,8 +11,6 @@ As of **01/10/2024** I am working on experimental_overhaul, it's much cleaner, i
 
 I will remove this note once work on the branch is complete.
 
-Update 2/17/24: Yes this project is still active, life happens and I can't control that. I will be pushing some updates in the coming weeks.
-
 ## Features
 Currently these are the features of the client with more to be added:
 

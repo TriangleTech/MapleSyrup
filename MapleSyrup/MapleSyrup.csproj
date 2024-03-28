@@ -11,6 +11,7 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -35,9 +36,5 @@
 
     <ItemGroup>
       <ProjectReference Include="..\FNA\FNA.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Managers\ComponentManager.cs" />
     </ItemGroup>
 </Project>

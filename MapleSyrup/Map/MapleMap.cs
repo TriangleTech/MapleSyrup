@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using MapleSyrup.EC;
 using MapleSyrup.EC.Components;
 using MapleSyrup.Event;
 using MapleSyrup.Managers;
+using MapleSyrup.Player;
 using MapleSyrup.Utilities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,36 +61,46 @@ public class MapleMap : IEventListener
         var resource = _locator.GetManager<ResourceManager>();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void LoadBackground()
     {
         var resource = _locator.GetManager<ResourceManager>();
         var entity = _locator.GetManager<EntityManager>();
-        var backgroundData = resource.LoadMapData($"{_worldId}.img/back");
 
-        for (int i = 0; i < resource.GetBackgroundCount($"{_worldId}.img"); i++)
+        for (int i = 0; i < resource.GetNodeCount("Map",$"Map/Map{_worldId[0]}/{_worldId}.img"); i++)
         {
-            if ((string)backgroundData[$"{i}", "bS"] == string.Empty)
+            var no = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/no");
+            var x = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/x");;
+            var y = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/y");;
+            var rx = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/rx");;
+            var ry = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/ry");;
+            var type = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/type");;
+            var cx = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/cx");;
+            var cy = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/cy");;
+            var bS = resource.GetString("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/bS");
+            var a = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/a");;
+            var front = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/front");;
+            var ani = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/ani");;
+            var f = resource.GetInt("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/back/{i}/f");;
+            
+            if (bS == string.Empty)
                 continue;
 
-            if ((int)backgroundData[$"{i}", "ani"] == 0)
+            if (ani == 0)
             {
-                var origin =
-                    (Vector2)resource.GetOrigin(
-                        $"Map/Back/{backgroundData[$"{i}", "bS"]}.img/back/{backgroundData[$"{i}", "no"]}");
-
+                var origin = resource.GetVector("Map", $"Back/{bS}.img/back/{no}");
                 var background = entity.Create<MapBackground>();
-                background.Layer = (int)backgroundData[$"{i}", "front"] == 1
+                background.Layer = front == 1
                     ? RenderLayer.Foreground
                     : RenderLayer.Background;
-                background.Parallax.Type = (BackgroundType)backgroundData[$"{i}", "type"];
+                background.Parallax.Type = (BackgroundType)type;
                 background.Transform.zIndex = 0;
-                background.Transform.Position = new Vector2((int)backgroundData[$"{i}", "x"],
-                    (int)backgroundData[$"{i}", "y"]);
+                background.Transform.Position = new Vector2((int)x,
+                    y);
                 background.Transform.Origin = origin;
-                background.Parallax.Rx = (int)backgroundData[$"{i}", "rx"];
-                background.Parallax.Ry = (int)backgroundData[$"{i}", "ry"];
-                background.Texture = resource.GetBackground(
-                    $"{backgroundData[$"{i}", "bS"]}.img/back/{backgroundData[$"{i}", "no"]}");
+                background.Parallax.Rx = rx;
+                background.Parallax.Ry = ry;
+                background.Texture = resource.GetTexture("Map", $"Back/{bS}.img/back/{no}");
             }
             else
             {
@@ -97,43 +109,43 @@ public class MapleMap : IEventListener
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void LoadTile()
     {
         var resource = _locator.GetManager<ResourceManager>();
         var entity = _locator.GetManager<EntityManager>();
         var layer = 0;
+        var tS = resource.GetString("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/0/info/tS");
         do
         {
-            for (int i = 0; i < resource.GetTileCount($"{_worldId}.img/{layer}"); i++)
+            var path = $"Map/Map{_worldId[0]}/{_worldId}.img/{layer}/tile";
+            for (int i = 0; i < resource.GetNodeCount("Map", path); i++)
             {
-                using var tileData = resource.LoadMapData($"{_worldId}.img/{layer}/tile");
-                if (resource.Contains($"Map/Map/Map{_worldId[0]}/{_worldId}.img/{layer}/info/tS", out var tS))
-                    tileData[$"{layer}", "tS"] = (string)tS;
-                else
-                    tileData[$"{layer}", "tS"] = tileData[$"{0}", "tS"];
+                var tSVal = resource.GetString("Map", $"Map/Map{_worldId[0]}/{_worldId}.img/{layer}/info/tS");
+                if (tSVal != string.Empty && layer != 0) 
+                    tS = tSVal;
 
-                _ = resource.Contains(
-                    $"Map/Tile/{tileData[$"{layer}", "tS"]}.img/{tileData[$"{i}", "u"]}/{tileData[$"{i}", "no"]}/z",
-                    out var z);
-                tileData[$"{i}", "z"] = z;
-                var origin = (Vector2)resource.GetOrigin(
-                    $"Map/Tile/{tileData[$"{layer}", "tS"]}.img/{tileData[$"{i}", "u"]}/{tileData[$"{i}", "no"]}");
+                var x = resource.GetInt("Map", $"{path}/{i}/x");
+                var y = resource.GetInt("Map", $"{path}/{i}/y");
+                var u = resource.GetString("Map", $"{path}/{i}/u");
+                var no = resource.GetInt("Map", $"{path}/{i}/no");
+                var zM = resource.GetInt("Map", $"{path}/{i}/zM");
+                var tilePath = $"Tile/{tS}.img/{u}/{no}";
+                var z = resource.GetInt("Map", $"{tilePath}/z");
+                var origin = resource.GetVector("Map", $"{tilePath}/origin");
                 var tile = entity.Create<MapTile>();
                 tile.Layer = (RenderLayer)layer + 1;
-                tile.Transform.zIndex = (int)tileData[$"{i}", "z"] +
-                                        10 * (3000 * (layer + 1) - (int)tileData[$"{i}", "zM"]) -
-                                        1073721834;
-
-                tile.Transform.Position = new Vector2((int)tileData[$"{i}", "x"], (int)tileData[$"{i}", "y"]);
+                tile.Transform.zIndex = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
+                tile.Transform.Position = new Vector2(x, y);
                 tile.Transform.Origin = origin;
-                tile.Texture = resource.GetTile(
-                    $"{tileData[$"{layer}", "tS"]}.img/{tileData[$"{i}", "u"]}/{tileData[$"{i}", "no"]}");
+                tile.Texture = resource.GetTexture("Map", tilePath);
             }
 
             layer++;
         } while (layer < 8);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void LoadObj()
     {
         var layer = 0;
@@ -141,35 +153,36 @@ public class MapleMap : IEventListener
         var entity = _locator.GetManager<EntityManager>();
         do
         {
-            for (int i = 0; i < resource.GetObjectCount($"{_worldId}.img/{layer}"); i++)
+            var path = $"Map/Map{_worldId[0]}/{_worldId}.img/{layer}/obj";
+            for (int i = 0; i < resource.GetNodeCount("Map", path); i++)
             {
-                using var objData = resource.LoadMapData($"{_worldId}.img/{layer}/obj");
-                var nodeCount =
-                    resource.GetNodeCount(
-                        $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}");
+                var oS = resource.GetString("Map", $"{path}/{i}/oS");
+                var l0 = resource.GetString("Map", $"{path}/{i}/l0");
+                var l1 = resource.GetString("Map", $"{path}/{i}/l1");
+                var l2 = resource.GetString("Map", $"{path}/{i}/l2");
+                var x = resource.GetInt("Map", $"{path}/{i}/x");
+                var y = resource.GetInt("Map", $"{path}/{i}/y");
+                var z = resource.GetInt("Map", $"{path}/{i}/z");
+                var f = resource.GetInt("Map", $"{path}/{i}/f");
+                var zM = resource.GetInt("Map", $"{path}/{i}/zM");
 
-                var x = (int)objData[$"{i}", "x"];
-                var y = (int)objData[$"{i}", "y"];
-                var z = (int)objData[$"{i}", "z"];
+                var objPath = $"Obj/{oS}.img/{l0}/{l1}/{l2}";
+                var nodeCount = resource.GetNodeCount("Map", objPath);
 
                 var obj = entity.Create<MapObj>();
                 obj.Layer = (RenderLayer)layer + 1;
-                obj.Transform.zIndex = (int)(30000 * layer + z) - 1073739824;
+                obj.Transform.zIndex = (30000 * layer + z) - 1073739824;
                 obj.Transform.Position = new Vector2(x, y);
-
-                if (objData.Contains($"{i}", "r"))
-                    obj.Flags &= ~EntityFlag.Active;
 
                 if (nodeCount == 1)
                 {
-                    var origin = (Vector2)resource.GetOrigin(
-                        $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/0");
+                    var origin = (Vector2)resource.GetVector("Map", $"{objPath}/0/origin");
                     obj.Transform.Origin = origin;
-                    obj.Texture = resource.GetMapObject(
-                        $"{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/0");
+                    obj.Texture = resource.GetTexture("Map", $"{objPath}/0");
                 }
                 else
                 {
+                    /*
                     // TODO: Handle Obstacles
                     if (resource.Contains(
                             $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/obstacle",
@@ -178,7 +191,8 @@ public class MapleMap : IEventListener
                     else
                     {
                         LoadAnimatedObject(ref obj, nodeCount, i, objData);
-                    }
+                    }*/
+                    entity.Remove(obj);
                 }
             }
 
@@ -186,9 +200,10 @@ public class MapleMap : IEventListener
         } while (layer < 8);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void LoadAnimatedObject(ref MapObj obj, int nodeCount, int increment, VariantMap<string, string, object> objData)
     {
-        var i = increment;
+        /*var i = increment;
         var resource = _locator.GetManager<ResourceManager>();
         var entity = _locator.GetManager<EntityManager>();
         var x = (int)objData[$"{i}", "x"];
@@ -277,27 +292,27 @@ public class MapleMap : IEventListener
                         $"Map/Obj/{objData[$"{i}", "oS"]}.img/{objData[$"{i}", "l0"]}/{objData[$"{i}", "l1"]}/{objData[$"{i}", "l2"]}/{j}/delay",
                         out var delay))
                     blend.Delay.Add((int)delay);
-            }*/
-        }
+            }
+        }*/
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void LoadPortals()
     {
         var resource = _locator.GetManager<ResourceManager>();
         var entity = _locator.GetManager<EntityManager>();
-        var worldPath = $"Map/Map/Map{_worldId[0]}/{_worldId}.img";
-        var portalCount = resource.GetNodeCount($"{worldPath}/portal");
-        using var portalData = resource.LoadMapData($"{_worldId}.img/portal");
+        var worldPath = $"Map/Map{_worldId[0]}/{_worldId}.img/portal";
+        var portalCount = resource.GetNodeCount("Map", $"{worldPath}");
 
         for (int i = 0; i < portalCount; i++)
         {
-            var name = (string)portalData[$"{i}", "pn"];
-            var portalType = (int)portalData[$"{i}", "pt"];
+            var name = resource.GetString("Map", $"{worldPath}/{i}/pn");
+            var portalType = resource.GetInt("Map", $"{worldPath}/{i}/pt");
             // script was previously here
-            var x = (int)portalData[$"{i}", "x"];
-            var y = (int)portalData[$"{i}", "y"];
-            var targetMap = (int)portalData[$"{i}", "tm"];; // The map it leads to
-            var targetPortal = (string)portalData[$"{i}", "tn"];; // The portal you end up on
+            var x = resource.GetInt("Map", $"{worldPath}/{i}/x");
+            var y = resource.GetInt("Map", $"{worldPath}/{i}/y");
+            var targetMap = resource.GetInt("Map", $"{worldPath}/{i}/tm"); // The map it leads to
+            var targetPortal = resource.GetString("Map", $"{worldPath}/{i}/tn"); // The portal you end up on
             var portal = entity.Create<Portal>();
             portal.Name = name;
             portal.Script = "";
@@ -305,7 +320,7 @@ public class MapleMap : IEventListener
             portal.TargetPortal = targetPortal;
             portal.PortalId = i;
             portal.Transform.Position = new(x, y);
-            portal.Transform.Origin = (Vector2)resource.GetOrigin($"Map/MapHelper.img/portal/game/pv/0");
+            portal.Transform.Origin = resource.GetVector("Map", $"MapHelper.img/portal/game/pv/0");
             portal.Layer = RenderLayer.Foreground;
             portal.Animation.AddDelay(100);
 
@@ -315,11 +330,11 @@ public class MapleMap : IEventListener
                 case 4:
                 case 7:
                     portal.Type = PortalType.Visible;
-                    portal.Texture = resource.GetPortal($"pv/0");
+                    portal.Texture = resource.GetTexture("Map", "MapHelper.img/portal/game/pv/0");
                     for (var j = 0; j < 8; j++)
                     {
-                        var origin = (Vector2)resource.GetOrigin($"Map/MapHelper.img/portal/game/pv/{j}");
-                        portal.Animation.AddFrame(portal.Transform.Position, origin, resource.GetPortal($"pv/{j}"));
+                        var origin = (Vector2)resource.GetVector("Map", $"MapHelper.img/portal/game/pv/{j}/origin");
+                        portal.Animation.AddFrame(portal.Transform.Position, origin, resource.GetTexture("Map", $"MapHelper.img/portal/game/pv/{j}"));
                         portal.Animation.AddDelay(100);
                     }
                     break;
@@ -360,19 +375,19 @@ public class MapleMap : IEventListener
             
             var background = sorted[i] as MapBackground;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-                DepthStencilState.Default, RasterizerState.CullNone, null, background.Parallax.GetMatrix());
+                DepthStencilState.Default, RasterizerState.CullNone, null, Matrix.Identity);
             spriteBatch.Draw(background.Texture, background.Transform.Position, null, Color.White,
                 0f, background.Transform.Origin, 1f, SpriteEffects.None, 0f);
             spriteBatch.End();
         }
     }
 
-    public void UpdateBackground(IEntity entity)
+    public void UpdateBackground(IEntity entity, CameraComponent camera)
     {
         if (!(entity & EntityFlag.Background))
             return;
         var background = entity as MapBackground;
-        background.Parallax.UpdateMatrix();
+        background.Parallax.UpdateMatrix(camera);
     }
 
     public void RenderTile(SpriteBatch spriteBatch, IEntity entity)

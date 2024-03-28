@@ -3,7 +3,7 @@ namespace MapleSyrup.Player;
 public enum BodyMap
 {
     Neck,
-    NeckBody,
+    BodyNeck,
     EarOverHead,
     EarBelowHead,
     Brow,

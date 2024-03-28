@@ -14,7 +14,7 @@ public class MapBackground : IEntity
     public EntityFlag Flags { get; set; }
     public ComponentFlag CFlags { get; set; }
     public TransformComponent Transform { get; }
-    public ParallaxComponent Parallax { get; }
+    public ParallaxComponent Parallax { get; set; }
     public RenderLayer Layer { get; set; } = RenderLayer.Background;
     public Texture2D Texture { get; set; }
 

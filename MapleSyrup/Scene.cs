@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ImGuiNET;
 using MapleSyrup.EC;
+using MapleSyrup.EC.Components;
 using MapleSyrup.Event;
 using MapleSyrup.Managers;
 using MapleSyrup.Map;
@@ -23,6 +24,7 @@ public class Scene : Game, IEventListener
     private SpriteBatch _spriteBatch;
     private bool _loaded;
     private Avatar _avatar;
+    private CameraComponent _camera;
     
     public EventFlag Flags { get; }
     public bool Loaded => _loaded;
@@ -55,13 +57,20 @@ public class Scene : Game, IEventListener
 
     protected override void LoadContent()
     {
+        _camera = new CameraComponent(_avatar);
+        _camera.Position = Vector2.Zero;
+        _camera.Viewport = GraphicsDevice.Viewport;
+        
         var _event = _locator.GetManager<EventManager>();
         var map = _locator.GetManager<MapManager>();
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _event.Register(this);
         _map = map.Create(10000);
-        _avatar = new Avatar(_locator);
-        _avatar.Transform.Position = new Vector2(0, 0);
+        
+        
+        //_avatar = new Avatar(_locator);
+        //_avatar.Transform.Position = new Vector2(0, 0);
+        //_avatar.Camera = _camera;
         
         base.LoadContent();
     }
@@ -77,14 +86,20 @@ public class Scene : Game, IEventListener
             {
                 if (!(_sorted[i] & EntityFlag.Active))
                     continue;
-                _map.UpdateBackground(_sorted[i]);
+                _map.UpdateBackground(_sorted[i], _camera);
                 _map.UpdateObj(_sorted[i], gameTime);
                 _map.UpdatePortal(_sorted[i], gameTime);
             }
-            _avatar.UpdatePlayer(gameTime);
-            _avatar.TestInput();
         });
 
+        /*
+        Task.Run(() =>
+        {
+            _avatar.UpdatePlayer(gameTime);
+            _avatar.TestInput();
+            _camera.UpdateMatrix(_avatar);
+        });*/
+        
         base.Update(gameTime);
     }
 
@@ -98,14 +113,14 @@ public class Scene : Game, IEventListener
         
         _map.RenderBackground(_spriteBatch, _sorted);
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap,
-            DepthStencilState.Default, RasterizerState.CullNone, null, _avatar.Camera.GetMatrix());
+            DepthStencilState.Default, RasterizerState.CullNone, null, Matrix.Identity);
         for (int i = 0; i < _sorted.Count; i++)
         {
             _map.RenderTile(_spriteBatch, _sorted[i]);
             _map.RenderObj(_spriteBatch, _sorted[i]);
             _map.RenderPortal(_spriteBatch, _sorted[i]);
         }
-        _avatar.DrawPlayer(_spriteBatch);
+        //_avatar.DrawPlayer(_spriteBatch);
         _spriteBatch.End();
         
         base.Draw(gameTime);
@@ -151,7 +166,7 @@ public class Scene : Game, IEventListener
     protected override void UnloadContent()
     {
         _spriteBatch.Dispose();
-        _avatar.CleanUp();
+        //_avatar.CleanUp();
         foreach (var entity in _entities)
         {
             entity.CleanUp();

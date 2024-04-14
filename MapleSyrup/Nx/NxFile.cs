@@ -183,6 +183,11 @@ public unsafe class NxFile : IDisposable
     
     #endregion
 
+    public NxItem GetItem(string itemName)
+    {
+        throw new NotImplementedException();
+    }
+
     public NxFile GetImage(string path)
     {
         if (!_restored)

@@ -7,6 +7,8 @@ public unsafe class NxReader : IDisposable
 {
     private Memory<byte> _memory;
     private uint _position;
+    private int _nodeCount, _stringCount, _bitmapCount, _audioCount;
+    private long _nodeBlockOffset, _stringBlockOffset, _bitmapBlockOffset, _audioBlockOffset;
 
     public Memory<byte> Memory => _memory;
 
@@ -14,7 +16,18 @@ public unsafe class NxReader : IDisposable
     {
         _memory = data;
         _position = 0;
+        
+        _nodeCount = ReadInt();
+        _nodeBlockOffset = ReadLong();
+        _stringCount = ReadInt();
+        _stringBlockOffset = ReadLong();
+        _bitmapCount = ReadInt();
+        _bitmapBlockOffset = _bitmapCount > 0 ? ReadLong() : 0;
+        _audioCount = ReadInt();
+        _audioBlockOffset = _audioCount > 0 ? ReadLong() : 0;
     }
+    
+    #region Read Functions
 
     public Span<byte> ReadBytes(int offset, int length)
     {
@@ -96,6 +109,17 @@ public unsafe class NxReader : IDisposable
 
         return Encoding.UTF8.GetString(stringData);
     }
+    
+    #endregion
+    
+    #region Data Parsing
+
+    public void ParseChildren(int firstChildId, int childCount, out List<int> offsets)
+    {
+        
+    }
+    
+    #endregion
 
     public void Dispose()
     {

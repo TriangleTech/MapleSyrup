@@ -1,6 +1,6 @@
 namespace MapleSyrup.Map;
 
-public class MapBackground
+public class MapLoader
 {
     
 }

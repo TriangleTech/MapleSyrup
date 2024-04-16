@@ -105,6 +105,52 @@ public class ActorManager
         Task.Run(() => actorAdded?.Invoke(tile));
     }
 
+    public void CreateObject(ActorLayer layer, Texture2D texture, Vector2 position, Vector2 origin, int zIndex, int delay)
+    {
+        var obj = new MapObj()
+        {
+            Animation = new(),
+            Layer = layer,
+            Position = position,
+            Origin = origin,
+            Z = zIndex,
+        };
+        
+        obj.Animation.AddFrame(delay, texture);
+        Task.Run(() => actorAdded?.Invoke(obj));
+    }
+    
+    public MapObj CreateObject(ActorLayer layer, Vector2 position, Vector2 origin, int zIndex)
+    {
+        var obj = new MapObj()
+        {
+            Animation = new(),
+            Layer = layer,
+            Position = position,
+            Origin = origin,
+            Z = zIndex,
+        };
+        Task.Run(() => actorAdded?.Invoke(obj));
+        
+        return obj;
+    }
+
+    public Portal CreatePortal(NxNode node, Vector2 position, Vector2 origin)
+    {
+        var portal = new Portal()
+        {
+            Node = node,
+            Animation = new(),
+            Layer = ActorLayer.TileLayer7,
+            Position = position,
+            Origin = origin,
+            Z = 0
+        };
+        
+        Task.Run(() => actorAdded?.Invoke(portal));
+        return portal;
+    }
+
     public void Add(Actor actor)
     {
         actor.Visible = false;

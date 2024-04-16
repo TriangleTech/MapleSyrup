@@ -57,9 +57,7 @@ public class Application : Game
         _world.Draw();
         base.Draw(gameTime);
     }
-
-    private Random random = new Random();
-
+    
     protected override void Update(GameTime gameTime)
     {
         var keyboard = Keyboard.GetState();

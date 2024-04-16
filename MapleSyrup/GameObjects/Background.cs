@@ -1,3 +1,4 @@
+using MapleSyrup.GameObjects.Enums;
 using MapleSyrup.Scene;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

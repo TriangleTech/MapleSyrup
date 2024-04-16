@@ -1,4 +1,4 @@
-namespace MapleSyrup.Scene;
+namespace MapleSyrup.GameObjects.Enums;
 
 public enum BackgroundType
 {

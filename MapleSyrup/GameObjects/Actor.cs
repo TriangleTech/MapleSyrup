@@ -1,3 +1,4 @@
+using MapleSyrup.Nx;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -9,9 +10,16 @@ public abstract class Actor : IComparable<Actor>
     private int _zIndex;
     private ActorLayer _layer;
     private bool _visible;
+    private NxNode _node;
 
     public Vector2 Position = Vector2.Zero;
     public Vector2 Origin = Vector2.Zero;
+
+    public NxNode Node
+    {
+        get => _node;
+        set => _node = value;
+    }
 
     public string Name
     {

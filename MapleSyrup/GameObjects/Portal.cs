@@ -4,32 +4,30 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.GameObjects;
 
-public class MapObj : Actor
+public class Portal : Actor
 {
     private Animation _animation;
 
     public Animation Animation
     {
         get => _animation;
-        set => _animation = value;
+        init => _animation = value;
     }
-
-    public bool Animated => Animation.Count > 1;
     
     public override void Clear()
     {
         _animation.Clear();
+        Node.Dispose();
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
+        Origin = Node[$"{_animation.Frame}"]["origin"].GetVector();
         spriteBatch.Draw(_animation.GetFrame(), Position, null, Color.White, 0f, Origin, Vector2.One, SpriteEffects.None, 0f);
     }
 
     public override void Update(GameTime gameTime)
     {
-        if (!Animated)
-            return;
-        _animation.UpdateFrame(gameTime);
+        Origin = _animation.UpdateFrame(gameTime) ? Node[$"{_animation.Frame}"]["origin"].GetVector() : Origin;
     }
 }

@@ -23,8 +23,8 @@ public class ResourceManager
 
     public void Initialize()
     {
-        _nxFiles["Mob"] = new NxFile("/home/beray/mapledev/v62/v62_nx/Mob.nx", _graphics);
-        _nxFiles["Map"] = new NxFile("/home/beray/mapledev/v62/v62_nx/Map.nx", _graphics);
+        _nxFiles["Mob"] = new NxFile("D:/v62/Mob.nx", _graphics);
+        _nxFiles["Map"] = new NxFile("D:/v62/Map.nx", _graphics);
     }
 
     public NxFile this[string name] => _nxFiles[name];

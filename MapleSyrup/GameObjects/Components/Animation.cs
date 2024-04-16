@@ -11,6 +11,7 @@ public class Animation
     private int _currentDelay;
 
     public int Count => _frames.Count - 1;
+    public int Frame => _frame;
     
     public Animation()
     {
@@ -27,10 +28,10 @@ public class Animation
         _frames.Add(frame);
     }
 
-    public void UpdateFrame(GameTime gameTime)
+    public bool UpdateFrame(GameTime gameTime)
     {
         if (!Advance(gameTime)) 
-            return;
+            return false;
         
         if (_frame >= _frames.Count - 1)
         {
@@ -40,6 +41,8 @@ public class Animation
         {
             _frame++;
         }
+
+        return true;
     }
 
     private bool Advance(GameTime gameTime)

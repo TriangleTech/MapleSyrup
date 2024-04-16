@@ -8,9 +8,9 @@ public class StateMachine
     private readonly Actor _parent;
     private string _currentState;
     private List<string> _possibleStates;
-    private Dictionary<string, State> _states;
+    private Dictionary<string, Animation> _states;
 
-    public State State => _states[_currentState];
+    public Animation State => _states[_currentState];
     public string Name => _currentState;
 
     public StateMachine(Actor actor)
@@ -18,15 +18,15 @@ public class StateMachine
         _parent = actor;
         _possibleStates = new ();
         _states = new();
-        _currentState = "stand";
+        _currentState = "move";
     }
 
     public void Default()
     {
-        _currentState = "stand";
+        _currentState = "move";
     }
 
-    public bool AddState(string stateName, State state)
+    public bool AddState(string stateName, Animation state)
     {
         if (!_possibleStates.Contains(stateName))
             _possibleStates.Add(stateName);
@@ -37,7 +37,7 @@ public class StateMachine
     {
         if (!_possibleStates.Contains(stateName))
             return false; // TODO: Change this to default state.
-        _currentState = _possibleStates.Find(state => state == stateName);
+        _currentState = _possibleStates.Find(state => state == stateName) ?? throw new NullReferenceException("[STATE MACHINE] Requested State doesn't exist.");
         return true;
     }
 

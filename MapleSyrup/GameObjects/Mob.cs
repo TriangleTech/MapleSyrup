@@ -18,12 +18,12 @@ public class Mob : Actor
     public override void Draw(SpriteBatch spriteBatch)
     {
         var tex = _state.State.GetFrame();
-        spriteBatch.Draw(tex, Vector2.Zero, Color.White);
+        spriteBatch.Draw(tex, Position, Color.White);
     }
 
     public override void Update(GameTime gameTime)
     {
-        _state.State.UpdateFrame();
+        _state.State.UpdateFrame(gameTime);
     }
 
     public override void Clear()

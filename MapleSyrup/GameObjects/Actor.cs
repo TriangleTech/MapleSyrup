@@ -6,9 +6,12 @@ namespace MapleSyrup.GameObjects;
 public abstract class Actor : IComparable<Actor>
 {
     private string _name;
-    private Vector2 _position, _origin;
     private int _zIndex;
     private ActorLayer _layer;
+    private bool _visible;
+
+    public Vector2 Position = Vector2.Zero;
+    public Vector2 Origin = Vector2.Zero;
 
     public string Name
     {
@@ -28,6 +31,12 @@ public abstract class Actor : IComparable<Actor>
         set => _layer = value;
     }
 
+    public bool Visible
+    {
+        get => _visible;
+        set => _visible = value;
+    }
+
     public int CompareTo(Actor? other)
     {
         if (ReferenceEquals(this, other)) 
@@ -42,7 +51,7 @@ public abstract class Actor : IComparable<Actor>
         var indexComparison = _zIndex.CompareTo(other.Z);
         if (indexComparison != 0)
             return indexComparison;
-        return 0;
+        return 1;
     }
 
     public abstract void Clear();

@@ -3,27 +3,28 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MapleSyrup.GameObjects.Components;
 
-public class State
+public class Animation
 {
-    private List<Texture2D> _frames;
     private int _frame;
+    private List<Texture2D> _frames;
     private int _delay;
     private int _currentDelay;
+
+    public int Count => _frames.Count - 1;
     
-    public State()
+    public Animation()
     {
+        _frame = 0;
+        _delay = 0;
+        _currentDelay = 0;
         _frames = new();
     }
 
-    public void AddFrame(int frame, int delay, Texture2D texture)
+    public void AddFrame(int delay, Texture2D frame)
     {
         _delay = delay;
-        _frames.Add(texture);
-    }
-
-    public Texture2D GetFrame()
-    {
-        return _frames[_frame];
+        _currentDelay = delay;
+        _frames.Add(frame);
     }
 
     public void UpdateFrame(GameTime gameTime)
@@ -53,6 +54,8 @@ public class State
         return false;
     }
 
+    public Texture2D GetFrame() => _frames[_frame];
+    
     public void Clear()
     {
         foreach (var tex in _frames)

@@ -8,7 +8,7 @@ namespace MapleSyrup.Scene;
 
 public class GameWorld
 {
-    private NxNode map;
+    private NxNode _map;
     private string _mapId;
     private ActorManager _actor;
     private ResourceManager _resource;
@@ -24,7 +24,7 @@ public class GameWorld
 
     public void Load()
     {
-        map = _resource["Map"].GetNode($"{_mapId}.img");
+        _map = _resource["Map"].GetNode($"{_mapId}.img");
 
         LoadBackground();
         var layer = 0;
@@ -44,13 +44,25 @@ public class GameWorld
 
     private void LoadBackground()
     {
-        
+        var root = _map["back"];
+
+        foreach (var background in _map.Children)
+        {
+            var bS = background["bS"].GetString();
+            var x = 0;
+            var y = 0;
+            var rx = 0;
+            var ry = 0;
+            var cx = 0;
+            var cy = 0;
+            
+        }
     }
 
     private void LoadTile(int layer)
     {
-        var root = map[$"{layer}"];
-        var tS = root?["info"]?["tS"]?.GetString() ?? map["0"]?["info"]?["tS"]?.GetString();
+        var root = _map[$"{layer}"];
+        var tS = root?["info"]?["tS"]?.GetString() ?? _map["0"]?["info"]?["tS"]?.GetString();
         var tileSet = _resource["Map"].GetNode($"Tile/{tS}.img");
 
         foreach (var tile in root["tile"].Children)
@@ -71,7 +83,7 @@ public class GameWorld
 
     private void LoadObjects(int layer)
     {
-        var root = map[$"{layer}"];
+        var root = _map[$"{layer}"];
         foreach (var obj in root["obj"].Children)
         {
             var oS = obj["oS"].GetString();
@@ -113,7 +125,7 @@ public class GameWorld
 
     private void LoadPortals()
     {
-        var root = map[$"portal"];
+        var root = _map[$"portal"];
         var helper = _resource["Map"].GetNode("MapHelper.img");
         var portalNode = helper["portal"]["game"];
 
@@ -176,7 +188,7 @@ public class GameWorld
 
     public void Destroy()
     {
-        map.Dispose();
+        _map.Dispose();
         sb.Dispose();
     }
 }

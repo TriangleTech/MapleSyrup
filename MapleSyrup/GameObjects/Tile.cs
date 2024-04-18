@@ -15,6 +15,7 @@ public class Tile : Actor
     
     public override void Clear()
     {
+        _texture.Dispose();
     }
 
     public override void Draw(SpriteBatch spriteBatch)

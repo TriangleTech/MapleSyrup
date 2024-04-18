@@ -48,11 +48,11 @@ public class NxNode : IDisposable
         _offset = offset;
     }
 
-    public NxNode? this[string name]
+    public NxNode this[string name]
     {
         get
         {
-            return _children.FirstOrDefault(c => c.Name == name) ?? null;
+            return _children.FirstOrDefault(c => c.Name == name) ?? throw new NullReferenceException();
         }
     }
 

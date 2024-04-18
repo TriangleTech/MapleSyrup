@@ -23,6 +23,10 @@ public class MapObj : Actor
 
     public override void Draw(SpriteBatch spriteBatch)
     {
+        if (Animated)
+        {
+            Origin = Node[$"{_animation.Frame}"]["origin"].GetVector();
+        }
         spriteBatch.Draw(_animation.GetFrame(), Position, null, Color.White, 0f, Origin, Vector2.One, SpriteEffects.None, 0f);
     }
 

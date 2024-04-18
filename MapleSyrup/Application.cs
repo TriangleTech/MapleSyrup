@@ -20,12 +20,10 @@ public class Application : Game
         : base()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
-        _graphicsDeviceManager.PreferredBackBufferWidth = 800;
-        _graphicsDeviceManager.PreferredBackBufferHeight = 600;
+        _graphicsDeviceManager.PreferredBackBufferWidth = 1280;
+        _graphicsDeviceManager.PreferredBackBufferHeight = 768;
     }
-
-    private SpriteBatch sb;
-
+    
     protected override void Initialize()
     {
         base.Initialize();
@@ -37,8 +35,7 @@ public class Application : Game
         _actorManager = new(this);
         _resourceManager.Initialize();
         
-        sb = new SpriteBatch(GraphicsDevice);
-        _world = new GameWorld("000010000", ref _actorManager, ref _resourceManager);
+        _world = new GameWorld("100000000");
         _world.Load();
         base.LoadContent();
     }
@@ -61,7 +58,8 @@ public class Application : Game
     protected override void Update(GameTime gameTime)
     {
         var keyboard = Keyboard.GetState();
-        SDL.SDL_SetWindowTitle(Window.Handle, $"MapleSyrup | Actors:{_actorManager.Actors.Count()}");
+        var frameRate = Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds);
+        SDL.SDL_SetWindowTitle(Window.Handle, $"MapleSyrup | Actors:{_actorManager.Actors.Count()} | FPS: {frameRate}");
         if (keyboard.IsKeyDown(Keys.Escape))
             Exit();
         _world.Update(gameTime);

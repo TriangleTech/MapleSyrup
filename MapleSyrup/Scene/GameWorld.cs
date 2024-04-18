@@ -10,27 +10,25 @@ public class GameWorld
 {
     private NxNode _map;
     private string _mapId;
-    private ActorManager _actor;
-    private ResourceManager _resource;
     private SpriteBatch sb;
     
-    public GameWorld(string mapId, ref ActorManager actorManager, ref ResourceManager resourceManager)
+    public GameWorld(string mapId)
     {
         _mapId = mapId;
-        _actor = actorManager;
-        _resource = resourceManager;
-        sb = new SpriteBatch(resourceManager.GraphicsDevice);
+        sb = new SpriteBatch(ResourceManager.Instance.GraphicsDevice);
     }
 
     public void Load()
     {
+        var _resource = ResourceManager.Instance;
+        var _actor = ActorManager.Instance;
         _map = _resource["Map"].GetNode($"{_mapId}.img");
 
-        LoadBackground();
+        //LoadBackground();
         var layer = 0;
         do
         {
-            // uncomment if you want it to be async loaded...not recommended, looks weird.
+            // uncomment if you want it to be async loading...not recommended, looks weird.
             //var layer1 = layer;
             //Task.Run(() => LoadTile(layer1));
             //Task.Run(() => LoadObjects(layer1));
@@ -61,8 +59,12 @@ public class GameWorld
 
     private void LoadTile(int layer)
     {
+        var _resource = ResourceManager.Instance;
+        var _actor = ActorManager.Instance;
         var root = _map[$"{layer}"];
-        var tS = root?["info"]?["tS"]?.GetString() ?? _map["0"]?["info"]?["tS"]?.GetString();
+        if (root["tile"].Children.Count == 0)
+            return;
+        var tS = root.Has("info", out var newSet) ? newSet["tS"].GetString() : _map["0"]["info"]["tS"].GetString();
         var tileSet = _resource["Map"].GetNode($"Tile/{tS}.img");
 
         foreach (var tile in root["tile"].Children)
@@ -83,6 +85,8 @@ public class GameWorld
 
     private void LoadObjects(int layer)
     {
+        var _resource = ResourceManager.Instance;
+        var _actor = ActorManager.Instance;
         var root = _map[$"{layer}"];
         foreach (var obj in root["obj"].Children)
         {
@@ -94,11 +98,26 @@ public class GameWorld
             var y = obj["y"].GetInt();
             var z = obj["z"].GetInt();
             var f = obj["f"].GetInt();
-            var zM = obj["x"].GetInt();
+            var zM = obj["zM"].GetInt();
             var order = (30000 * (layer + 1) + z) - 1073739824;
             var objSet = _resource["Map"].GetNode($"Obj/{oS}.img");
             var node = objSet[l0][l1][l2];
 
+            if (node.Has("blend", out _))
+            {
+                LoadBlendAnimation();
+                continue;
+            }
+            if (node.Has("obstacle", out _))
+            {
+                LoadObstacle();
+                continue;
+            }
+            if (node.Has("seat", out _))
+            {
+                LoadSeat();
+                continue;
+            }
             if (node.Children.Count > 1)
             {
                 LoadAnimatedObj(layer, obj, ref node);
@@ -114,17 +133,46 @@ public class GameWorld
 
     private void LoadAnimatedObj(int layer, NxNode obj, ref NxNode node)
     {
+        var _resource = ResourceManager.Instance;
+        var _actor = ActorManager.Instance;
         var x = obj["x"].GetInt();
         var y = obj["y"].GetInt();
         var z = obj["z"].GetInt();
         var f = obj["f"].GetInt();
-        var zM = obj["x"].GetInt();
+        var zM = obj["zM"].GetInt();
         var order = (30000 * (layer + 1) + z) - 1073739824;
+
+        var actor = _actor.CreateObject((ActorLayer)layer + 1, new Vector2(x, y), node["0"]["origin"].GetVector(),
+            order);
+        var count = node.Children.Count; // Yes I know I can just make a variable node count but uhhh me no feel like it
+        actor.Node = node;
+
+        for (var i = 0; i < count - 1; i++)
+        {
+            var texture = node[$"{i}"].GetTexture(_resource.GraphicsDevice);
+            actor.Animation.AddFrame(node.Has("delay", out var delay) ? delay.GetInt() : 150, texture);
+        }
+    }
+
+    private void LoadBlendAnimation()
+    {
+        
+    }
+
+    private void LoadObstacle()
+    {
+        
+    }
+
+    private void LoadSeat()
+    {
         
     }
 
     private void LoadPortals()
     {
+        var _resource = ResourceManager.Instance;
+        var _actor = ActorManager.Instance;
         var root = _map[$"portal"];
         var helper = _resource["Map"].GetNode("MapHelper.img");
         var portalNode = helper["portal"]["game"];
@@ -168,6 +216,7 @@ public class GameWorld
 
     public void Draw()
     {
+        var _actor = ActorManager.Instance;
         sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
         var actors = _actor.Actors.GetItems() as List<Actor>;
         for (int i = 0; i < actors.Count(); i++)
@@ -179,6 +228,7 @@ public class GameWorld
 
     public void Update(GameTime gameTime)
     {
+        var _actor = ActorManager.Instance;
         var actors = _actor.Actors.GetItems() as List<Actor>;
         for (int i = 0; i < actors.Count(); i++)
         {

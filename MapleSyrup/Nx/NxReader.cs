@@ -50,7 +50,7 @@ public unsafe class NxReader : IDisposable
     public Span<byte> ReadBytes(long offset, int length)
     {
         var buffer = new byte[length];
-        using (MemoryMappedViewAccessor accessor = _mmf.CreateViewAccessor(offset, length))
+        using (var accessor = _mmf.CreateViewAccessor(offset, length))
         {
             accessor.ReadArray(0, buffer, 0, length);
         }
@@ -92,11 +92,11 @@ public unsafe class NxReader : IDisposable
 
     public string ReadNullTerminatedString(int offset)
     {
-        byte value = 0;
-        int length = 0;
+        var value = 0;
+        var length = 0;
         do
         {
-            using (MemoryMappedViewAccessor accessor = _mmf.CreateViewAccessor(offset + length, 1))
+            using (var accessor = _mmf.CreateViewAccessor(offset + length, 1))
             {
                 value = accessor.ReadByte(0);
             }
@@ -245,6 +245,7 @@ public unsafe class NxReader : IDisposable
 
     public void Dispose()
     {
+        _stringPool.Clear();
         _mmf?.Dispose();
     }
 }

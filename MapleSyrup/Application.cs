@@ -1,4 +1,5 @@
 using MapleSyrup.GameObjects;
+using MapleSyrup.GameObjects.Components;
 using MapleSyrup.Managers;
 using MapleSyrup.Nx;
 using MapleSyrup.Scene;
@@ -35,7 +36,7 @@ public class Application : Game
         _actorManager = new(this);
         _resourceManager.Initialize();
         
-        _world = new GameWorld("100000000");
+        _world = new GameWorld("000020000");
         _world.Load();
         base.LoadContent();
     }
@@ -60,10 +61,13 @@ public class Application : Game
         var keyboard = Keyboard.GetState();
         var frameRate = Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds);
         SDL.SDL_SetWindowTitle(Window.Handle, $"MapleSyrup | Actors:{_actorManager.Actors.Count()} | FPS: {frameRate}");
+        Task.Run(() => _world.Update(gameTime));
+        
+        if (keyboard.IsKeyDown(Keys.S))
+            _actorManager.SendIt();
+        
         if (keyboard.IsKeyDown(Keys.Escape))
             Exit();
-        _world.Update(gameTime);
-
         base.Update(gameTime);
     }
 }

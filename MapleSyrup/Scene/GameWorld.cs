@@ -1,8 +1,10 @@
 using MapleSyrup.GameObjects;
+using MapleSyrup.GameObjects.Components;
 using MapleSyrup.Managers;
 using MapleSyrup.Nx;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace MapleSyrup.Scene;
 
@@ -11,18 +13,21 @@ public class GameWorld
     private NxNode _map;
     private string _mapId;
     private SpriteBatch sb;
+    private Camera _camera;
+    private object _threadLock;
     
     public GameWorld(string mapId)
     {
         _mapId = mapId;
+        _camera = new Camera();
+        _threadLock = new();
         sb = new SpriteBatch(ResourceManager.Instance.GraphicsDevice);
     }
 
     public void Load()
     {
-        var _resource = ResourceManager.Instance;
-        var _actor = ActorManager.Instance;
-        _map = _resource["Map"].GetNode($"{_mapId}.img");
+        var resourceManager = ResourceManager.Instance;
+        _map = resourceManager["Map"].GetNode($"{_mapId}.img");
 
         //LoadBackground();
         var layer = 0;
@@ -40,6 +45,8 @@ public class GameWorld
         LoadPortals();
     }
 
+    #region [PRIVATE] Load Functions
+    
     private void LoadBackground()
     {
         var root = _map["back"];
@@ -59,13 +66,13 @@ public class GameWorld
 
     private void LoadTile(int layer)
     {
-        var _resource = ResourceManager.Instance;
-        var _actor = ActorManager.Instance;
+        var resourceManager = ResourceManager.Instance;
+        var actorManager = ActorManager.Instance;
         var root = _map[$"{layer}"];
         if (root["tile"].Children.Count == 0)
             return;
         var tS = root.Has("info", out var newSet) ? newSet["tS"].GetString() : _map["0"]["info"]["tS"].GetString();
-        var tileSet = _resource["Map"].GetNode($"Tile/{tS}.img");
+        var tileSet = resourceManager["Map"].GetNode($"Tile/{tS}.img");
 
         foreach (var tile in root["tile"].Children)
         {
@@ -73,20 +80,22 @@ public class GameWorld
             var y = tile["y"].GetInt();
             var no = tile["no"].GetInt();
             var u = tile["u"].GetString();
-            var texture = tileSet[u][$"{no}"].GetTexture(_resource.GraphicsDevice);
+            var texture = tileSet[u][$"{no}"].GetTexture(resourceManager.GraphicsDevice);
             var origin = tileSet[u][$"{no}"]["origin"].GetVector();
             var z = tileSet[u][$"{no}"]["z"].GetInt();
             var zM = tile["zM"].GetInt();
             var order = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
             
-            _actor.CreateTile((ActorLayer)layer + 1, texture, new Vector2(x, y), origin, order);
+            actorManager.CreateTile((ActorLayer)layer + 1, texture, new Vector2(x, y), origin, order);
         }
     }
 
+    private Random random = new Random();
+    
     private void LoadObjects(int layer)
     {
-        var _resource = ResourceManager.Instance;
-        var _actor = ActorManager.Instance;
+        var resourceManager = ResourceManager.Instance;
+        var actorManager = ActorManager.Instance;
         var root = _map[$"{layer}"];
         foreach (var obj in root["obj"].Children)
         {
@@ -100,7 +109,7 @@ public class GameWorld
             var f = obj["f"].GetInt();
             var zM = obj["zM"].GetInt();
             var order = (30000 * (layer + 1) + z) - 1073739824;
-            var objSet = _resource["Map"].GetNode($"Obj/{oS}.img");
+            var objSet = resourceManager["Map"].GetNode($"Obj/{oS}.img");
             var node = objSet[l0][l1][l2];
 
             if (node.Has("blend", out _))
@@ -123,18 +132,18 @@ public class GameWorld
                 LoadAnimatedObj(layer, obj, ref node);
                 continue;
             }
-
+            
             var origin = node["0"]["origin"].GetVector();
-            //var delay = node["0"]["delay"].GetInt();
-            _actor.CreateObject((ActorLayer)layer + 1, node["0"].GetTexture(_resource.GraphicsDevice),
-                new Vector2(x, y), origin, order, 150);
+            actorManager.CreateObject((ActorLayer)layer + 1, node["0"].GetTexture(resourceManager.GraphicsDevice),
+                new Vector2(x, y), origin, order, 0);
+            
         }
     }
 
     private void LoadAnimatedObj(int layer, NxNode obj, ref NxNode node)
     {
-        var _resource = ResourceManager.Instance;
-        var _actor = ActorManager.Instance;
+        var resourceManager = ResourceManager.Instance;
+        var actorManager = ActorManager.Instance;
         var x = obj["x"].GetInt();
         var y = obj["y"].GetInt();
         var z = obj["z"].GetInt();
@@ -142,14 +151,14 @@ public class GameWorld
         var zM = obj["zM"].GetInt();
         var order = (30000 * (layer + 1) + z) - 1073739824;
 
-        var actor = _actor.CreateObject((ActorLayer)layer + 1, new Vector2(x, y), node["0"]["origin"].GetVector(),
+        var actor = actorManager.CreateObject((ActorLayer)layer + 1, new Vector2(x, y), node["0"]["origin"].GetVector(),
             order);
         var count = node.Children.Count; // Yes I know I can just make a variable node count but uhhh me no feel like it
         actor.Node = node;
 
         for (var i = 0; i < count - 1; i++)
         {
-            var texture = node[$"{i}"].GetTexture(_resource.GraphicsDevice);
+            var texture = node[$"{i}"].GetTexture(resourceManager.GraphicsDevice);
             actor.Animation.AddFrame(node.Has("delay", out var delay) ? delay.GetInt() : 150, texture);
         }
     }
@@ -171,10 +180,10 @@ public class GameWorld
 
     private void LoadPortals()
     {
-        var _resource = ResourceManager.Instance;
-        var _actor = ActorManager.Instance;
+        var resourceManager = ResourceManager.Instance;
+        var actorManager = ActorManager.Instance;
         var root = _map[$"portal"];
-        var helper = _resource["Map"].GetNode("MapHelper.img");
+        var helper = resourceManager["Map"].GetNode("MapHelper.img");
         var portalNode = helper["portal"]["game"];
 
         foreach (var portal in root.Children)
@@ -197,10 +206,10 @@ public class GameWorld
                 case 1:
                 case 2:
                 {
-                    var actor = _actor.CreatePortal(portalNode["pv"], new Vector2(x, y), Vector2.Zero);
+                    var actor = actorManager.CreatePortal(portalNode["pv"], new Vector2(x, y), Vector2.Zero);
                     for (int i = 0; i < 7; i++)
                     {
-                        actor.Animation.AddFrame(150, actor.Node[$"{i}"].GetTexture(_resource.GraphicsDevice));
+                        actor.Animation.AddFrame(150, actor.Node[$"{i}"].GetTexture(resourceManager.GraphicsDevice));
                     }
                 }
                     break;
@@ -213,26 +222,48 @@ public class GameWorld
             }
         }
     }
+    
+    #endregion
 
     public void Draw()
     {
-        var _actor = ActorManager.Instance;
-        sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
-        var actors = _actor.Actors.GetItems() as List<Actor>;
-        for (int i = 0; i < actors.Count(); i++)
+        lock (_threadLock)
         {
-            actors[i].Draw(sb);
+            var actorManager = ActorManager.Instance;
+            var actors = actorManager.Actors.GetItems() as List<Actor>;
+            sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearClamp,
+                DepthStencilState.Default, RasterizerState.CullNone, null, _camera.GetTransform());
+            for (int i = 0; i < actors.Count; i++)
+            {
+                actors[i].Draw(sb);
+            }
+
+            sb.End();
         }
-        sb.End();
     }
 
     public void Update(GameTime gameTime)
     {
-        var _actor = ActorManager.Instance;
-        var actors = _actor.Actors.GetItems() as List<Actor>;
-        for (int i = 0; i < actors.Count(); i++)
+        lock(_threadLock)
         {
-            actors[i].Update(gameTime);
+            var keyboard = Keyboard.GetState();
+            var actorManager = ActorManager.Instance;
+            var actors = actorManager.Actors.GetItems() as List<Actor>;
+            for (int i = 0; i < actors.Count(); i++)
+            {
+                actors[i].Update(gameTime);
+            }
+
+            _camera.UpdateMatrix();
+
+            if (keyboard.IsKeyDown(Keys.Left))
+                _camera.Position.X -= 10f;
+            if (keyboard.IsKeyDown(Keys.Right))
+                _camera.Position.X += 10f;
+            if (keyboard.IsKeyDown(Keys.Up))
+                _camera.Position.Y -= 10f;
+            if (keyboard.IsKeyDown(Keys.Down))
+                _camera.Position.Y += 10f;
         }
     }
 

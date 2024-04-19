@@ -12,7 +12,7 @@ public class Tile : Actor
         get => _texture;
         set => _texture = value;
     }
-    
+
     public override void Clear()
     {
         _texture.Dispose();
@@ -20,7 +20,10 @@ public class Tile : Actor
 
     public override void Draw(SpriteBatch spriteBatch)
     {
-        spriteBatch.Draw(_texture, Position, null, Color.White, 0f, Origin, Vector2.One, SpriteEffects.None, 0f);
+        lock (_threadLock)
+        {
+            spriteBatch.Draw(_texture, Position, null, Color.White, 0f, Origin, Vector2.One, SpriteEffects.None, 0f);
+        }
     }
 
     public override void Update(GameTime gameTime)

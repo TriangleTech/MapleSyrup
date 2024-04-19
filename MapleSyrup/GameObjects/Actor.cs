@@ -11,6 +11,7 @@ public abstract class Actor : IComparable<Actor>
     private ActorLayer _layer;
     private bool _visible;
     private NxNode _node;
+    protected object _threadLock = new();
 
     public Vector2 Position = Vector2.Zero;
     public Vector2 Origin = Vector2.Zero;

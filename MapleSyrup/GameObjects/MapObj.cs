@@ -23,17 +23,21 @@ public class MapObj : Actor
 
     public override void Draw(SpriteBatch spriteBatch)
     {
-        if (Animated)
+        lock (_threadLock)
         {
-            Origin = Node[$"{_animation.Frame}"]["origin"].GetVector();
+            if (Animated)
+                Origin = Node[$"{_animation.Frame}"]["origin"].GetVector();
+            spriteBatch.Draw(_animation.GetFrame(), Position, null, Color.White, 0f, Origin, Vector2.One,
+                SpriteEffects.None, 0f);
         }
-        spriteBatch.Draw(_animation.GetFrame(), Position, null, Color.White, 0f, Origin, Vector2.One, SpriteEffects.None, 0f);
     }
 
     public override void Update(GameTime gameTime)
     {
-        if (!Animated)
-            return;
-        _animation.UpdateFrame(gameTime);
+        lock(_threadLock)
+        {
+            if (Animated)
+                _animation.UpdateFrame(gameTime);
+        }
     }
 }

@@ -17,6 +17,7 @@ public class ActorManager
     private Thread actorThread;
 
     private Queue<Actor> toBeAdded, toBeRemoved, toBeChanged;
+    private Queue<Actor> randomQueue;
 
     public static ActorManager Instance => _instance;
 
@@ -29,6 +30,7 @@ public class ActorManager
         toBeAdded = new();
         toBeRemoved = new();
         toBeChanged = new();
+        randomQueue = new();
         actorAdded += OnActorAdded;
         actorRemoved += OnActorRemoved;
         actorChanged += OnActorChanged;
@@ -134,6 +136,17 @@ public class ActorManager
         
         return obj;
     }
+    
+    public T CreateTestActor<T>(ActorLayer layer, Vector2 position, Vector2 origin, int zIndex) where T : Actor
+    {
+        var actor = Activator.CreateInstance<T>();
+        actor.Layer = layer;
+        actor.Position = position;
+        actor.Origin = origin;
+        actor.Z = zIndex;
+
+        return actor;
+    }
 
     public Portal CreatePortal(NxNode node, Vector2 position, Vector2 origin)
     {
@@ -158,6 +171,18 @@ public class ActorManager
 
         if (toBeAdded.Count > 5)
             Task.Run(() => actorAdded?.Invoke(actor));
+    }
+
+    public void AddRandom(Actor actor)
+    {
+        Console.WriteLine("[RANDOM] Actor Added");
+        randomQueue.Enqueue(actor);
+    }
+
+    public void SendIt()
+    {
+        if (randomQueue.Count > 0)
+            Task.Run(() => actorAdded?.Invoke(randomQueue.Dequeue()));
     }
 
     public void Remove(Actor actor)

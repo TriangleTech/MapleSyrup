@@ -8,118 +8,97 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace MapleSyrup.Nx;
 
-public class NxNode : IDisposable
+public class NxNode(ref NxReader reader, NodeType type, string nodeName, long offset)
+    : IDisposable
 {
-    private NodeType _type;
-    private string _name;
-    private List<NxNode> _children;
-    private long _offset;
-    private NxReader _reader;
-    
+    private List<NxNode> _children = new();
+    private readonly NxReader _reader = reader;
+
     public NodeType Type
     {
-        get => _type;
-        set => _type = value;
+        get => type;
+        set => type = value;
     }
-    
+
     public string Name
     {
-        get => _name;
-        set => _name = value;
+        get => nodeName;
+        set => nodeName = value;
     }
-    
+
     public List<NxNode> Children
     {
         get => _children;
         set => _children = value;
     }
 
-    public NxNode()
+    public NxNode this[string node]
     {
-        _children = new();
-    }
-    
-    public NxNode(ref NxReader reader, NodeType type, string name, long offset)
-    {
-        _reader = reader;
-        _type = type;
-        _name = name;
-        _children = new();
-        _offset = offset;
+        get { return _children.FirstOrDefault(c => c.Name == node) ?? throw new NullReferenceException(); }
     }
 
-    public NxNode this[string name]
+    public bool Has(string node, out NxNode? child)
     {
-        get
+        foreach (var t in _children.Where(t => t.Name == node))
         {
-            return _children.FirstOrDefault(c => c.Name == name) ?? throw new NullReferenceException();
-        }
-    }
-
-    public bool Has(string node, out NxNode child)
-    {
-        for (var i = 0; i < _children.Count; i++)
-        {
-            if (_children[i].Name != node) continue;
-            
-            child = _children[i];
+            child = t;
             return true;
         }
 
-        child = default;
+        child = null;
         return false;
     }
 
     public int GetInt()
     {
-        if (_type != NodeType.Int64)
+        if (type != NodeType.Int64)
             return -9999;
-        var value = _reader.ReadLong(_offset + 12);
+        var value = _reader.ReadLong(offset + 12);
         return (int)value;
     }
-    
+
     public double GetDouble()
     {
-        if (_type != NodeType.Double)
+        if (type != NodeType.Double)
             return -9999.999;
-        var value = _reader.ReadLong(_offset + 12);
+        var value = _reader.ReadLong(offset + 12);
         return value;
     }
-    
+
     public Vector2 GetVector()
     {
-        if (_type != NodeType.Vector)
+        if (type != NodeType.Vector)
             return Vector2.Zero;
-        var x = _reader.ReadInt(_offset + 12);
-        var y = _reader.ReadInt(_offset + 16);
+        var x = _reader.ReadInt(offset + 12);
+        var y = _reader.ReadInt(offset + 16);
         return new Vector2(x, y);
     }
 
     public string GetString()
     {
-        if (_type != NodeType.String)
+        if (type != NodeType.String)
             return string.Empty;
-        var nameOffset = _reader.ReadInt(_offset + 12);
+        var nameOffset = _reader.ReadInt(offset + 12);
         var stringOffset = _reader.ReadLong(_reader.StringBlockOffset + (sizeof(long) * nameOffset));
-        var name = _reader.ReadString((int)stringOffset);
+        var readString = _reader.ReadString((int)stringOffset);
 
-        return name;
+        return readString;
     }
 
-    public Texture2D GetTexture(GraphicsDevice device)
+    public Texture2D? GetTexture(GraphicsDevice device)
     {
-        if (_type != NodeType.Bitmap)
-            return default;
-        
-        var bitmapId = _reader.ReadInt(_offset + 12);
-        var width = _reader.ReadShort(_offset + 16);
-        var height = _reader.ReadShort(_offset + 18);
+        if (type != NodeType.Bitmap)
+            return null;
+
+        var bitmapId = _reader.ReadInt(offset + 12);
+        var width = _reader.ReadShort(offset + 16);
+        var height = _reader.ReadShort(offset + 18);
         var bitmapImageLocation = _reader.ReadLong(_reader.BitmapBlockOffset + sizeof(long) * bitmapId);
-            
+
         int length = _reader.ReadInt((int)bitmapImageLocation);
         byte[] compressedBitmap = _reader.ReadBytes((int)bitmapImageLocation + 4, length).ToArray();
         byte[] uncompressedBitmap = new byte[width * height * 4];
-        LZ4Codec.Decode(compressedBitmap, 0, compressedBitmap.Length, 
+        LZ4Codec.Decode(compressedBitmap, 0, compressedBitmap.Length,
             uncompressedBitmap, 0, uncompressedBitmap.Length);
         using var image = Image.LoadPixelData<Bgra32>(uncompressedBitmap, width, height);
         using var stream = new MemoryStream();
@@ -137,7 +116,7 @@ public class NxNode : IDisposable
         {
             sb.Append($"Child: {child.Name}\n");
         }
-        
+
         return sb.ToString();
     }
 

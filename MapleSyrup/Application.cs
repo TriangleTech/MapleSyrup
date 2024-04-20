@@ -1,4 +1,5 @@
 using MapleSyrup.GameObjects;
+using MapleSyrup.GameObjects.Avatar;
 using MapleSyrup.GameObjects.Components;
 using MapleSyrup.Managers;
 using MapleSyrup.Nx;
@@ -21,12 +22,14 @@ public class Application : Game
         : base()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
-        _graphicsDeviceManager.PreferredBackBufferWidth = 1280;
-        _graphicsDeviceManager.PreferredBackBufferHeight = 768;
     }
     
     protected override void Initialize()
     {
+        _graphicsDeviceManager.PreferredBackBufferWidth = 1280;
+        _graphicsDeviceManager.PreferredBackBufferHeight = 768;
+        _graphicsDeviceManager.ApplyChanges();
+        
         base.Initialize();
     }
     
@@ -36,8 +39,10 @@ public class Application : Game
         _actorManager = new(this);
         _resourceManager.Initialize();
         
-        _world = new GameWorld("000020000");
-        _world.Load();
+        _world = new GameWorld();
+        _world.Load("000020000");
+
+        var avatar = new Avatar();
         base.LoadContent();
     }
 

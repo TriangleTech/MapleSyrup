@@ -1,4 +1,5 @@
 using MapleSyrup.GameObjects;
+using MapleSyrup.GameObjects.Avatar;
 using MapleSyrup.GameObjects.Components;
 using MapleSyrup.Nx;
 using MapleSyrup.Utils;
@@ -56,7 +57,7 @@ public class ActorManager
     {
         var mob = new Mob();
         mob.Position = pos;
-        mob.Layer = ActorLayer.Background;
+        mob.Layer = ActorLayer.TileLayer5;
         mob.Z = _actors.Count();
         var resource = ResourceManager.Instance;
         var nx = resource["Mob"];

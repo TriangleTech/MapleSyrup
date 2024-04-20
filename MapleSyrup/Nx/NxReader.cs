@@ -111,6 +111,7 @@ public unsafe class NxReader : IDisposable
 
     #region String Pool
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GenerateStringPool(bool isMap)
     {
         using var accessor = _mmf.CreateViewAccessor();
@@ -122,7 +123,6 @@ public unsafe class NxReader : IDisposable
             // fucking maps wanting to be special...
             {
                 var nodeOffset = _nodeBlockOffset;
-                var nameOffset = ReadInt((int)nodeOffset);
                 var firstChildId = ReadInt((int)nodeOffset + 4);
                 var childCount = ReadShort((int)nodeOffset + 8);
 
@@ -222,22 +222,73 @@ public unsafe class NxReader : IDisposable
         }
         else
         {
-            for (int i = 0; i < _nodeCount; i++)
-            {
-                {
-                    var nodeOffset = _nodeBlockOffset + 20 * i;
-                    var nameOffset = ReadInt((int)nodeOffset);
-                    var rootStringOffset = Unsafe.Read<long>(data + _stringBlockOffset + (sizeof(long) * nameOffset));
-                    var name = ReadString((int)rootStringOffset);
+            if (_fileName == "Character")
+            { // now characters wants to be special tooo ffs
+                var nodeOffset = _nodeBlockOffset;
+                var firstChildId = ReadInt((int)nodeOffset + 4);
+                var childCount = ReadShort((int)nodeOffset + 8);
 
-                    if (name.Contains(".img"))
+                for (int i = firstChildId; i < firstChildId + childCount; i++)
+                {
+                    var childOffset = (int)_nodeBlockOffset + 20 * i;
+                    var childNameOffset = ReadInt(childOffset);
+                    var nodeChildId = ReadInt(childOffset + 4);
+                    var nodeChildCount = ReadShort(childOffset + 8);
+                    var stringOffset = Unsafe.Read<long>(data + _stringBlockOffset + (sizeof(long) * childNameOffset));
+                    var childName = ReadString((int)stringOffset);
+                    
+                    if (childName.Contains(".img"))
                     {
-                        _stringPool.Add($"{_fileName}/{name}", (int)nodeOffset);
+                        _stringPool.Add($"{_fileName}/{childName}", (int)childOffset);
+                        continue;
+                    }
+
+                    switch (childName)
+                    {
+                        case "Shield":
+                        case "Shoe":
+                        case "Helmet":
+                        case "Pant":
+                        case "Overall":
+                        case "Face":
+                        {
+                            for (var j = nodeChildId; j < nodeChildId + nodeChildCount; j++)
+                            {
+                                var offset = (int)_nodeBlockOffset + 20 * i;
+                                var nameOffset = ReadInt(childOffset);
+                                var nameTableOffset = Unsafe.Read<long>(data + _stringBlockOffset + (sizeof(long) * nameOffset));
+                                var nodeName = ReadString((int)nameTableOffset);
+
+                                if (nodeName.Contains(".img"))
+                                {
+                                    _stringPool.Add($"{_fileName}/{nodeName}", (int)offset);
+                                }
+                            }
+                        }
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _nodeCount; i++)
+                {
+                    {
+                        var nodeOffset = _nodeBlockOffset + 20 * i;
+                        var nameOffset = ReadInt((int)nodeOffset);
+                        var rootStringOffset =
+                            Unsafe.Read<long>(data + _stringBlockOffset + (sizeof(long) * nameOffset));
+                        var name = ReadString((int)rootStringOffset);
+
+                        if (name.Contains(".img"))
+                        {
+                            _stringPool.Add($"{_fileName}/{name}", (int)nodeOffset);
+                        }
                     }
                 }
             }
         }
-        
+
         accessor.SafeMemoryMappedViewHandle.ReleasePointer();
     }
 

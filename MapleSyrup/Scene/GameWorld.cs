@@ -16,17 +16,20 @@ public class GameWorld
     private Camera _camera;
     private object _threadLock;
     
-    public GameWorld(string mapId)
+    public GameWorld()
     {
-        _mapId = mapId;
+        Console.WriteLine("Created World");
         _camera = new Camera();
         _threadLock = new();
         sb = new SpriteBatch(ResourceManager.Instance.GraphicsDevice);
     }
 
-    public void Load()
+    public void Load(string mapId)
     {
+        Console.WriteLine("Loading World");
+
         var resourceManager = ResourceManager.Instance;
+        _mapId = mapId;
         _map = resourceManager["Map"].GetNode($"{_mapId}.img");
 
         //LoadBackground();
@@ -43,6 +46,9 @@ public class GameWorld
         } while (layer < 8);
         
         LoadPortals();
+        
+        Console.WriteLine("Loaded World");
+
     }
 
     #region [PRIVATE] Load Functions
@@ -89,8 +95,6 @@ public class GameWorld
             actorManager.CreateTile((ActorLayer)layer + 1, texture, new Vector2(x, y), origin, order);
         }
     }
-
-    private Random random = new Random();
     
     private void LoadObjects(int layer)
     {

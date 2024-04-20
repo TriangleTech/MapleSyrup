@@ -22,13 +22,6 @@ public class NxFile : IDisposable
     {
         if (!_reader.StringPool.TryGetValue($"{_reader.File}/{node}", out var offset))
             throw new NullReferenceException();
-        
-        //var nameOffset = _reader.ReadInt(offset);
-        //var firstChildId = _reader.ReadInt(offset + 4);
-        //var childCount = _reader.ReadShort(offset + 8);
-        //var nodeType = _reader.ReadShort(offset + 10);
-        //var stringOffset = _reader.ReadLong(_reader.StringBlockOffset + (sizeof(long) * nameOffset));
-        //var name = _reader.ReadString((int)stringOffset);
         var info = ProcessNodeInfo(offset);
         var parent = new NxNode(ref _reader, info.nodeType, info.name, offset);
         ParseChildren(parent, info.firstChildId, info.childCount);
@@ -43,13 +36,6 @@ public class NxFile : IDisposable
         {
             var nodeOffset = _reader.NodeBlockOffset + 20 * i;
             var info = ProcessNodeInfo(nodeOffset);
-            //var nameOffset = _reader.ReadInt(nodeOffset);
-            //var nodeChildId = _reader.ReadInt(nodeOffset + 4);
-            //var nodeChildCount = _reader.ReadShort(nodeOffset + 8);
-            //var nodeType = _reader.ReadShort(nodeOffset + 10);
-            //var stringOffset = _reader.ReadLong(_reader.StringBlockOffset + (sizeof(long) * nameOffset));
-            //var name = _reader.ReadString((int)stringOffset);
-            
             var childNode = new NxNode(ref _reader, info.nodeType, info.name, nodeOffset);
             if (info.childCount > 0)
             {

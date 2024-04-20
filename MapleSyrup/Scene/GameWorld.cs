@@ -86,13 +86,13 @@ public class GameWorld
             var y = tile["y"].GetInt();
             var no = tile["no"].GetInt();
             var u = tile["u"].GetString();
-            var texture = tileSet[u][$"{no}"].GetTexture(resourceManager.GraphicsDevice);
+            var texture = tileSet[u][$"{no}"].GetTexture(resourceManager.GraphicsDevice).Get();
             var origin = tileSet[u][$"{no}"]["origin"].GetVector();
             var z = tileSet[u][$"{no}"]["z"].GetInt();
             var zM = tile["zM"].GetInt();
             var order = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
             
-            actorManager.CreateTile((ActorLayer)layer + 1, texture, new Vector2(x, y), origin, order);
+            actorManager.CreateTile((ActorLayer)layer + 1, ref texture, new Vector2(x, y), origin, order);
         }
     }
     
@@ -138,7 +138,8 @@ public class GameWorld
             }
             
             var origin = node["0"]["origin"].GetVector();
-            actorManager.CreateObject((ActorLayer)layer + 1, node["0"].GetTexture(resourceManager.GraphicsDevice),
+            var texture = node["0"].GetTexture(resourceManager.GraphicsDevice).Get();
+            actorManager.CreateObject((ActorLayer)layer + 1, ref texture,
                 new Vector2(x, y), origin, order, 0);
             
         }
@@ -162,8 +163,8 @@ public class GameWorld
 
         for (var i = 0; i < count - 1; i++)
         {
-            var texture = node[$"{i}"].GetTexture(resourceManager.GraphicsDevice);
-            actor.Animation.AddFrame(node.Has("delay", out var delay) ? delay.GetInt() : 150, texture);
+            var texture = node[$"{i}"].GetTexture(resourceManager.GraphicsDevice).Get();
+            actor.Animation.AddFrame(node.Has("delay", out var delay) ? delay.GetInt() : 150, ref texture);
         }
     }
 
@@ -213,7 +214,8 @@ public class GameWorld
                     var actor = actorManager.CreatePortal(portalNode["pv"], new Vector2(x, y), Vector2.Zero);
                     for (int i = 0; i < 7; i++)
                     {
-                        actor.Animation.AddFrame(150, actor.Node[$"{i}"].GetTexture(resourceManager.GraphicsDevice));
+                        var texture = actor.Node[$"{i}"].GetTexture(resourceManager.GraphicsDevice).Get();
+                        actor.Animation.AddFrame(150, ref texture);
                     }
                 }
                     break;

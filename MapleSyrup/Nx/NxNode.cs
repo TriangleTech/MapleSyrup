@@ -1,5 +1,6 @@
 using System.Text;
 using K4os.Compression.LZ4;
+using MapleSyrup.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
@@ -13,6 +14,7 @@ public class NxNode(ref NxReader reader, NodeType type, string nodeName, long of
 {
     private List<NxNode> _children = new();
     private readonly NxReader _reader = reader;
+    private RefCounted<Texture2D> _texture;
 
     public NodeType Type
     {
@@ -85,7 +87,7 @@ public class NxNode(ref NxReader reader, NodeType type, string nodeName, long of
         return readString;
     }
 
-    public Texture2D? GetTexture(GraphicsDevice device)
+    public RefCounted<Texture2D> GetTexture(GraphicsDevice device)
     {
         if (type != NodeType.Bitmap)
             return null;
@@ -104,8 +106,9 @@ public class NxNode(ref NxReader reader, NodeType type, string nodeName, long of
         using var stream = new MemoryStream();
         image.Save(stream, new PngEncoder());
         var tex = Texture2D.FromStream(device, stream);
+        _texture = new RefCounted<Texture2D>(tex);
 
-        return tex;
+        return _texture;
     }
 
     public override string ToString()
@@ -122,6 +125,7 @@ public class NxNode(ref NxReader reader, NodeType type, string nodeName, long of
 
     public void Dispose()
     {
+        _texture?.Release(true);
         _children.ForEach(node => node.Dispose());
         _children.Clear();
     }

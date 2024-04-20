@@ -74,10 +74,11 @@ public class ActorManager
                 if (frame.Name.Length > 3)
                     continue; // TODO: Deal with this later.
 
+                var texture = frame.GetTexture(resource.GraphicsDevice).Get();
                 var i = int.Parse(frame.Name);
                 state.AddFrame(
                     frame.Has("delay", out var delay) ? delay.GetInt() : 150,
-                    frame.GetTexture(resource.GraphicsDevice));
+                    ref texture);
             }
 
             mob.StateMachine.AddState(stateNode.Name, state);
@@ -94,7 +95,7 @@ public class ActorManager
     /// <param name="position"></param>
     /// <param name="origin"></param>
     /// <param name="zIndex"></param>
-    public void CreateTile(ActorLayer layer, Texture2D texture, Vector2 position, Vector2 origin, int zIndex)
+    public void CreateTile(ActorLayer layer, ref Texture2D texture, Vector2 position, Vector2 origin, int zIndex)
     {
         var tile = new Tile
         {
@@ -108,7 +109,7 @@ public class ActorManager
         Task.Run(() => actorAdded?.Invoke(tile));
     }
 
-    public void CreateObject(ActorLayer layer, Texture2D texture, Vector2 position, Vector2 origin, int zIndex, int delay)
+    public void CreateObject(ActorLayer layer, ref Texture2D texture, Vector2 position, Vector2 origin, int zIndex, int delay)
     {
         var obj = new MapObj()
         {
@@ -119,7 +120,7 @@ public class ActorManager
             Z = zIndex,
         };
         
-        obj.Animation.AddFrame(delay, texture);
+        obj.Animation.AddFrame(delay, ref texture);
         Task.Run(() => actorAdded?.Invoke(obj));
     }
     

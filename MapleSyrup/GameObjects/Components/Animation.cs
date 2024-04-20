@@ -21,7 +21,7 @@ public class Animation
         _frames = new();
     }
 
-    public void AddFrame(int delay, Texture2D frame)
+    public void AddFrame(int delay, ref Texture2D frame)
     {
         _delay = delay;
         _currentDelay = delay;

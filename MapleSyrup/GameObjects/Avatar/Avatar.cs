@@ -25,13 +25,12 @@ public class Avatar : Actor
         var headId = "00012000.img";
         using var nx = ResourceManager.Instance["Character"].GetNode(skinId);
 
-        foreach (var state in nx.Children)
+        foreach (var stateNode in nx.Children.Where(state => state.Name != "info"))
         {
-            _possibleStates.Add(state.Name);
-            Console.WriteLine($"State Names: {state.Name}");
+            _possibleStates.Add(stateNode.Name);
         }
     }
-    
+
     public override void Clear()
     {
         _possibleStates.Clear();

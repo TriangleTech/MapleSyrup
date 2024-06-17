@@ -1,3 +1,12 @@
+# Update (8/17/24)
+I know, been a while since the last update. I changed the codebase and will be posting a link here soon, I have to fix some stuff first. The new codebase is in C++, but if you're familiar with how this one looks, you'll see they quite identical.
+
+I didn't plan to change it, but C#'s processing is horrible. I made it a pure pointer base library at one point and still couldn't generate the biggest map faster than 25 seconds. 
+
+It's written in clean C++ (C#-like C++), it still has the same features as the prior one, plus some. I still plan on continuing the C# client, but it'll most likely become a pure offline client. The C++ is also further ahead than this one.
+
+Stay toned!
+
 # MapleSyrup
 MapleSyrup is a emulation client for MapleStory written in C#. This project is primarily for
 educational purposes and is highly recommended not to be used for commercial purposes. Use

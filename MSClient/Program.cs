@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using MapleSyrup;
-using MapleSyrup.Nx;
+using MSClient;
+using MSClient.NX;
 
-using var game = new Scene();
+using var game = new Application();
 game.Run();

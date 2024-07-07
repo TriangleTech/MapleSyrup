@@ -1,50 +1,40 @@
-# Update (8/17/24)
-I know, been a while since the last update. I changed the codebase and will be posting a link here soon, I have to fix some stuff first. The new codebase is in C++, but if you're familiar with how this one looks, you'll see they quite identical.
-
-I didn't plan to change it, but C#'s processing is horrible. I made it a pure pointer base library at one point and still couldn't generate the biggest map faster than 25 seconds. 
-
-It's written in clean C++ (C#-like C++), it still has the same features as the prior one, plus some. I still plan on continuing the C# client, but it'll most likely become a pure offline client. The C++ is also further ahead than this one.
-
-Stay toned!
-
 # MapleSyrup
-MapleSyrup is a emulation client for MapleStory written in C#. This project is primarily for
-educational purposes and is highly recommended not to be used for commercial purposes. Use
-at your own risk.
+>MapleSyrup, for the lack of a better name, is a C# MapleStory client emulator. 
+This project was created for the love of the game, and interest in understanding its fundamentals. 
+This project does not aim to be commercialized in any way, it's released to the community for those who also 
+enjoy undertaking projects such as this. This client has been re-written from the ground up, so it's back to 
+square one. Is it discouraging to start over? No, it's actually pretty fun. 
+ 
+> Legality: I'm not claiming rights or ownerships over any images used or the name "MapleStory".
+> All rights and trademarks of MapleStory go to their respective owners. 
 
-**Note**: Take a look at the branches, sometimes I will be working on a feature or change that may
-break the whole client, so I send it to an experimental branch. All branch names will be
-*experimental_* + the features I am doing.
+## What happened before?
+>Originally in June, accidentally put August, I honestly have no excuse as to why...I stated I would be moving 
+> forward with a C++ client, I decided to keep that under wraps and transfer what I learned in that client to 
+> this one. My schedule has also become somewhat stable now, so there won't be months in-between updates anymore.
 
-As of **01/10/2024** I am working on experimental_overhaul, it's much cleaner, in my opinion.
+>Loading times have been decreased, larger maps still take about 3 to 7 seconds to load, but that's better than 
+> the previous 25 seconds that it took. It could be better, but I haven't bothered to optimize anything yet.
 
-I will remove this note once work on the branch is complete.
+## What's being worked on? (For details check Changelog)
+>- Networking (partially done).
+>- Map loading (via networking).
 
-## Features
-Currently these are the features of the client with more to be added:
+## Building & Using Network-side.
+### Building
+>I primarily use JetBrains' Rider IDE, so I'm familiar with how to compile on that. Simply, grab the project, restore
+>the nuget packages, and build.
+### Using Networking
+>So, I'm more than happy to open source something like this, what I'm not going to do is completely hand over all the information. 
+This will cause not only problems for me, but for those who are inexperienced and decide to do something stupid like releasing a 
+PS without knowing how to modify information properly.
 
-- Hybrid Entity-Component-System (Experimental).
-- Various subsystems to control the engine.
-- Game Context, containing the systems within the engine, avoiding the singleton pattern.
-- Event-base communication system (Experimental).
-- Resource System with zero abstraction to WZ or NX format, regardless of which
-is used, it doesn't change the code base.
+>SO, with that rant out of the way. There are two ways to use the networking in this client:
+>- Either implement the MS cryptography system, I refuse.
+>- Remove all AES & MapleCustomEncryption out of a server and have it read the header and data.
 
-## TODO
-- Map Rendering (60%) missing background scrolling, NPCs, and benches.
-- Character Rendering (0%) *IN-WORK*
-- Mob Rendering (0%)
-- Networking (0%) NEXT IN LIST
+>It's pretty obvious what I did, anyone with a junior-level of programming knowledge can get this done in about 5 minutes, so it's nothing difficult.
 
-## Notes
-- This project to created to not copy the original game, or to be "MS-Like", but more to
-create a flexible, extensible, and easy-to-use "engine" that features can be added as it 
-gets complete.
-- The primarily aim for this reason is to find alternative to the original methods MS used
-to render or move players and objects. This is where the learning purposes comes in.
-- While I will provide support with enhancements and bug fixes, support for any additional 
-content after this project is considered "complete" will not be provided.
-- This project works on priorities, so there'll be instances where things are **purposely** 
-left incomplete for the sake of completion. This items will be minor and not affect gameplay.
- An example of this, background scrolling (i.e clouds, lights, etc.) are ignored for the sake
-of progression. **It will be added at a later time** but it doesn't affect gameplay at all.
+## Libraries used
+I develop primary on Linux, so this should work with no issues on windows. I do test it from time to time on windows.
+- Raylib-csLo (The other one works too but lacks a lot of the other libraries.)

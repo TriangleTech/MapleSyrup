@@ -1,0 +1,11 @@
+Changelog (7/1/2024 - 7/7/2024)
+-- Decided to take a different approach.
+-- Removed FNA support, amazing library, but lacks the features needed to properly emulate MS.
+-- Removed all files, literally.
+-- Added Raylib-CSLo
+-- Added Networking Support (doesn't use encryption)
+-- Added NetworkManager
+-- Added ActorManager
+-- Added Tile loading
+-- Added Object loading
+

@@ -9,7 +9,7 @@ public abstract class Actor(ref NxNode node) : IComparable<Actor>
 {
     protected string _name = "";
     protected int _zIndex = 0;
-    protected ActorLayer _layer = ActorLayer.Background;
+    protected ActorLayer _layer;
     protected bool _visible = true;
     protected NxNode _node = node;
     protected Rectangle _bounds = new();

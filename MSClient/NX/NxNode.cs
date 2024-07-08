@@ -86,6 +86,32 @@ public class NxNode
 
         throw new Exception($"[NX] Parent: {Name} does not contain child {name}");
     }
+    
+    public bool Has(string node)
+    {
+        if (SaveMode == NxSaveMode.Save)
+        {
+            return _children.TryGetValue(node, out _);
+        }
+        
+        for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
+        {
+            var childOffset = _reader.NodeBlockOffset + 20 * i;
+            _reader.Seek(childOffset);
+            var nameOffset = _reader.ReadInt();
+
+            _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
+            var stringOffset = _reader.ReadLong();
+            var childName = _reader.ReadString(stringOffset);
+            
+            if (childName == node)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public bool Has(string node, out NxNode? child)
     {

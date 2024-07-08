@@ -13,6 +13,7 @@ public class World : Actor
 {
     private bool _isLogin;
     private readonly NxNode _ui;
+    private readonly Camera2D _camera;
     
     public WorldState State { get; set; }
     
@@ -20,6 +21,9 @@ public class World : Actor
     : base(ref mapNode)
     {
         _isLogin = false;
+        _camera = new Camera2D();
+        _camera.target = new Vector2(0, 0);
+        _camera.zoom = 1.0f;
     }
 
     public World(ref NxNode mapNode, ref NxNode uiNode)
@@ -33,6 +37,7 @@ public class World : Actor
     {
         var timer = new Stopwatch();
         timer.Start();
+        LoadBackground();
         for (var i = 0; i < 8; i++)
         {
             LoadObjects(i);
@@ -47,18 +52,44 @@ public class World : Actor
     private void LoadBackground()
     {
         var root = _node["back"];
+        var actorManager = ServiceLocator.Get<ActorManager>();
 
-       for (var i = 0; i < root.ChildCount; i++)
-       {
-           var background = root[$"{i}"];
-           var bS = background.GetString("bS");
+        for (var i = 0; i < root.ChildCount; i++)
+        {
+            var background = root[$"{i}"];
+            var bS = background.GetString("bS");
+            var no = background.GetInt("no");
             var x = background.GetInt("x");
             var y = background.GetInt("y");
             var rx = background.GetInt("rx");
             var ry = background.GetInt("ry");
             var cx = background.GetInt("cx");
             var cy = background.GetInt("cy");
-            
+            var a = background.GetInt("a");
+            var front = background.GetInt("front");
+            var ani = background.GetInt("ani");
+            var f = background.GetInt("f");
+
+            if (ani == 1)
+            {
+                var backgroundSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Back/{bS}.img");
+                var back = backgroundSet["ani"][$"{no}"];
+                var frames = new List<Texture>(back.ChildCount);
+                for (var j = 0; j < back.ChildCount; j++)
+                {
+                    var texture = back.GetTexture($"{j}");
+                    frames.Add(texture);
+                }
+                var origin = backgroundSet["back"][$"{no}"].GetVector("origin");
+                actorManager.Create(new Background(ref background, frames, new Vector2(x, y), cx, cy, rx, ry, front == 1 ? ActorLayer.Foreground : ActorLayer.Background));
+            }
+            else
+            {
+                var backgroundSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Back/{bS}.img");
+                var texture = backgroundSet["back"].GetTexture($"{no}");
+                var origin = backgroundSet["back"][$"{no}"].GetVector("origin");
+                actorManager.Create(new Background(ref background, texture, new Vector2(x, y), origin, cx, cy, rx, ry, front == 1 ? ActorLayer.Foreground : ActorLayer.Background));
+            }
         }
     }
 
@@ -82,7 +113,7 @@ public class World : Actor
             var origin = tileSet[u][$"{no}"].GetVector("origin");
             var z = tileSet[u][$"{no}"].GetInt("z");
             var zM = tile.GetInt("zM");
-            var order = z + 10 * (3000 * (layer + 1) - zM) - 1073721834;
+            var order = z + 10 * (3000 * (int)(ActorLayer.TileLayer0 + layer) - zM) - 1073721834;
             
             actorManager.Create(new MapObject(ref tile, texture, new Vector2(x, y), origin, ActorLayer.TileLayer0 + layer, order));
         }
@@ -105,21 +136,21 @@ public class World : Actor
             var z = obj.GetInt("z");
             var f = obj.GetInt("f");
             var zM = obj.GetInt("zM");
-            var order = (30000 * (layer + 1) + z) - 1073739824;
+            var order = (30000 * (int)(ActorLayer.TileLayer0 + layer) + z) - 1073739824;
             var objSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Obj/{oS}.img");
             var node = objSet[l0][l1][l2];
 
-            if (node.Has("blend", out _))
+            if (node.Has("blend"))
             {
                 //LoadBlendAnimation();
                 continue;
             }
-            if (node.Has("obstacle", out _))
+            if (node.Has("obstacle"))
             {
                 //LoadObstacle();
                 continue;
             }
-            if (node.Has("seat", out _))
+            if (node.Has("seat"))
             {
                 //LoadSeat();
                 continue;
@@ -146,30 +177,15 @@ public class World : Actor
         var z = obj.GetInt("z");
         var f = obj.GetInt("f");
         var zM = obj.GetInt("zM");
-        var order = (30000 * (layer + 1) + z) - 1073739824;
+        var order = (30000 * (int)(ActorLayer.TileLayer0 + layer) + z) - 1073739824;
 
         var frames = new List<Texture>(node.ChildCount);
-        for (var i = 0; i < node.ChildCount - 1; i++)
+        for (var i = 0; i < node.ChildCount; i++)
         {
             var texture = node.GetTexture($"{i}");
             frames.Add(texture);
         }
         actorManager.Create(new MapObject(ref node, frames, new Vector2(x, y), ActorLayer.TileLayer0 + layer, order));
-    }
-
-    private void LoadBlendAnimation()
-    {
-        
-    }
-
-    private void LoadObstacle()
-    {
-        
-    }
-
-    private void LoadSeat()
-    {
-        
     }
 
     private void LoadPortals()
@@ -241,12 +257,12 @@ public class World : Actor
     public override void Draw(float frameTime)
     {
         var actor = ServiceLocator.Get<ActorManager>();
+        Raylib.BeginMode2D(_camera);
         actor.Draw(frameTime);
+        Raylib.EndMode2D();
     }
     
     public override void Clear()
     {
-        var actor = ServiceLocator.Get<ActorManager>();
-        actor.ClearActors();
     }
 }

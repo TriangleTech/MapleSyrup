@@ -8,4 +8,13 @@ Changelog (7/1/2024 - 7/7/2024)
 -- Added ActorManager
 -- Added Tile loading
 -- Added Object loading
-
+-- Internal structure changes.
+-- Made it so each layer is their own-sorted set, having different set allows easier transferring between layers.
+-- Fixed the frame time calculation.
+-- Added background loading, nothing special yet.
+-- Added an animated boolean to both MapObject and Background
+-- Added a Has method, without the out variable to the NxNode.
+-- Added a camera to the world, this will be the primary camera, nothing special yet.
+-- Fixed an issue where the maps were unloaded twice.
+-- Fixed an issues where the animations were taking forever to update.
+-- Found an issue with the sorting system, will fix later.

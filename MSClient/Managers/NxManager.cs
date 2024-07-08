@@ -13,7 +13,7 @@ public class NxManager : IManager
 
     public void Initialize()
     {
-        _nx[MapleFiles.Map] = new NxFile("/ext/dev/maple_dev/v62_nx/Map.nx", NxSaveMode.None) ;
+        _nx[MapleFiles.Map] = new NxFile("/home/devy/mapledev/v62/Map.nx", NxSaveMode.None) ;
     }
 
     public NxFile Get(MapleFiles file)

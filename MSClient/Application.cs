@@ -23,12 +23,12 @@ public class Application : IDisposable
         while (!Raylib.WindowShouldClose())
         { 
             //network.ProcessResponses();
-            Update(Raylib.GetFrameTime());
+            Update(Raylib.GetFrameTime() * 1000);
             
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib.GRAY);
             Raylib.DrawFPS(0, 0);
-            Draw(Raylib.GetFrameTime());
+            Draw(Raylib.GetFrameTime() * 1000);
             Raylib.EndDrawing();
             //network.ProcessRequests();
         }

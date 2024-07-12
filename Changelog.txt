@@ -1,4 +1,44 @@
-Changelog (7/1/2024 - 7/7/2024)
+Changelog (7.11.24) Character & Map Update
+--Added RayGui stuff into the client.
+--Added Face into the player, bodytype, and bodypart.
+--Added separate update methods for body and face, still needs to be touched up a bit.
+--Added a special case for Character.nx in the ReadNodeData method, it now grabs the appropriate nodes.
+--Added a command window, it's going to be used for debugging, changing/adding stuff dynamically, once things get much further.
+--Added BodyPart code that encompasses all cases, for now.
+--Added BodyType enum
+--Added Arm struct to handle the arms of the player
+--Added Clear method to Body, Head, Arm classes, to release the textures.
+--Added a check where the state doesn't need the face rendered.
+--Added random delay to the blinking, it's kind of fast right now, but it works.
+--Fixed an issues where the wrong values for the state were being called
+--Fixed an animation issue for both MapObjects and the character where the last frame was being skipped.
+--Fixed the positioning of all body parts of the player.
+--Changed the ActorManager so it only detects actors that can be click on, not all of them.
+--Face renders correctly, for now. Had to use an Abs function, which I'm not sure if that's correct.
+--Removed Arm, Body, Head classes.
+--Removed ResourceManager, not useful right now.
+--Removed Obstacle class, not needed right now.
+
+ChangeLog (7.10.24) Experimental Avatar 
+-- Added ActorType to differentiate between the different actors
+-- Added Body, BodyPart, and Head to handle the creation of the player body for now
+-- Added the Player class which encompasses the whole body
+-- Added a GetPlayer method to ActorManager
+__ Made it so you can see the children in the node, in case you need the names instead of the count.
+-- Added a test player to the world class
+-- Changed how the world class is initialized so it makes more sense now.
+--Fixed an issue with other states that caused the client to crash.
+--Fixed an issue with the animation (Player/MapObject) that was iterating correctly.
+--Separated the different body rendering for efficiency.
+
+Changelog (7.8.2024) Small changes
+-- Removed the IComparable from the Actor class, not point having it there.
+-- Changed the actor dictionary to contain a List instead of a sorted set.
+-- (Possible Bug) Fixed the sorting, for now. It's hard to say since everything isn't there yet.
+-- Added a SortAll List, to sort everything once it's there to reduce sort calls.
+-- Fixed the issue with animated objects not being sorted, turns out I didn't even assign the order or layer.
+
+Changelog (7.1.24 - 7.7.24) Rebase
 -- Decided to take a different approach.
 -- Removed FNA support, amazing library, but lacks the features needed to properly emulate MS.
 -- Removed all files, literally.

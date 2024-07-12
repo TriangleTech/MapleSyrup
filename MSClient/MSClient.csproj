@@ -14,11 +14,18 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+      <Content Include="..\Changelog.txt">
+        <Link>Changelog.txt</Link>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
       <PackageReference Include="Raylib-CsLo" Version="4.2.0.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MapleSyrup_Do_Not_Build\MapleSyrup_Do_Not_Build.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,12 +1,15 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using MSClient.Actors;
+using MSClient.Avatar;
 using MSClient.Net;
+using Raylib_CsLo;
 
 namespace MSClient.Managers;
 
 public class ActorManager : IManager
 {
-    private readonly Dictionary<ActorLayer, SortedSet<Actor>> _actors;
+    private readonly Dictionary<ActorLayer, List<Actor>> _actors;
     private readonly Queue<Actor> _actorsToRemove, _actorsToAdd;
     private readonly Queue<(Actor, ActorLayer)> _actorsToChange;
     private readonly object _threadLock;
@@ -22,17 +25,17 @@ public class ActorManager : IManager
 
     public void Initialize()
     {
-        _actors[ActorLayer.Background] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer0] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer1] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer2] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer3] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer4] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer5] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer6] = new SortedSet<Actor>();
-        _actors[ActorLayer.TileLayer7] = new SortedSet<Actor>();
-        _actors[ActorLayer.Effects] = new SortedSet<Actor>();
-        _actors[ActorLayer.Foreground] = new SortedSet<Actor>();
+        _actors[ActorLayer.Background] = new List<Actor>();
+        _actors[ActorLayer.TileLayer0] = new List<Actor>();
+        _actors[ActorLayer.TileLayer1] = new List<Actor>();
+        _actors[ActorLayer.TileLayer2] = new List<Actor>();
+        _actors[ActorLayer.TileLayer3] = new List<Actor>();
+        _actors[ActorLayer.TileLayer4] = new List<Actor>();
+        _actors[ActorLayer.TileLayer5] = new List<Actor>();
+        _actors[ActorLayer.TileLayer6] = new List<Actor>();
+        _actors[ActorLayer.TileLayer7] = new List<Actor>();
+        _actors[ActorLayer.Effects] = new List<Actor>();
+        _actors[ActorLayer.Foreground] = new List<Actor>();
     }
 
     public void Shutdown()
@@ -66,6 +69,135 @@ public class ActorManager : IManager
     {
         lock (_threadLock)
             _actorsToChange.Enqueue((actor, layer));
+    }
+    
+    #region Actor Locators
+
+    public bool GetPlayer(out Player? found)
+    {
+        lock (_threadLock)
+        {
+            foreach (var actor in _actors[ActorLayer.TileLayer0].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer1].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer2].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer3].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer4].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer5].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer6].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer7].Where(actor => actor.ActorType == ActorType.Player))
+            {
+                found = actor as Player;
+                return true;
+            }
+
+            found = null;
+            return false;
+        }
+    }
+
+    public bool GetActorAt(Vector2 position, out Actor? found)
+    {
+        lock (_threadLock)
+        {
+            foreach (Actor? actor in _actors[ActorLayer.TileLayer0].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer1].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer2].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer3].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer4].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer5].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer6].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds)
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+            foreach (var actor in _actors[ActorLayer.TileLayer7].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds)
+                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
+            {
+                found = actor;
+                return true;
+            }
+
+            found = null;
+            return false;
+        }
+    }
+    
+    #endregion
+
+    #region Sort/Clear/Dispatch
+
+    public void SortAll()
+    {
+        //_actors[ActorLayer.Background].Sort(new ActorCompare<Actor>()); // don't need to be sorted.
+        _actors[ActorLayer.TileLayer0].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer1].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer2].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer3].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer4].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer5].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer6].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.TileLayer7].Sort(new ActorCompare<Actor>());
+        _actors[ActorLayer.Effects].Sort(new ActorCompare<Actor>()); // might not need to be sorted.
+        //_actors[ActorLayer.Foreground].Sort(new ActorCompare<Actor>()); // same as background.
     }
 
     public void ClearActors()
@@ -170,7 +302,10 @@ public class ActorManager : IManager
             }
         }
     }
+    
+    #endregion
 
+    #region Update/Draw/Validate
     public void Update(float frameTime)
     {
         lock (_threadLock)
@@ -289,6 +424,7 @@ public class ActorManager : IManager
             {
                 var actorToAdd = _actorsToAdd.Dequeue();
                 _actors[actorToAdd.Layer].Add(actorToAdd);
+                _actors[actorToAdd.Layer].Sort(new ActorCompare<Actor>());
             }
 
             // Process actors whose layers need to be changed
@@ -298,7 +434,10 @@ public class ActorManager : IManager
                 _actors[actorToChange.Layer].Remove(actorToChange);
                 actorToChange.Layer = newLayer;
                 _actors[newLayer].Add(actorToChange);
+                _actors[newLayer].Sort(new ActorCompare<Actor>());
             }
         }
     }
+    
+    #endregion
 }

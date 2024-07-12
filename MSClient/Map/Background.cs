@@ -16,7 +16,7 @@ public class Background : Actor
     private int _delay = 150;
     
     public Background(ref NxNode node, Texture texture, Vector2 position, Vector2 origin, int cx, int cy, int rx, int ry, ActorLayer layer)
-        : base(ref node)
+        : base(node, ActorType.Background)
     {
         _node = node;
         _frames = new List<Texture>(1) { texture };
@@ -34,7 +34,7 @@ public class Background : Actor
     }
     
     public Background(ref NxNode node, List<Texture> frames, Vector2 position, int cx, int cy, int rx, int ry, ActorLayer layer)
-        : base(ref node)
+        : base(node, ActorType.Background)
     {
         _node = node;
         _frames = frames;

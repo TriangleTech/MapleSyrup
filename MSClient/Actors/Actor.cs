@@ -5,9 +5,10 @@ using Raylib_CsLo;
 
 namespace MSClient.Actors;
 
-public abstract class Actor(ref NxNode node) : IComparable<Actor>
+public abstract class Actor(NxNode? node, ActorType type)
 {
     protected string _name = "";
+    protected ActorType _type = ActorType.None;
     protected int _zIndex = 0;
     protected ActorLayer _layer;
     protected bool _visible = true;
@@ -17,6 +18,7 @@ public abstract class Actor(ref NxNode node) : IComparable<Actor>
 
     public Vector2 Position => _position - _origin;
     public Rectangle Bounds => _bounds;
+    public ActorType ActorType => _type;
 
     public NxNode Node
     {
@@ -46,23 +48,6 @@ public abstract class Actor(ref NxNode node) : IComparable<Actor>
     {
         get => _visible;
         set => _visible = value;
-    }
-
-    public int CompareTo(Actor? other)
-    {
-        if (ReferenceEquals(this, other))
-            return 0;
-        if (ReferenceEquals(null, other))
-            return 1;
-
-        var layerComparison = _layer.CompareTo(other.Layer);
-        if (layerComparison != 0)
-            return layerComparison;
-
-        var indexComparison = _zIndex.CompareTo(other.Z);
-        if (indexComparison != 0)
-            return indexComparison;
-        return 1;
     }
 
     public abstract void Clear();

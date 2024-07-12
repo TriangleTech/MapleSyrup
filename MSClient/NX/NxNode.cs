@@ -13,10 +13,11 @@ public class NxNode
     public long Offset { get; }
     public int FirstChildId { get; }
     public short ChildCount { get; }
+    public Dictionary<string, long> Children => _children;
     public NodeType NodeType { get; }
     public NxSaveMode SaveMode { get; }
     
-    public NxNode(ref NxReader reader, long offset, string name, NxSaveMode mode = NxSaveMode.None)
+    public NxNode(NxReader reader, long offset, string name, NxSaveMode mode = NxSaveMode.None)
     {
         _reader = reader;
         Offset = offset;
@@ -66,7 +67,7 @@ public class NxNode
         if (SaveMode == NxSaveMode.Save)
         {
             _ = _children.TryGetValue(name, out var offset);
-            return offset > 0 ? new NxNode(ref _reader, offset, name, SaveMode) : throw new Exception($"[NX] Parent: {Name} does not contain child {name}");
+            return offset > 0 ? new NxNode(_reader, offset, name, SaveMode) : throw new Exception($"[NX] Parent: {Name} does not contain child {name}");
         }
         
         for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
@@ -80,7 +81,7 @@ public class NxNode
             var childName = _reader.ReadString(stringOffset);
             if (childName == name)
             {
-                return new NxNode(ref _reader, childOffset, childName);
+                return new NxNode(_reader, childOffset, childName);
             }
         }
 
@@ -118,7 +119,7 @@ public class NxNode
         if (SaveMode == NxSaveMode.Save)
         {
             _ = _children.TryGetValue(node, out var offset);
-            child = offset > 0 ? new NxNode(ref _reader, offset, node, SaveMode) : throw new Exception($"[NX] Parent: {Name} does not contain child {node}");
+            child = offset > 0 ? new NxNode(_reader, offset, node, SaveMode) : throw new Exception($"[NX] Parent: {Name} does not contain child {node}");
             return true;
         }
         
@@ -134,7 +135,7 @@ public class NxNode
             
             if (childName == node)
             {
-                child = new NxNode(ref _reader, childOffset, childName);
+                child = new NxNode(_reader, childOffset, childName);
                 return true;
             }
         }
@@ -162,8 +163,7 @@ public class NxNode
             var childOffset = _reader.NodeBlockOffset + 20 * i;
             _reader.Seek(childOffset);
             var nameOffset = _reader.ReadInt();
-            _reader.Skip(4); // firstchildid
-            _reader.Skip(2); // childcount
+            _reader.Skip(6);
             var type = (NodeType)_reader.ReadShort();
 
             _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
@@ -199,8 +199,7 @@ public class NxNode
             var childOffset = _reader.NodeBlockOffset + 20 * i;
             _reader.Seek(childOffset);
             var nameOffset = _reader.ReadInt();
-            _reader.Skip(4); // firstchildid
-            _reader.Skip(2); // childcount
+            _reader.Skip(6);
             var type = (NodeType)_reader.ReadShort();
             
             _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
@@ -234,8 +233,7 @@ public class NxNode
             var childOffset = _reader.NodeBlockOffset + 20 * i;
             _reader.Seek(childOffset);
             var nameOffset = _reader.ReadInt();
-            _reader.Skip(4); // firstchildid
-            _reader.Skip(2); // childcount
+            _reader.Skip(6);
             var type = (NodeType)_reader.ReadShort();
             
             _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
@@ -274,8 +272,7 @@ public class NxNode
             var childOffset = _reader.NodeBlockOffset + 20 * i;
             _reader.Seek(childOffset);
             var nameOffset = _reader.ReadInt();
-            _reader.Skip(4); // firstchildid
-            _reader.Skip(2); // childcount
+            _reader.Skip(6);
             var type = (NodeType)_reader.ReadShort();
             
             _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
@@ -358,8 +355,7 @@ public class NxNode
             var childOffset = _reader.NodeBlockOffset + 20 * i;
             _reader.Seek(childOffset);
             var nameOffset = _reader.ReadInt();
-            _reader.Skip(4); // firstchildid
-            _reader.Skip(2); // childcount
+            _reader.Skip(6);
             var type = (NodeType)_reader.ReadShort();
             
             _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
@@ -424,4 +420,5 @@ public enum NxSaveMode
 {
     None,
     Save
+
 }

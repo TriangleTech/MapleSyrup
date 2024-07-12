@@ -16,7 +16,7 @@ public class MapObject : Actor
     private int _delay;
 
     public MapObject(ref NxNode node, Texture texture, Vector2 position, Vector2 origin, ActorLayer layer, int order)
-        : base(ref node)
+        : base(node, ActorType.MapObject)
     {
         _node = node;
         _frames = new List<Texture>(1) { texture };
@@ -31,14 +31,16 @@ public class MapObject : Actor
     }
 
     public MapObject(ref NxNode node, List<Texture> textures, Vector2 position, ActorLayer layer, int order)
-        : base(ref node)
+        : base(node, ActorType.MapObject)
     {
         _node = node;
         _currentFrame = 0;
         _frames = textures;
-        _frameCount = _frames.Count - 1;
+        _frameCount = _frames.Count;
         _animated = true;
         _position = position;
+        _layer = layer;
+        _zIndex = order;
         _origin = _node["0"].GetVector("origin");
         _delay = _node["0"].GetInt("delay");
         _bounds = new Rectangle(Position.X, Position.Y, _frames[0].width, _frames[0].height);
@@ -66,15 +68,11 @@ public class MapObject : Actor
     {
         if (!_animated)
             return;
-        
-        if (_currentFrame >= _frameCount) {
-            _currentFrame = 0;
-            _delay = _node["0"].GetInt("delay");
-            return;
-        }
 
         if (_delay <= 0) {
             _currentFrame++;
+            if (_currentFrame >= _frameCount)
+                _currentFrame = 0;
             _delay = _node[$"{_currentFrame}"].GetInt("delay");
         } else {
             _delay -= (int)frameTime;

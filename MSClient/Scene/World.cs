@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using MSClient.Actors;
+using MSClient.Avatar;
 using MSClient.Managers;
 using MSClient.Map;
 using MSClient.Net;
@@ -12,29 +13,26 @@ namespace MSClient.Scene;
 public class World : Actor
 {
     private bool _isLogin;
-    private readonly NxNode _ui;
-    private readonly Camera2D _camera;
+    private Camera2D _camera;
+    private Player _player;
     
     public WorldState State { get; set; }
-    
-    public World(ref NxNode mapNode)
-    : base(ref mapNode)
-    {
-        _isLogin = false;
-        _camera = new Camera2D();
-        _camera.target = new Vector2(0, 0);
-        _camera.zoom = 1.0f;
-    }
 
-    public World(ref NxNode mapNode, ref NxNode uiNode)
-    : base(ref mapNode)
+    public World(NxNode mapNode, bool isLogin)
+    : base(mapNode, ActorType.None)
     {
-        _isLogin = true;
-        _ui = uiNode;
+        _node = mapNode;
+        _isLogin = isLogin;
+        _camera = new Camera2D
+        {
+            target = new Vector2(0, 0),
+            zoom = 1.0f
+        };
     }
 
     public void Load()
     {
+        var actor = ServiceLocator.Get<ActorManager>();
         var timer = new Stopwatch();
         timer.Start();
         LoadBackground();
@@ -45,6 +43,12 @@ public class World : Actor
         }
         timer.Stop();
         Console.WriteLine($"Map fully loaded in: {timer.ElapsedMilliseconds} ms");
+        actor.SortAll();
+        _player = new Player();
+        _player.Layer = ActorLayer.TileLayer6;
+        _player.Init();
+        
+        actor.AddActor(_player);
     }
     
     #region Loading Functions
@@ -80,7 +84,6 @@ public class World : Actor
                     var texture = back.GetTexture($"{j}");
                     frames.Add(texture);
                 }
-                var origin = backgroundSet["back"][$"{no}"].GetVector("origin");
                 actorManager.Create(new Background(ref background, frames, new Vector2(x, y), cx, cy, rx, ry, front == 1 ? ActorLayer.Foreground : ActorLayer.Background));
             }
             else
@@ -163,7 +166,6 @@ public class World : Actor
             
             var origin = node["0"].GetVector("origin");
             var texture = node.GetTexture("0");
-            
             actorManager.Create(new MapObject(ref node, texture, new Vector2(x, y), origin, ActorLayer.TileLayer0 + layer, order));
         }
     }
@@ -190,9 +192,8 @@ public class World : Actor
 
     private void LoadPortals()
     {
-        
         var actorManager = ServiceLocator.Get<ActorManager>();;
-        var root = _node[$"portal"];
+        var root = _node["portal"];
         var helper = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode("MapHelper.img");
         var portalNode = helper["portal"]["game"];
 
@@ -251,7 +252,23 @@ public class World : Actor
     {
         var actor = ServiceLocator.Get<ActorManager>();
         actor.Update(frameTime);
+
+        var mousePos = Raylib.GetMousePosition();
+        if (actor.GetActorAt(mousePos, out var found))
+        {
+            if (found != null && Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+                actor.ChangeActorLayer(found, ActorLayer.TileLayer6);
+        }
         actor.ValidateActors();
+
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_LEFT))
+            _camera.target.X -= 10.0f;
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_UP))
+            _camera.target.Y -= 10.0f;
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_DOWN))
+            _camera.target.Y += 10.0f;
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT))
+            _camera.target.X += 10.0f;
     }
 
     public override void Draw(float frameTime)

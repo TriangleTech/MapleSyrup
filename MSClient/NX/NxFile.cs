@@ -98,6 +98,54 @@ public class NxFile
                         break;
                 }
             }
+        } else if (_parentFile == "Character")
+        {
+            for (var i = rootFirstChildId; i < rootFirstChildId + rootChildCount; i++)
+            {
+                var offset = _reader.NodeBlockOffset + 20 * i;
+                _reader.Seek(offset);
+                var nameOffset = _reader.ReadInt();
+                var firstChildId = _reader.ReadInt();
+                var childCount = _reader.ReadShort();
+                _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
+                var stringOffset = _reader.ReadLong();
+                var name = _reader.ReadString(stringOffset);
+                switch (name)
+                {
+                    case "Cap": 
+                    case "Cape":
+                    case "Coat":
+                    case "Face":
+                    case "Glove":
+                    case "Hair":
+                    case "Longcoat":
+                    case "Pants":
+                    case "PetEquip":
+                    case "Ring":
+                    case "Shield":
+                    case "Shoes":
+                    case "TamingMob":
+                    case "Weapon":
+                    {
+                        for (var j = firstChildId; j < firstChildId + childCount; j++)
+                        {
+                            var childOffset = _reader.NodeBlockOffset + 20 * j;
+                            _reader.Seek(childOffset);
+                            var childNameOffset = _reader.ReadInt();
+                            _reader.Seek(_reader.StringBlockOffset + 8 * childNameOffset);
+                            var childStringOffset = _reader.ReadLong();
+                            var childName = _reader.ReadString(childStringOffset);
+                            _stringPool.Add($"{name}/{childName}", childOffset);
+                        }
+                    }
+                        break;
+                    default:
+                    {
+                        _stringPool.Add($"{name}", offset);
+                    }
+                        break;
+                }
+            }
         }
         else
         {
@@ -108,10 +156,6 @@ public class NxFile
                 _reader.Seek(offset);
 
                 var nameOffset = _reader.ReadInt();
-                var firstChildId = _reader.ReadInt();
-                var childCount = _reader.ReadShort();
-                var type = (NodeType)_reader.ReadShort();
-
                 _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
                 var stringOffset = _reader.ReadLong();
                 var name = _reader.ReadString(stringOffset);
@@ -127,7 +171,7 @@ public class NxFile
     {
         if (!_stringPool.TryGetValue(nodeName, out var offset))
             throw new NullReferenceException($"[NX] The node ({nodeName}) was not found within the string pool.");
-        return new NxNode(ref _reader, offset, nodeName, _saveMode);
+        return new NxNode(_reader, offset, nodeName, _saveMode);
     }
 }
 

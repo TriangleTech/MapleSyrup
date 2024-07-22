@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleSyrup_Do_Not_Build", "MapleSyrup_Do_Not_Build\MapleSyrup_Do_Not_Build.csproj", "{E8337388-07F4-4C99-950C-EC0E8E56F888}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSClient", "MSClient\MSClient.csproj", "{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

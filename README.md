@@ -28,15 +28,23 @@ later.
 - Restore Nuget Packages
 - Build
 
-### Using Networking
+### Using Networking (Updated 7.25.24)
 While I won't provide the server source I am using, can't give everything out. I will say that
 it fairly simple and straightforward to grab a server source, of any kind, and modify it like I state
 below. This client is create for fun and entertainment purposes, the server side is a plus, not a
-requirement. 
+requirement. Eventually I do plan on releasing a dummy server, for those who want to play "single player"
+this dummy sever will just read and slap back data, no database required, only a simple loopback
+of the 127 kind. 
 
-SO, with that rant out of the way. There are two ways to use the networking in this client:
+On that note, the next update will break compactibility with regular servers, it has to do with 
+how the header data for packets is read. I changed it so it's a short being read and the opcode
+being included in the header. So basically two shorts being sent first, I will add forward 
+compatbility later on. This update will be pushed closer to the end of July, beginning of August.
+
+So, with that out of the way. There are two ways to use the networking in this client:
 - Either implement the MS cryptography system, I refuse.
 - Remove all AES & MapleCustomEncryption out of a server and have it read the header and data.
+- Change it so that the header contains a short packet length and a short opcode.
 
 It's pretty obvious what I did, anyone with a junior-level of programming knowledge can get this done in about 5 minutes, so it's nothing difficult.
 

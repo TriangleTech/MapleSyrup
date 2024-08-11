@@ -14,7 +14,6 @@ public class MapLoader
     public bool Load(NxNode node)
     {
         _node = node;
-        var actor = ServiceLocator.Get<ActorManager>();
         var timer = new Stopwatch();
         timer.Start();
         LoadBackground();
@@ -24,7 +23,7 @@ public class MapLoader
             LoadTile(i);
         }
         timer.Stop();
-        actor.SortAll();
+        ServiceLocator.Get<WorldManager>().GetWorld().SortLayers();
         Console.WriteLine($"Map fully loaded in: {timer.ElapsedMilliseconds} ms");
         return true;
     }
@@ -67,64 +66,8 @@ public class MapLoader
         for (var i = 0; i < root["obj"].ChildCount; i++)
         {
             var obj = root["obj"][$"{i}"];
-            var oS = obj.GetString("oS");
-            var l0 = obj.GetString("l0");
-            var l1 = obj.GetString("l1");
-            var l2 = obj.GetString("l2");
-            var x = obj.GetInt("x");
-            var y = obj.GetInt("y");
-            var z = obj.GetInt("z");
-            var f = obj.GetInt("f");
-            var zM = obj.GetInt("zM");
-            var order = (30000 * (int)(ActorLayer.TileLayer0 + layer) + z) - 1073739824;
-            var objSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Obj/{oS}.img");
-            var node = objSet[l0][l1][l2];
-
-            if (node.Has("blend"))
-            {
-                //LoadBlendAnimation();
-                continue;
-            }
-            if (node.Has("obstacle"))
-            {
-                //LoadObstacle();
-                continue;
-            }
-            if (node.Has("seat"))
-            {
-                //LoadSeat();
-                continue;
-            }
-            if (node.ChildCount > 1)
-            {
-                LoadAnimatedObj(layer, obj, ref node);
-                continue;
-            }
-            
-            var origin = node["0"].GetVector("origin");
-            var texture = node.GetTexture("0");
-            actorManager.Create(new MapObject(node, texture, new Vector2(x, y), origin, ActorLayer.TileLayer0 + layer, order));
+            actorManager.CreateObject(obj, layer);
         }
-    }
-
-    private void LoadAnimatedObj(int layer, NxNode obj, ref NxNode node)
-    {
-        
-        var actorManager = ServiceLocator.Get<ActorManager>();;
-        var x = obj.GetInt("x");
-        var y = obj.GetInt("y");
-        var z = obj.GetInt("z");
-        var f = obj.GetInt("f");
-        var zM = obj.GetInt("zM");
-        var order = (30000 * (int)(ActorLayer.TileLayer0 + layer) + z) - 1073739824;
-
-        var frames = new List<Texture>(node.ChildCount);
-        for (var i = 0; i < node.ChildCount - 1; i++)
-        {
-            var texture = node.GetTexture($"{i}");
-            frames.Add(texture);
-        }
-        actorManager.Create(new MapObject(node, frames, new Vector2(x, y), ActorLayer.TileLayer0 + layer, order));
     }
 
     private void LoadPortals()

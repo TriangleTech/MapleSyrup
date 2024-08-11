@@ -1,0 +1,400 @@
+Login Updates (8.10.24)
+--Added pants rendering to player.
+--Added Select/Create/Delete button to character board.
+--Changed values within the stack panel to float, for more accurate adjustments.
+--Fixed an issue with pants not having the correct information, never copypasta.
+
+--Added dummy character to creation area, whatever you wanna call it.
+--Added null checking in a lot of areas.
+--Fixed face placement, it was off by a few pixels because subtraction order.
+--Fixed actor sorting, backgrounds were sorted incorrectly.
+
+
+Login & Overall changes (8.9.24)
+--Added support for MS Beta (Data.nx), works and renders just fine.
+--Added support for modern servers, packets get read in 4 byte length and 2 byte opcode.
+--Fixed Worlds and Channels not spawning correctly, this was due to them being created together.
+--Fixed multiple worlds and channels being spawned even though I only requested one.
+--Fixed some issues with the parsing of the string pool for NX files.
+--Fixed an issue with In/Out packets not sending the correct information.
+--Fixed having to skip 2 bytes when the packet was being parsed, turns out the dummy
+server had an opcode being added in the beginning for some reason. 
+
+--Added Equipment list to Avatar Look, this may change later but for now it works.
+--Added Cape rendering
+--Added weapon (only behind hand) rendering
+--Added coat (not long coat) rendering
+--Added variables to hold values to send to the server when selecting a world. Do know this is still very
+experimental, no guarantees.
+--Removed part layers, why did I waste all that time if I was going to manually sort them anyways....
+
+
+Character Changes (8.8.24) 
+--Added Changing layers, not tested yet.
+--Removed redundant code.
+
+Character Update (8.7.24)
+--Added Hair class since hair is completely difference from body parts.
+--Added hair rendering to the player, works both flipped and normal.
+--Added HairType enum, for you not to guess what type of hair to render.
+
+--Added PartLayer for the sorting that the player has.
+--Added a list of the layers in the Player class as well, used for later.
+--Removed Hair class, it's combined with the body part class now, along with equipment.
+--Removed HairType, no longer needed.
+--Removed IPart, proved to be useless.
+--Removed AvatarLayer, it basically got replaced by PartLayer.
+--Massive changes through the Player class, it's a lot so go through it.
+
+Login Screen & Background updates (8.6.24)
+--Added Horizontal tiling of the backgrounds.
+--Added Horizontal scrolling of the backgrounds.
+--Added a few variables to the graphics manager, it'll start getting used more later.
+--Defaulted the window width/height to 800x600, can be increased with Alt+Enter to
+1024x768. Do note, I've only tested this with 4:3 ratio windows, use others at
+you own risk of things looking wonky.
+--Added IsLeft, OnGround, and Moving variables to the Player class, also locked controls when
+in login screen.
+--Fixed an issue when resizing windows, the background scrolling would increase 10x.
+--Fixed documentation to clarify what version the legacy and "New" UI support.
+
+Fixed issues with UI again, added a few things (8.5.24)
+--Added WorldInfo to WorldManager for easy access, since only one world will
+be loaded at a time, this is fine.
+--Added WorldBounds to WorldManager for the same reason.
+--Added BackgroundType detection to the Background class.
+--Added support for HorizontalTiling textures.
+--Added ScreenOffset & DstRectangle to IActor, the player is not likely to use this.
+--Fixed an issue with Textboxes not correctly being positioned when window is resized,
+I thought I fixed this earlier, but I didn't.
+--Fixed login signboard text boxes.
+--Fixed decal positioning based on the parent, same issue as the text boxes.
+--Removed all exceptions from the NxNode file, except important ones, this is for a good reason. 
+
+Fixed more UI issues & Updated some other components (8.5.24)
+--Added OnHover and OnClick for the TextureButton.
+--Added ScreenOffset and DstRectangle to all UIPanels and UIComponents.
+--Added the new hover and click callbacks to the button creation.
+--Fixed StackPanel, didn't update it when I updated ButtonPanel.
+--Fixed some documentation that wasn't consistent with what was happening.
+--Fixed checkboxes, adding states and fixed rendering.
+--Fixed StaticPanel Focusing not working.
+--Fixed Textboxes not aligning correctly when window resized.
+
+Changed how actors are rendered (8.5.24)
+--Removed the dictionary of actors, it was getting complicated to handle the differences between each actor.
+--Added player spawning into the login screen.
+--Added selecting the player and changing the state to the walking state.
+--Added a FullScreen flag for the game.
+--Changed the screen width and height to getters setters.
+--Removed world class for now, since I'm not going to focus on that for now.
+--Fixed ButtonPanel not working properly due to new ratio changes.
+--Fixed Modal not working properly.
+--Fixed StaticPanel having few issues due to ratio changes.
+
+Dropped Json & Added Aspect Ratio stuff (8.4.24)
+--Technically there's a lot missing in the in-between since August 1st, 
+I got lazy and didn't update the log.
+--Removed the last remaining bits out of the MapObject and Background classes, everything is set manually now.
+--Removed all traces of the Yaml and Json systems, they were useless. I will need to develop a custom solution.
+--Removed a lot of redundant code, mostly in the UI, texture buttons specially is one of them.
+--Officially added labels, works as advertised.
+--Added custom label on upper right of client, show version being working on and the build type. For now it's entered manually.
+--Added Texture resizing for all map objects, backgrounds, and UI components.
+--Added AvatarStats & AvatarLook classes...they look the same I might combine them.
+--Added a lot of documentation, will go through them once again to make sure it makes sense.
+--Fixed all issues with the UI components not working due to resizing.
+--Warning, resizing has only been tested with 800x600 and 1024x768.
+--Note, I am referencing available sources for most information, that's where the guess-timations I was talking
+about kick in, the information in there mostly dictated how I rendered and structred things. Not the best reference,
+but looking through PDBs wastes too much time and I personally don't have a lot of that.
+
+
+Working on Json Loading System (8.1.24)
+--Added Newtonsoft.Json to create asset files, will go more into this later.
+--Added AssetManager, to load already made scene or ui files.
+--Removed yaml, didn't like the way it did things, and also had a lot of broken features,
+that would cause problems if this was built in AOT mode.
+--Json ignored the NxNode, might changed this later
+
+Migrations & Optimizations (7.31.24)
+--Moved all code inside the ActorManager, aside from a few things, inside the Login (will move world later).
+--Moved to the enums for the Guis into a enum folder.
+--IWorld now handles a lot of the functionality that ActorManager had.
+--Reason for the move is because ActorManager was not acting like that at all, so it was getting annoying,
+so from now on it will only handle creation and deletion of the actors.
+--Added backgroundtype to backgrounds.
+--Completed legacy sign-in page, works fine, grabbing worlds and channels work as well.
+--[TO-DO] Need to fix the alignment of a few things, as well as fix the width and height of some textures.
+--Attempted to add Yaml parsing, it works fine for certain things, but overall it's kind of useless. 
+--I may add it officially later when custom content comes into play.
+
+UI Updates (7.30.24)
+--Added ButtonPanel, replaces ButtonGroup, only accepts texture buttons for now.
+--Added Channel and Button board to the world button. This is still being worked on.
+--Added condition to check whether or not a button has the states needed, not all buttons have
+a pressed or hover state.
+--Added a few methods to the UIManager.
+--Added Label component, used for later on. Not tested but pretty sure it works.
+--Added GridLayout, used in ButtonPanel, but will be used in stack panel as well.
+--Changed some of the parameters to the creation of panels and components.
+--Changed Dictionary to list in IUIPanel.
+--Changed IUINode to IUIComponent, so it makes more sense.
+--Changed location of clear method inside IUIComponent, so it makes more consistent layouts.
+
+--Added OffsetX/Y into the button panel.
+--Fixed offset issue with ButtonPanel
+--Fixed collision detection with buttons in the panel
+--Fixed the column/row issue, I had them flipped.
+--Fixed TextureButtons not working properly with two-state buttons.
+--Moved ButtonPanel to the panel folder.
+
+--Added Bounds checking to the InPacket
+--Added IDisposeable to both InPacket & OutPacket.
+--Added all code from ButtonPanel to StackPanel, there's a difference between these two. One is specifically for
+buttons, you will see why if you try to add something else that is not a button to it.
+--Added a change queue to the UIManager, in case a UI changes so much to the point it needs to be reloaded.
+--Added an instant condition to adding UI panels, this is only used for the login, all others should not trigger this.
+--Added moving to character screen in newer versions, working on legacy now.
+--Found a problem with the sorting of the newer versions, a background that should be in the front is covering the char select.
+--Removed all dispatches for packets in the actor manager, was possibly the cause for packet losses.
+--Removed ProcessPacket from IActor
+
+
+UI Updates (7.29.24)
+--Added ScreenFrame, this will mainly be used for the login and primary UI stuff.
+--Added the sorting backing into the actor manager
+--Added ValidateActors to the end of the update cycle.
+--Added the parent object to the UINodes
+--Added IDs to the UINodes that are independent of the UIPanel, these are to keep track of which ID
+is currently active in the panel, will be more useful later.
+--Added a few more function into the UI manager.
+
+--Added a place to change the file path for now, not going to make this a foreach or for loop.
+--Added disposable to the NXFile, NXReader, and NXNode.
+--Changed IUIContainer to IUIPanel
+--Changed how the panels behave and some of the exposed variables.
+
+--Added a bool for a pseudo editor, this will be implemented later one and eventually built upon.
+--Added a few varibles into the application.cs since I forgot to do that earlier.
+--Added bounds checking to InPacket and default to 0 value if it goes over, this should cause most packet checks to fail.
+--Added World button creation.
+--Added Channel panel creation.
+--Added World btn press functionality.
+--Changed the modern UI version limit, turns out I'm working a post-BB UI, I thought it started in v83.
+--Removed a few unnecessary lines of code here and there.
+--Fixed an issue where all UI textures weren't unloading, whoops.
+
+
+UI Updates (7.28.24)
+--Added Modal, for notices and other notification, this takes order priority over any UI components.
+--Added UI priority to determine how the UI should be drawn, most are normal.
+--Added documentation to more functions.
+--Added a few new methods to the Login world.
+--Added a containers and components folder in the gui to differentiate the various parts.
+--Changed how the UI system behaves overall, had to change some of the coordinates since it no longer applied to the UI.
+--Removed any unnecessary parts that are no longer used.
+
+UI Updates (7.27.24)
+--Added IUserInterface, for the lack of a better name
+--Added StaticContainer, to store UIs that do not move.
+--Added UIManager, to control what happens to the UI.
+--Added StackContainer, incomplete.
+--Changed the primary function of the UI, no longer part of the actor system
+--Changed where the drawing occurs with the camera, it's not in the main application.
+--Changed all previous UI code to match the form of the UI system.
+--Changed the log name to updatelog. Makes more sense.
+--Removed all UI functions from the ActorManager, still needs to be cleaned up.
+
+Login & UI Updates (7.26.24)
+--Added a notice popup for the login response, depending on the login response
+depends on the notice.
+--Added a NoticeType enum to keep track of the different texts, too many...
+--Changed the Process method to HandlePacket, and the other to something
+similar
+--Added TextBox to create text boxes, each box has a parameter if you want
+to hide the text.
+--Added InputManager and GraphicsManager to start cleaning up all the raylib code.
+--Updated documentation to some classes, not all. Some are still in development so 
+they may change a few more times before I solidify the design.
+--Added GetActorByName, needs to be optimized
+--Added GetMouseWheel to input manager.
+--Changed a few region names.
+--Changed position of frame variable in login.
+
+Client & Dummy Server Updates (7.25.24)
+--Made the update threads concurrent now, so they don't have data clashes.
+--Made it so that the packets get queued instead of immediately processed,
+this fixed an issue where network actors were not appearing. (Raylib texture, 
+even XNA/Monogame/FNA, are not multithreaded).
+--Added a bool to check if the window is closed, so that we can successfully exit
+the window without socket errors.
+--Added a function to process the packet responses (InPackets) 
+--Added a few try-catch to functions that tend to crash for dumb reasons.
+--Added a decal UI Node, this is pretty much a static image, some UI require it.
+--Changed the foreach loops to for loops in the actor system, to prevent the 
+error that foreach loops cause.
+--Changed the name of the PacketResponse/Request to InPacket/OutPacket
+--Fixed the positioning of the checkboxes, forgot to subtract the parent position.
+--Moved the packet processing to their respective world
+
+Dummy Server (7.23.24 - 7.24.24)
+--Added a DummyServer to the solution.
+--Login portion of the server is almost complete.
+--Login portion now effectively connects with the client and receives data.
+--If the client disconnect without reason it doesn't cause an error.
+--Will begin channel and world servers later on.
+
+UI & Login Updates (7.23.24)
+--Added a UIContainer that will contain all UI components within it.
+--Added IUINode, which are placed within a UIContainer.
+--Added CreateButton, CreateCheck, and CreateContainer functions.
+--Added a function callback to both checkbox and buttons.
+--Added FullPath to NxNode, in order to call actors by their name.
+--Added the Login Button, Exit Button, and Sign board to the login screen.
+--Added an AppConfig so you can switch between version, I'll make it more intuitive later.
+--Added a condition when the login is loaded to check for which type of login to create.
+--Added a call back to the login button so it sends you to the correct location of the login screen.
+--Changed the ActorManager draw function so it only looks for visible actors.
+--Changed the ID in the actors to only be set upon initialization.
+
+--Added packet receiving and responding to client. It's very messy right now, so still in a super alpha phase.
+--Added packet sending to the login button, it send the packet successfully, all that left is the process the 
+login status correctly and we can move forward.
+--Changed the network server, I will say this my server only accepts a short header and a short opcode, so modify your, or 
+change the length to 6 in the network manager.
+--Removed a lot of redundant functions.
+--TextureButtons can now be disabled and won't switch back to normal for no reason.
+--CheckBoxes and TextureButtons now dispose their textures properly...oops.
+--Added a GetNode function to the NxManager, allows you to get the image files without calling the file.
+--Decided to push the version I'm working on to 113, I believe its a good balance between old and new content.
+--PacketProcessor now distributes the packets properly.
+--World and Actors now response to packets being injected.
+
+Began work on UI & Networking integration (7.22.24)
+--Added TextureButton to handle most buttons in the game, the UI will still be a part of the
+ActorSystem.
+--Added ButtonState.
+--Added an event delegate for the GUIs to handle custom events when they're clicked.
+--TextureButtons now change the way they need to, for the most part. I just started.
+--Checkboxes change the way the need to..its two states so it's kind of hard to mess this up.
+--Added UI to the drawing sequence.
+--Changed the button state names to match the ones in the image.
+--Removed the redundant Update and Draw functions in the application.
+--Removed direct calling of map objects (animated or not) from the map laoder. 
+--All objects for the maps are now abstracted away from the map, so that if an event happens that a new object is needed, it can be spawned.
+
+Performance Enhancements (7.21.24)
+--Added IActor and removed Actor, there was no need to have that inheritance.
+--Added CreateBackground, CreateTile, to ActorManager, will add more soon.
+--Changed the remaining actors to inherit IActor, everything works fine.
+--Enhance overall performance, Henesys used to take about 3.5 seconds to load, now it's about 1.5 seconds.
+--Wrapped the update function in a Task, so that it runs individually from the rest of the application.
+
+Began Login work (7.19.24)
+--Separated loading from the world class into a MapLoader class.
+--Streamlined creating worlds to wait till it's done loading.
+--Changed a few things in MapObject class.
+--Started the process of creating a world state.
+
+Client Updates (7.18.24)
+--Added OneTime/Counted animations
+--Added Blended animations (kind of weird for now)
+--Added LoopAnimation for all others.
+--Added same loop up method in WZ library from NX library.
+--Fixed an issue where the animated objects was not properly loading for login screen.
+--Fixed an issue where the animated backgrounds were not loading properly for login screen.
+
+Networking, Actors, Wz Parsing (7.14.24)
+--Began restructuring the networking system, I use my own server so there's no guarantee that
+it'll remain compatible with other servers, but I will do my best to keep it consistent.
+--Began restructuring the actor system, now that there is something that works as it should,
+I'm going to start restructuring it so that it will work with the networking.
+--Began working on a WZ parser, because why not. Credits for the information are within the files.
+--Renamed RecvOps and SendOps to match what their packet is called.
+
+Nothing Much (7.13.24)
+--Added a CreateLogin function to the WorldManager
+--Added UI nx to the NxManager
+--Added clearing of the two lists in the player class, oops
+--Added condition checking if the player is in the ladder state
+--Removed ref out of Background
+
+Character Updates (7.12.24)
+--Added AvatarLayers, this will be used later one when equipment comes into play.
+--Added Character flipping on the X-axis, not perfect but it works for now.
+--Added the remainder Body types to the enum.
+--Added an AvatarState enum to make it easier to shift between states without knowing the name.
+--Added a possible state list so that you know the difference between states and actions.
+--Added a frame count list, that you know exactly how much frames are in each state.
+--Added Character movement, pretty fast for now. 
+--Added Character StateChange upon specific movement.
+--Added simple, not complete, detection if the character is on a ladder, so it only updates the character when the player moves.
+--Added a camera update function to the world manager, since it should handle these sort of things.
+--Separated the Origin and Positions of the actors, it was getting a bit confusing.
+--Changed how the player is initiated, all states are loaded prior. Then the default is set.
+--Changed the ChangeState method, so it picks a state instead of creating one.
+--NOTE: All these lists (i.e. AvatarState, possible states, and frame count) ARE ONE TO ONE, if you even touch one of the values it will mess everything up. So be careful.
+--Fixed an issue with animation cycling (a test I ran to make sure everything works). All animation now work as the should.
+--Fixed an issue where the textures weren't clearing correctly in the player.
+
+Character & Map Update (7.11.24)
+--Added RayGui stuff into the client.
+--Added Face into the player, bodytype, and bodypart.
+--Added separate update methods for body and face, still needs to be touched up a bit.
+--Added a special case for Character.nx in the ReadNodeData method, it now grabs the appropriate nodes.
+--Added a command window, it's going to be used for debugging, changing/adding stuff dynamically, once things get much further.
+--Added BodyPart code that encompasses all cases, for now.
+--Added BodyType enum
+--Added Arm struct to handle the arms of the player
+--Added Clear method to Body, Head, Arm classes, to release the textures.
+--Added a check where the state doesn't need the face rendered.
+--Added random delay to the blinking, it's kind of fast right now, but it works.
+--Fixed an issues where the wrong values for the state were being called
+--Fixed an animation issue for both MapObjects and the character where the last frame was being skipped.
+--Fixed the positioning of all body parts of the player.
+--Changed the ActorManager so it only detects actors that can be click on, not all of them.
+--Face renders correctly, for now. Had to use an Abs function, which I'm not sure if that's correct.
+--Removed Arm, Body, Head classes.
+--Removed ResourceManager, not useful right now.
+--Removed Obstacle class, not needed right now.
+
+Experimental Avatar  (7.10.24)
+-- Added ActorType to differentiate between the different actors
+-- Added Body, BodyPart, and Head to handle the creation of the player body for now
+-- Added the Player class which encompasses the whole body
+-- Added a GetPlayer method to ActorManager
+__ Made it so you can see the children in the node, in case you need the names instead of the count.
+-- Added a test player to the world class
+-- Changed how the world class is initialized so it makes more sense now.
+--Fixed an issue with other states that caused the client to crash.
+--Fixed an issue with the animation (Player/MapObject) that was iterating correctly.
+--Separated the different body rendering for efficiency.
+
+Small changes (7.8.2024) 
+-- Removed the IComparable from the Actor class, not point having it there.
+-- Changed the actor dictionary to contain a List instead of a sorted set.
+-- (Possible Bug) Fixed the sorting, for now. It's hard to say since everything isn't there yet.
+-- Added a SortAll List, to sort everything once it's there to reduce sort calls.
+-- Fixed the issue with animated objects not being sorted, turns out I didn't even assign the order or layer.
+
+Rebase (7.1.24 - 7.7.24) 
+-- Decided to take a different approach.
+-- Removed FNA support, amazing library, but lacks the features needed to properly emulate MS.
+-- Removed all files, literally.
+-- Added Raylib-CSLo
+-- Added Networking Support (doesn't use encryption)
+-- Added NetworkManager
+-- Added ActorManager
+-- Added Tile loading
+-- Added Object loading
+-- Internal structure changes.
+-- Made it so each layer is their own-sorted set, having different set allows easier transferring between layers.
+-- Fixed the frame time calculation.
+-- Added background loading, nothing special yet.
+-- Added an animated boolean to both MapObject and Background
+-- Added a Has method, without the out variable to the NxNode.
+-- Added a camera to the world, this will be the primary camera, nothing special yet.
+-- Fixed an issue where the maps were unloaded twice.
+-- Fixed an issues where the animations were taking forever to update.
+-- Found an issue with the sorting system, will fix later.

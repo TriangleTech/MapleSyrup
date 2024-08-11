@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Client.NX;
 
-public unsafe class NxReader
+public unsafe class NxReader : IDisposable
 {
     private readonly BinaryReader _reader;
     private long _position;
@@ -24,15 +24,10 @@ public unsafe class NxReader
     {
         _reader = new BinaryReader(stream, Encoding.UTF8);
         _position = 0;
+        ParseHeader();
     }
 
-    ~NxReader()
-    {
-        _reader.Close();
-        _reader.Dispose();
-    }
-
-    public void ParseHeader()
+    private void ParseHeader()
     {
         Seek(0);
         var magic = ReadInt();
@@ -119,5 +114,11 @@ public unsafe class NxReader
             throw new Exception("Attempted to skip further than the file size.");
         _position += numberOfBytes;
         _reader.BaseStream.Position += numberOfBytes;
+    }
+
+    public void Dispose()
+    {
+        _reader.Close();
+        _reader.Dispose();
     }
 }

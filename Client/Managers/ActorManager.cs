@@ -9,507 +9,237 @@ using Raylib_CsLo;
 
 namespace Client.Managers;
 
+/// <summary>
+/// The ActorManager class is responsible for managing game actors.
+/// </summary>
 public class ActorManager : IManager
 {
-   private readonly Dictionary<ActorLayer, List<IActor>> _actors;
-    private readonly Queue<IActor> _actorsToRemove, _actorsToAdd;
-    private readonly Queue<(IActor, ActorLayer)> _actorsToChange;
-    private readonly object _threadLock;
-    private uint _actorCount;
+    /// <summary>
+    /// The lock object used for thread synchronization in the ActorManager class.
+    /// </summary>
+    private object _threadLock;
 
     public ActorManager()
     {
-        _actors = new();
-        _actorsToRemove = new();
-        _actorsToAdd = new();
-        _actorsToChange = new();
         _threadLock = new();
-        _actorCount = 0;
-    }
-
-    public void Initialize()
-    {
-        _actors[ActorLayer.Background] = new ();
-        _actors[ActorLayer.TileLayer0] = new ();
-        _actors[ActorLayer.TileLayer1] = new ();
-        _actors[ActorLayer.TileLayer2] = new ();
-        _actors[ActorLayer.TileLayer3] = new ();
-        _actors[ActorLayer.TileLayer4] = new ();
-        _actors[ActorLayer.TileLayer5] = new ();
-        _actors[ActorLayer.TileLayer6] = new ();
-        _actors[ActorLayer.TileLayer7] = new ();
-        _actors[ActorLayer.Effects] = new ();
-        _actors[ActorLayer.Foreground] = new ();
-    }
-
-    public void Shutdown()
-    {
-        _actorCount = 0;
-        ClearActors();
     }
 
     /// <summary>
-    /// Create a specific actor, prior to client rendering. For any additional actors after rendering,
-    /// please use AddActor or SpawnActor methods.
+    /// Initializes the ActorManager by creating and initializing a dictionary to store actors on different layers.
     /// </summary>
-    /// <param name="actor"></param>
-    /// <typeparam name="T"></typeparam>
-    public void Create<T>(T actor) where T : IActor
+    public void Initialize()
     {
-        lock (_threadLock)
-        {
-            actor.ID = _actorCount++;
-            _actors[actor.Layer].Add(actor);
-        }
     }
 
+    /// <summary>
+    /// Shuts down the ActorManager.
+    /// </summary
+    public void Shutdown()
+    {
+    }
+
+    #region Map Loading
+
+
+    /// <summary>
+    /// Creates a background actor based on the provided background node.
+    /// </summary>
+    /// <param name="background">The background node containing the information to create the background actor.</param>
     public void CreateBackground(NxNode background)
     {
-        lock (_threadLock)
-        {
-            var bS = background.GetString("bS");
-            var no = background.GetInt("no");
-            var x = background.GetInt("x");
-            var y = background.GetInt("y");
-            var rx = background.GetInt("rx");
-            var ry = background.GetInt("ry");
-            var cx = background.GetInt("cx");
-            var cy = background.GetInt("cy");
-            var a = background.GetInt("a");
-            var front = background.GetInt("front");
-            var ani = background.GetInt("ani");
-            var f = background.GetInt("f");
+        var world = ServiceLocator.Get<WorldManager>().GetWorld();
+        var bS = background.GetString("bS");
+        var no = background.GetInt("no");
+        var x = background.GetInt("x");
+        var y = background.GetInt("y");
+        var rx = background.GetInt("rx");
+        var ry = background.GetInt("ry");
+        var cx = background.GetInt("cx");
+        var cy = background.GetInt("cy");
+        var a = background.GetInt("a");
+        var front = background.GetInt("front");
+        var ani = background.GetInt("ani");
+        var f = background.GetInt("f");
+        var type = background.GetInt("type");
 
-            if (ani == 1)
+        if (ani == 1)
+        {
+            var backgroundSet = ServiceLocator.Get<NxManager>().GetNode($"Back/{bS}.img");
+            var back = backgroundSet["ani"][$"{no}"];
+            var frames = new List<Texture>(back.ChildCount);
+            for (var j = 0; j < back.ChildCount - 1; j++)
             {
-                var backgroundSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Back/{bS}.img");
-                var back = backgroundSet["ani"][$"{no}"];
-                var frames = new List<Texture>(back.ChildCount);
-                for (var j = 0; j < back.ChildCount - 1; j++)
-                {
-                    var texture = back.GetTexture($"{j}");
-                    frames.Add(texture);
-                }
-                SpawnActor(new Background(back, frames, new Vector2(x, y), cx, cy, rx, ry, front == 1 ? ActorLayer.Foreground : ActorLayer.Background));
+                var texture = back.GetTexture($"{j}");
+                frames.Add(texture);
             }
-            else
+            
+            if (cx == 0) cx = frames[0].width;
+            if (cy == 0) cy = frames[0].height;
+
+            world.AddActor(new Background
             {
-                var backgroundSet = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map).GetNode($"Back/{bS}.img");
-                var texture = backgroundSet["back"].GetTexture($"{no}");
-                var origin = backgroundSet["back"][$"{no}"].GetVector("origin");
-                SpawnActor(new Background(background, texture, new Vector2(x, y), origin, cx, cy, rx, ry, front == 1 ? ActorLayer.Foreground : ActorLayer.Background));
-            }
+                Node = back,
+                ID = world.GenerateID(),
+                Position = new Vector2(x, y),
+                Origin = back["0"].GetVector("origin"),
+                Z = no,
+                Cx = cx,
+                Cy = cy,
+                Rx = rx,
+                Ry = ry,
+                BackgroundType = type,
+                Layer = front == 1 ? ActorLayer.Foreground : ActorLayer.Background,
+                Frames = frames,
+                FrameCount = frames.Count,
+                Animated = true,
+                ActorType = ActorType.Background, 
+                TexturePath = back.FullPath,
+            });
         }
+        else
+        {
+            var backgroundSet = ServiceLocator.Get<NxManager>().GetNode($"Back/{bS}.img");
+            var back = backgroundSet["back"];
+            var texture = back.GetTexture($"{no}");
+            var origin = back[$"{no}"].GetVector("origin");
+            if (cx == 0) cx = texture.width;
+            if (cy == 0) cy = texture.height;
+            
+            world.AddActor(new Background
+            {
+                Node = back,
+                ID = world.GenerateID(),
+                Position = new Vector2(x, y),
+                Origin = origin,
+                Z = no,
+                Cx = cx,
+                Cy = cy,
+                Rx = rx,
+                Ry = ry,
+                BackgroundType = type,
+                Layer = front == 1 ? ActorLayer.Foreground : ActorLayer.Background,
+                Frames = [texture],
+                FrameCount = 1,
+                Animated = false,
+                ActorType = ActorType.Background,
+                TexturePath = backgroundSet["back"][$"{no}"].FullPath,
+                Width = texture.width,
+                Height = texture.height,
+            });
+        }
+        
+        //Console.WriteLine($"Background with type: {type} was created");
     }
 
+    /// <summary>
+    /// Creates a tile actor based on the given tile data.
+    /// </summary>
+    /// <param name="tileSet">The tile set containing the textures for the tile.</param>
+    /// <param name="layer">The layer index of the tile.</param>
+    /// <param name="tile">The tile data containing the position, texture, origin, and order information.</param>
     public void CreateTile(NxNode tileSet, int layer, NxNode tile)
     {
-        lock (_threadLock)
+        var world = ServiceLocator.Get<WorldManager>().GetWorld();
+        var x = tile.GetInt("x");
+        var y = tile.GetInt("y");
+        var no = tile.GetInt("no");
+        var u = tile.GetString("u");
+        var texture = tileSet[u].GetTexture($"{no}");
+        var origin = tileSet[u][$"{no}"].GetVector("origin");
+        var z = tileSet[u][$"{no}"].GetInt("z");
+        var zM = tile.GetInt("zM");
+        var order = z + 10 * (3000 * (int)(ActorLayer.TileLayer0 + layer) - zM) - 1073721834;
+        world.AddActor(new MapObject
         {
-            var x = tile.GetInt("x");
-            var y = tile.GetInt("y");
-            var no = tile.GetInt("no");
-            var u = tile.GetString("u");
-            var texture = tileSet[u].GetTexture($"{no}");
-            var origin = tileSet[u][$"{no}"].GetVector("origin");
-            var z = tileSet[u][$"{no}"].GetInt("z");
-            var zM = tile.GetInt("zM");
-            var order = z + 10 * (3000 * (int)(ActorLayer.TileLayer0 + layer) - zM) - 1073721834;
-            SpawnActor(new MapObject(tile, texture, new Vector2(x, y), origin, ActorLayer.TileLayer0 + layer, order));
-        }
+            Node = tile,
+            ID = world.GenerateID(),
+            Position = new Vector2(x, y),
+            Origin = origin,
+            Layer = ActorLayer.TileLayer0 + layer,
+            Z = order,
+            Frames = [texture],
+            FrameCount = 1,
+            Animated = false,
+            Blend = false,
+            LoopCount = -1,
+            ActorType = ActorType.Tile,
+        });
+
     }
 
-    public void SpawnNetworkActor()
+    /// <summary>
+    /// Creates an object in the game world based on the given NxNode and layer.
+    /// </summary>
+    /// <param name="obj">The NxNode representing the object to create.</param>
+    /// <param name="layer">The layer on which to create the object.</param>
+    public void CreateObject(NxNode obj, int layer)
     {
-        
-    }
+        var world = ServiceLocator.Get<WorldManager>().GetWorld();
+        var oS = obj.GetString("oS");
+        var l0 = obj.GetString("l0");
+        var l1 = obj.GetString("l1");
+        var l2 = obj.GetString("l2");
+        var x = obj.GetInt("x");
+        var y = obj.GetInt("y");
+        var z = obj.GetInt("z");
+        var f = obj.GetInt("f");
+        var zM = obj.GetInt("zM");
+        var order = 30000 * (int)(ActorLayer.TileLayer0 + layer) + z - 1073739824;
+        var objSet = ServiceLocator.Get<NxManager>().GetNode($"Obj/{oS}.img");
+        var node = objSet[l0][l1][l2];
 
-    public void SpawnActor(IActor actor)
-    {
-        lock (_threadLock)
+        if (node.ChildCount > 1)
         {
-            actor.ID = _actorCount++;
-            _actorsToAdd.Enqueue(actor);
+            var frames = new List<Texture>(node.ChildCount);
+            var blend = node["0"].Has("a0");
+            for (var i = 0; i < node.ChildCount - 1; i++)
+            {
+                var texture = node.GetTexture($"{i}");
+                frames.Add(texture);
+            }
+
+            world.AddActor(new MapObject
+            {
+                Node = node,
+                ID = world.GenerateID(),
+                Position = new Vector2(x, y),
+                Origin = node["0"].GetVector("origin"),
+                Layer = ActorLayer.TileLayer0 + layer,
+                Z = order,
+                Frames = frames,
+                FrameCount = frames.Count,
+                Animated = true,
+                Blend = blend,
+                LowerAlpha = blend ? node["0"].GetInt("a0") : 255,
+                UpperAlpha = blend ? node["0"].GetInt("a1") : 255,
+                LoopCount = node["0"].Has("repeat") ? node["0"].GetInt("repeat") : -1,
+                ActorType = ActorType.AnimatedMapObject,
+                TexturePath = node.FullPath
+            });
         }
-    }
-
-    public void RemoveActor(IActor actor)
-    {
-        lock (_threadLock)
-            _actorsToRemove.Enqueue(actor);
-    }
-
-    public void ChangeActorLayer(IActor actor, ActorLayer layer)
-    {
-        lock (_threadLock)
-            _actorsToChange.Enqueue((actor, layer));
-    }
-    
-    #region IActor Locators
-
-    public bool GetPlayer(out Player? found)
-    {
-        lock (_threadLock)
+        else
         {
-            foreach (var actor in _actors[ActorLayer.TileLayer0].Where(actor => actor.ActorType == ActorType.Player))
+            var origin = node["0"].GetVector("origin");
+            var texture = node.GetTexture("0");
+            world.AddActor(new MapObject
             {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7].Where(actor => actor.ActorType == ActorType.Player))
-            {
-                found = actor as Player;
-                return true;
-            }
-
-            found = null;
-            return false;
+                Node = node,
+                ID = world.GenerateID(),
+                Position = new Vector2(x, y),
+                Origin = origin,
+                Layer = ActorLayer.TileLayer0 + layer,
+                Z = order,
+                Frames = [texture],
+                FrameCount = 1,
+                Animated = false,
+                Blend = false,
+                LoopCount = -1,
+                ActorType = ActorType.StaticMapObject,
+                TexturePath = $"{node.FullPath}/0"
+            });
         }
+
     }
 
-    public bool GetActorAt(Vector2 position, out IActor? found)
-    {
-        lock (_threadLock)
-        {
-            foreach (IActor? actor in _actors[ActorLayer.TileLayer0].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds) 
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds)
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7].Where(actor => Raylib.CheckCollisionPointRec(position, actor.Bounds)
-                         && actor.ActorType == ActorType.Npc || actor.ActorType == ActorType.Player || actor.ActorType == ActorType.Reactor))
-            {
-                found = actor;
-                return true;
-            }
-
-            found = null;
-            return false;
-        }
-    }
-    
-    #endregion
-
-    #region Sort/Clear/Dispatch
-
-    public void SortAll()
-    {
-        _actors[ActorLayer.TileLayer0].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer1].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer2].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer3].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer4].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer5].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer6].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.TileLayer7].Sort(new ActorCompare<IActor>());
-        _actors[ActorLayer.Effects].Sort(new ActorCompare<IActor>()); // might not need to be sorted.
-    }
-
-    public void ClearActors()
-    {
-        lock (_threadLock)
-        {
-            foreach (var actor in _actors[ActorLayer.Background])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer0])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2])
-            {
-                actor.Clear();   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.Effects])
-            {
-                actor.Clear();
-            }
-            foreach (var actor in _actors[ActorLayer.Foreground])
-            {
-                actor.Clear();
-            }
-            _actors.Clear();
-        }
-    }
-
-    public void DispatchResponse(PacketResponse response)
-    {
-        lock (_threadLock)
-        {
-            foreach (var actor in _actors[ActorLayer.Background])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer0])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.Effects])
-            {
-                actor.ProcessPacket(response);
-            }
-            foreach (var actor in _actors[ActorLayer.Foreground])
-            {
-                actor.ProcessPacket(response);
-            }
-        }
-    }
-    
-    #endregion
-
-    #region Update/Draw/Validate
-    public void Update(float frameTime)
-    {
-        lock (_threadLock)
-        {
-            foreach (var actor in _actors[ActorLayer.Background])
-            {
-                actor.Update(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer0])
-            {
-                actor.Update(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1])
-            {
-                actor.Update(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7])
-            {
-                actor.Update(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.Effects])
-            {
-                actor.Update(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.Foreground])
-            {
-                actor.Update(frameTime);
-            }
-        }
-    }
-
-    public void Draw(float frameTime)
-    {
-        lock (_threadLock)
-        {
-            foreach (var actor in _actors[ActorLayer.Background])
-            {
-                actor.Draw(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer0])
-            {
-                actor.Draw(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer1])
-            {
-                actor.Draw(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer2])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer3])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer4])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer5])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer6])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.TileLayer7])
-            {
-                actor.Draw(frameTime);   
-            }
-            foreach (var actor in _actors[ActorLayer.Effects])
-            {
-                actor.Draw(frameTime);
-            }
-            foreach (var actor in _actors[ActorLayer.Foreground])
-            {
-                actor.Draw(frameTime);
-            }
-        }
-    }
-
-    public void ValidateActors()
-    {
-        lock (_threadLock)
-        {
-            // Process actors to be removed
-            while (_actorsToRemove.Count > 0)
-            {
-                var actorToRemove = _actorsToRemove.Dequeue();
-                _actors[actorToRemove.Layer].Remove(actorToRemove);
-            }
-
-            // Process actors to be added
-            while (_actorsToAdd.Count > 0)
-            {
-                var actorToAdd = _actorsToAdd.Dequeue();
-                _actors[actorToAdd.Layer].Add(actorToAdd);
-                _actors[actorToAdd.Layer].Sort(new ActorCompare<IActor>());
-            }
-
-            // Process actors whose layers need to be changed
-            while (_actorsToChange.Count > 0)
-            {
-                var (actorToChange, newLayer) = _actorsToChange.Dequeue();
-                _actors[actorToChange.Layer].Remove(actorToChange);
-                actorToChange.Layer = newLayer;
-                _actors[newLayer].Add(actorToChange);
-                _actors[newLayer].Sort(new ActorCompare<IActor>());
-            }
-        }
-    }
-    
     #endregion
 }

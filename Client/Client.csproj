@@ -14,9 +14,6 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
-      <Content Include="..\Changelog.txt">
-        <Link>Changelog.txt</Link>
-      </Content>
     </ItemGroup>
 
     <ItemGroup>

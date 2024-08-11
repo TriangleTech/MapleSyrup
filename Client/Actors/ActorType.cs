@@ -4,9 +4,11 @@ public enum ActorType
 {
     None,
     Background,
-    MapObject,
+    StaticMapObject,
+    AnimatedMapObject,
+    Tile,
     Reactor,
     Npc,
     Player,
-    Item
+    Item,
 }

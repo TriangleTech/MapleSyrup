@@ -13,38 +13,71 @@ public class Application : IDisposable
 
     public void Run()
     {
-        Raylib.InitWindow(800, 600, "MapleSyrup");
+        Raylib.InitWindow(AppConfig.ScreenWidth, AppConfig.ScreenHeight, AppConfig.ClientName);
         Raylib.SetTargetFPS(30);
         Raylib.SetTraceLogLevel((int)TraceLogLevel.LOG_NONE);
-        RayGui.GuiLoadStyleDefault();
-        
+
         LoadContent();
-        //var network = ServiceLocator.Get<NetworkManager>();
+        var net = ServiceLocator.Get<NetworkManager>();
         var world = ServiceLocator.Get<WorldManager>();
+        var ui = ServiceLocator.Get<UIManager>();
+
+        net.Connect();
         world.SetState(WorldState.StartUp);
-        //world.CreateLogin();
-        world.CreateWorld("100000000");
-        while (!Raylib.WindowShouldClose())
-        { 
-            //network.ProcessResponses();
-            Update(Raylib.GetFrameTime() * 1000);
-            
+        world.CreateLogin();
+        var scene = world.GetWorld() ?? throw new ArgumentNullException("world.GetWorld()");
+        while (!Raylib.WindowShouldClose() && !AppConfig.CloseWindow)
+        {
+            var frameTime = Raylib.GetFrameTime() * 1000;
+            net.HandlePacket();
+            scene.Update(frameTime);
+            ui.Update(frameTime);
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib.GRAY);
-            Draw(Raylib.GetFrameTime() * 1000);
+            Raylib.BeginMode2D(world.GetCamera());
+            scene.Draw(frameTime);
+            ui.Draw(frameTime);
+            Raylib.EndMode2D();
             Raylib.DrawFPS(0, 0);
             Raylib.EndDrawing();
-            //network.ProcessRequests();
+
+            if (Raylib.IsKeyDown(KeyboardKey.KEY_LEFT_ALT) && Raylib.IsKeyPressed(KeyboardKey.KEY_ENTER))
+            {
+                if (!AppConfig.IsFullscreen)
+                {
+                    AppConfig.ScreenWidth = 1024;
+                    AppConfig.ScreenHeight = 768;
+                    Raylib.SetWindowSize(AppConfig.ScreenWidth, AppConfig.ScreenHeight);
+                    var widthDiff = (float)AppConfig.ScreenWidth / AppConfig.OriginalWidth;
+                    var heightDiff = (float)AppConfig.ScreenHeight / AppConfig.OriginalHeight;
+                    world.GetWorld().UpdateZoom(Math.Min(widthDiff, heightDiff));
+                }
+                else
+                {
+                    AppConfig.ScreenWidth = 800;
+                    AppConfig.ScreenHeight = 600;
+                    Raylib.SetWindowSize(AppConfig.ScreenWidth, AppConfig.ScreenHeight);
+                    var widthDiff = (float)AppConfig.ScreenWidth / AppConfig.OriginalWidth;
+                    var heightDiff = (float)AppConfig.ScreenHeight / AppConfig.OriginalHeight;
+                    world.GetWorld().UpdateZoom(Math.Min(widthDiff, heightDiff));
+                }
+
+                AppConfig.IsFullscreen = !AppConfig.IsFullscreen;
+            }
         }
+
+        net.Disconnect();
         UnloadContent();
         Raylib.CloseWindow();
     }
-    
+
     private void LoadContent()
     {
         ServiceLocator.Register(new NxManager());
-        //ServiceLocator.Register(new NetworkManager());
+        ServiceLocator.Register(new NetworkManager());
         ServiceLocator.Register(new ActorManager());
+        ServiceLocator.Register(new InputManager());
+        ServiceLocator.Register(new UIManager());
         ServiceLocator.Register(new WorldManager());
     }
 
@@ -53,20 +86,8 @@ public class Application : IDisposable
         ServiceLocator.Release();
     }
 
-    private void Update(float frameTime)
-    {
-        var world = ServiceLocator.Get<WorldManager>().GetWorld();
-        Task.Run(() => world?.Update(frameTime));
-    }
-
-    private void Draw(float frameTime)
-    {
-        var world = ServiceLocator.Get<WorldManager>().GetWorld();
-        world?.Draw(frameTime);
-    }
-
     public void Dispose()
     {
-        
+
     }
 }

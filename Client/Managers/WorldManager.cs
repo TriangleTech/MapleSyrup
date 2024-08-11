@@ -1,6 +1,7 @@
 using System.Numerics;
 using Client.Actors;
 using Client.Map;
+using Client.Net;
 using Client.Scene;
 using Raylib_CsLo;
 
@@ -8,14 +9,22 @@ namespace Client.Managers;
 
 public class WorldManager : IManager
 {
-     private World? _world;
+    private IWorld? _world;
     private bool _isLoaded;
     private MapLoader _loader;
     private WorldState _state;
+    private WorldInfo _info;
+
+    public WorldState State => _state;
+    public WorldInfo WorldInfo => _info;
+    
+    public Texture Minimap { get; internal set; }
+    public Vector2 WorldSize { get; internal set; }
+    public Rectangle WorldBounds { get; internal set; }
+    
 
     public void Initialize()
     {
-        _world = null;
         _isLoaded = false;
         _loader = new();
     }
@@ -33,72 +42,67 @@ public class WorldManager : IManager
 
     public void CreateLogin()
     {
-        var ui = ServiceLocator.Get<NxManager>().Get(MapleFiles.UI);
-        var uiNode = ui.GetNode("MapLogin.img");
+        _world = new Login();
+        var uiNode = ServiceLocator.Get<NxManager>().GetNode("MapLogin.img");
+        _info = new WorldInfo(uiNode["info"]);
+        if (uiNode?.Has("miniMap") ?? false)
+        {
+            Minimap = uiNode.GetTexture("canvas");
+            WorldSize = new Vector2(uiNode["miniMap"].GetInt("width"),
+                uiNode["miniMap"].GetInt("height"));
+            WorldBounds = new Rectangle(WorldSize.X / 2f, WorldSize.Y / 2f, WorldSize.X, WorldSize.Y);
+        }
+        else
+        {
+            Minimap = new Texture() { width = 1, height = 1 };
+            if (WorldInfo.VRTop != 0)
+            {
+                WorldBounds = new Rectangle(WorldInfo.VRLeft, WorldInfo.VRTop, WorldInfo.VRRight - WorldInfo.VRLeft,
+                    WorldInfo.VRBottom - WorldInfo.VRTop);
+            }
+        }
         _isLoaded = _loader.Load(uiNode);
-
-        LoadLoginComponents();
-        
-        if (_isLoaded)
-            _world = new World(true);
+        _world.Load();
     }
 
-    private void LoadLoginComponents()
-    {
-        var actor = ServiceLocator.Get<ActorManager>();
-        var ui = ServiceLocator.Get<NxManager>().Get(MapleFiles.UI);
-        var uiNode = ui.GetNode("Login.img");
-        
-        // Load Frame
-        {
-            var frame = uiNode["Common"];
-            var origin = frame["frame"].GetVector("origin");
-            actor.Create(
-                new MapObject(frame, frame.GetTexture("frame"), Vector2.Zero, origin, ActorLayer.Foreground, 0));
-        }
-        
-        // Load Login Location
-        {
-            var loginLocation = uiNode["Common"]["loginlocation"];
-            actor.Create(
-                new MapObject(loginLocation, loginLocation.GetTexture("0"), Vector2.Zero, 
-                    loginLocation["0"].GetVector("origin"), ActorLayer.Effects, 0));
-            actor.Create(
-                new MapObject(loginLocation, loginLocation.GetTexture("1"), Vector2.Zero,
-                    loginLocation["1"].GetVector("origin"), ActorLayer.Effects, 1));
-        }
-        
-        actor.SortAll();
-    }
-
-    public void CreateWorld(string img)
+    public void CreateWorld(int id)
     {
         // TODO: Fade.
-        if (_world != null)
-            _world.Clear();
-
-        var nx = ServiceLocator.Get<NxManager>().Get(MapleFiles.Map);
-        var node = nx.GetNode($"Map{img[0]}/{img}.img");
+        var strId = GetMapId(id);
+        _world?.Clear();
+        _world = null;
+        var node = ServiceLocator.Get<NxManager>().GetNode($"Map{strId[0]}/{strId}.img");
+        _info = new WorldInfo(node["info"]);
         _isLoaded = _loader.Load(node);
-        if (_isLoaded)
-            _world = new World(false);    
     }
 
-    public World? GetWorld()
+    public IWorld GetWorld()
     {
-        return _world;
+        return _world ?? throw new Exception("World is null");
     }
 
     public Camera2D GetCamera()
     {
-        if (_world == null) throw new Exception("World is null");
-        return _world.Camera;
+        return _world?.Camera ?? throw new Exception("World is null");;
     }
 
     public void UpdateCamera(Vector2 position)
     {
-        if (_world == null) return;
-        
-        _world.Camera.target = Vector2.Lerp(_world.Camera.target, position, 0.2f);
+        _world?.UpdateCamera(position);
+    }
+
+    public void UpdateZoom(float zoom)
+    {
+        _world.UpdateZoom(zoom);
+    }
+
+    public void ProcessPackets(InPacket response)
+    {
+        _world?.ProcessPacket(response);
+    }
+
+    public string GetMapId(int id)
+    {
+        return id.ToString().PadLeft(9, '0');
     }
 }

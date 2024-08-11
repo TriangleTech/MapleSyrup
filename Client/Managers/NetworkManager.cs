@@ -1,6 +1,4 @@
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Client.Net;
 
 namespace Client.Managers;
@@ -20,20 +18,26 @@ public class NetworkManager : IManager
         _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _lock = new();
         _processor = new PacketProcessor();
-    }
-
-    public void Initialize()
-    {
-        _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _thread = new Thread(BeginConnect)
         {
             IsBackground = true
         };
     }
 
+    public void Initialize()
+    {
+        
+    }
+
     public void Connect()
     {
         _thread.Start();
+    }
+
+    public void Disconnect()
+    {
+        _thread.Join();
+        _socket.Disconnect(false);
     }
 
     private void BeginConnect()
@@ -50,8 +54,8 @@ public class NetworkManager : IManager
         {
             Console.WriteLine("Successfully Connected To Login Server.");
 
-            _buffer = new byte [4];
-            _socket.BeginReceive(_buffer, 0, 4, SocketFlags.None, OnHeaderReceived, _socket);
+            _buffer = new byte [6];
+            _socket.BeginReceive(_buffer, 0, 6, SocketFlags.None, OnHeaderReceived, _socket);
         }
         else
         {
@@ -63,40 +67,64 @@ public class NetworkManager : IManager
     private void OnHeaderReceived(IAsyncResult ar)
     {
         var socket = ar.AsyncState as Socket;
-
-        if (socket?.ReceiveBufferSize != 2)
+        
+        if (socket == null || !socket.Connected)
         {
-            _buffer = new byte [4];
-            _socket.BeginReceive(_buffer, 0, 4, SocketFlags.None, OnHeaderReceived, _socket);
+            return;
+        }
+
+        if (socket?.ReceiveBufferSize < 6)
+        {
+            _buffer = new byte [6];
+            _socket.BeginReceive(_buffer, 0, 6, SocketFlags.None, OnHeaderReceived, _socket);
             return;
         }
         
         var stream = new MemoryStream(_buffer);
         var reader = new BinaryReader(stream);
-        var packetLength = reader.ReadUInt16();
-        var packetHeader = reader.ReadUInt16();
-        var response = new PacketResponse((ResponseOps)packetHeader, packetLength);
+        var packetLength = reader.ReadInt32();
+        var packetIdentifier = reader.ReadUInt16();
+        var response = new InPacket((ResponseOps)packetIdentifier, packetLength);
+        Console.WriteLine($"Packet Received: {response.Opcode}");
         _buffer = new byte[packetLength];
-            
         _socket.BeginReceive(_buffer, 0, packetLength, SocketFlags.None, OnDataReceived, response);
     }
 
     private void OnDataReceived(IAsyncResult ar)
     {
-        var packet = ar.AsyncState as PacketResponse;
+        var packet = ar.AsyncState as InPacket;
 
-        if (packet?.Length is 0 or > 1024 or null)
+        if (packet == null || packet.PacketLength <= 0)
         {
-            _buffer = new byte [4];
-            _socket.BeginReceive(_buffer, 0, 4, SocketFlags.None, OnHeaderReceived, _socket);
+            _buffer = new byte [6];
+            _socket.BeginReceive(_buffer, 0, 6, SocketFlags.None, OnHeaderReceived, _socket);
             return;
         }
         
+        Console.WriteLine($"Processing Packet: {packet.Opcode}");
         packet.SetData(_buffer);
-        Task.Run(() => _processor.ProcessResponse(packet));
-        
-        _buffer = new byte [4];
-        _socket.BeginReceive(_buffer, 0, 4, SocketFlags.None, OnHeaderReceived, _socket);
+        _processor.Queue(packet);
+        _buffer = new byte [6];
+        _socket.BeginReceive(_buffer, 0, 6, SocketFlags.None, OnHeaderReceived, _socket);
+    }
+
+    public void SendPacket(OutPacket request)
+    {
+        if (request.Data.Length <= 0) return;
+        byte[] packetSize = BitConverter.GetBytes(request.Data.Length);
+        byte[] opcode = BitConverter.GetBytes((short)request.Opcode);
+        byte[] header = new byte[6];
+        packetSize.CopyTo(header, 0);
+        opcode.CopyTo(header, 4);
+        //Console.WriteLine($"Sending Packet: {request.Opcode} to server, with length of {request.Data.Length}");
+        //Console.WriteLine($"HEX DUMP: {BitConverter.ToString(request.Data)}");
+        _socket.Send(header);
+        _socket.Send(request.Data);
+    }
+
+    public void HandlePacket()
+    {
+        _processor.ProcessPacketResponses();
     }
 
     public void Shutdown()

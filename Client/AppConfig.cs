@@ -23,10 +23,9 @@ public class AppConfig
         (ScreenHeight - OriginalHeight * ScaleFactor) / 2;
 
     public static bool CloseWindow { get; set; } = false;
-    public const bool IsBetaVersion = false;
+    public const bool IsBetaVersion = true;
 
     public static readonly string GameFilePath = $"D:/v{VersionMajor}";
-    //public static readonly string GameFilePath = $"/home/devy/mapledev/v{VersionMajor}";
     public static readonly bool PseudoEditor = false; // This is just used to get better coordinates, since a lot of this are done by hand.
     
     // Network Settings

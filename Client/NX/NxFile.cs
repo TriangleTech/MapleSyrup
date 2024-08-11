@@ -57,6 +57,7 @@ public class NxFile : IDisposable
                         _reader.Seek(_reader.StringBlockOffset + 8 * nameOffset);
                         var stringOffset = _reader.ReadLong();
                         var name = _reader.ReadString(stringOffset);
+                        
                         switch (name)
                         {
                             case "Cap":
@@ -76,19 +77,24 @@ public class NxFile : IDisposable
                             {
                                 for (var k = firstChildId; k < firstChildId + childCount; k++)
                                 {
-                                    var childOffset = _reader.NodeBlockOffset + 20 * j;
+                                    var childOffset = _reader.NodeBlockOffset + 20 * k;
                                     _reader.Seek(childOffset);
                                     var childNameOffset = _reader.ReadInt();
                                     _reader.Seek(_reader.StringBlockOffset + 8 * childNameOffset);
                                     var childStringOffset = _reader.ReadLong();
                                     var childName = _reader.ReadString(childStringOffset);
                                     
-                                    if (!name.Contains(".img")) continue;
+                                    if (!childName.Contains(".img")) continue;
+                                    Console.WriteLine($"{rootName}/{name}/{childName}");
                                     _stringPool.Add($"{rootName}/{name}/{childName}", childOffset);
                                 }
                             }
                                 break;
                         }
+                        
+                        if (!name.Contains(".img")) continue;
+                        Console.WriteLine($"{rootName}/{name}");
+                        _stringPool.Add($"{rootName}/{name}", offset);
                     }
                     break;
                 }

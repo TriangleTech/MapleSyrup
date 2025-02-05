@@ -1,3 +1,19 @@
+Complete Revamp of Client
+--Removed Actor-based system, replaced with an ECS-based system.
+--Removed all forms of managers (i.e. ActorManager, SceneManager, etc.)
+--Removed all dependency to the managers and created a more streamline process.
+--Removed all scaling calculations and others confusing variables.
+--Removed all networking, no longer care about that right now. 
+--Changed the way scenes work, they're no longer a interface, now it's an base class.
+--Changed the NX parsing classes, now it's more straightforward to use, and it loads node much quicker.
+--Changed the way tiles, objects, and backgrounds get loaded with the new entity system.
+--Added various systems that handle the rendering, animation, and other aspects of the game.
+--Added an EntityFactory, which is the core of the ECS system.
+--Changed the way Entities get recalled, the system gives you their ID instead of the whole class.
+--Changed the way the window works, no longer does it rely on a confusing resizing system.
+--Added a Json window config file, so that you can edit the details without having to recompile.
+
+
 Login Updates (8.10.24)
 --Added pants rendering to player.
 --Added Select/Create/Delete button to character board.

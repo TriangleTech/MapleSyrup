@@ -52,6 +52,16 @@ public class NXFactory
         return _files[file].GetChildNode(parent, childName);
     }
 
+    public Dictionary<string, NXNode> GetChildren(MapleFiles file, NXNode parent)
+    {
+        return _files[file].GetChildren(parent);
+    }
+
+    public Span<string> GetChildrenNames(MapleFiles file, NXNode parent)
+    {
+        return _files[file].GetChildrenNames(parent);
+    }
+
     public bool HasNode(MapleFiles file, NXNode parent, string nodeName)
     {
         return _files[file].HasNode(parent, nodeName);

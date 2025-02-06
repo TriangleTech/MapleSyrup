@@ -230,10 +230,10 @@ public class NXFile : IDisposable
     /// </summary>
     /// <param name="node">The <see cref="NXNode"/> to parse.</param>
     /// <returns>A list of <see cref="NXNode"/></returns>
-    public List<NXNode> GetChildren(NXNode node)
+    public Dictionary<string, NXNode> GetChildren(NXNode node)
     {
-        if (node.ChildCount == 0) return new List<NXNode>(0);
-        var nodes = new List<NXNode>(node.ChildCount);
+        if (node.ChildCount == 0) return new(0);
+        var nodes = new Dictionary<string, NXNode>(node.ChildCount);
 
         for (var i = node.FirstChildId; i < node.FirstChildId + node.ChildCount; i++)
         {
@@ -249,7 +249,8 @@ public class NXFile : IDisposable
 
             _buffer.Seek((long)(stringOffset));
             var nodeName = _buffer.ReadString();
-            nodes.Add(new NXNode
+            
+            nodes.Add(nodeName, new NXNode
             {
                 NodePath = string.Concat(node.NodePath, $"/{nodeName}"),
                 Name = nodeName,

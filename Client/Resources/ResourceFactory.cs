@@ -44,6 +44,11 @@ public class ResourceFactory
         _resources.Remove(resourceName);
     }
 
+    public bool HasResource(string resourceName)
+    {
+        return _resources.TryGetValue(resourceName, out _);
+    }
+
     public void ShutDown()
     {
         foreach (var resource in _resources.Values)

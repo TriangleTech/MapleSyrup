@@ -177,72 +177,63 @@ public abstract class SceneBase
     {
         try
         {
-            var layerNode = NXFactory.Shared.GetChildNode(file, imgNode, i.ToString()) ??
-                            throw new NullReferenceException($"Failed to find [{i}] node");
-            var objLayer = NXFactory.Shared.GetChildNode(file, layerNode, "obj") ??
-                           throw new NullReferenceException("Failed to find [obj] node");
-
-            if (objLayer.ChildCount == 0) return;
-
-            Console.WriteLine($"Loading objects for layer {i}");
-            for (var j = 0; j < objLayer.ChildCount; j++)
+            var layer = NXFactory.Shared.GetChildNode(file, imgNode, i.ToString()) ??
+                        throw new NullReferenceException($"Failed to find [{i}] node");
+            var obj = NXFactory.Shared.GetChildNode(file, layer, "obj") ??
+                          throw new NullReferenceException($"Failed to find [obj] node");
+            if (obj.ChildCount == 0) return;
+            
+            var objNodes = NXFactory.Shared.GetChildren(file, obj);
+            foreach (var (_, objNode) in objNodes)
             {
-                // These reference the file they come from, not the location of the item that is referenced.
-                var objNode = NXFactory.Shared.GetChildNode(file, objLayer, j.ToString()) ??
-                              throw new NullReferenceException("Failed to find [tile] node");
-                var oS = NXFactory.Shared.GetChildNode(file, objNode, "oS")?.GetString() ??
-                         throw new NullReferenceException("Failed to find [oS] node");
-                var l0 = NXFactory.Shared.GetChildNode(file, objNode, "l0")?.GetString() ??
-                         throw new NullReferenceException("Failed to find [l0] node");
-                var l1 = NXFactory.Shared.GetChildNode(file, objNode, "l1")?.GetString() ??
-                         throw new NullReferenceException("Failed to find [l1] node");
-                var l2 = NXFactory.Shared.GetChildNode(file, objNode, "l2")?.GetString() ??
-                         throw new NullReferenceException("Failed to find [l2] node");
-                var x = NXFactory.Shared.GetChildNode(file, objNode, "x")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [x] node");
-                var y = NXFactory.Shared.GetChildNode(file, objNode, "y")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [y] node");
-                var z = NXFactory.Shared.GetChildNode(file, objNode, "z")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [z] node");
+                var nodes = NXFactory.Shared.GetChildren(file, objNode);
+                var oS = nodes["oS"].GetString();
+                var l0 = nodes["l0"].GetString();
+                var l1 = nodes["l1"].GetString();
+                var l2 = nodes["l2"].GetString();
+                var x = nodes["x"].GetInt();
+                var y = nodes["y"].GetInt();
+                var z = nodes["z"].GetInt();
                 // TODO: Eventually find out what these do. Commented out to save CPU processing.
                 //var zM = NXFactory.Shared.GetChildNode(file, objNode, "zM")?.GetInt() ??
                 //         throw new NullReferenceException("Failed to find [zM] node");
                 //var f = NXFactory.Shared.GetChildNode(file, objNode, "f")?.GetInt() ??
                 //        throw new NullReferenceException("Failed to find [f] node"); // pretty sure this means flipped.
                 var order = 30000 * i + z - 1073739824;
-
+                
                 var objSet = NXFactory.Shared.GetNode(MapleFiles.Map, $"Obj/{oS}.img/{l0}/{l1}/{l2}") ??
                              throw new NullReferenceException($"Failed to find [Obj/{oS}.img/{l0}/{l1}/{l2}] node");
+                var frameNodes = NXFactory.Shared.GetChildren(MapleFiles.Map, objSet);
+                if (frameNodes.TryGetValue("seat", out _)) continue; // TODO: Seats
+                if (frameNodes.TryGetValue("blend", out _)) continue; // TODO: Blend animation
+                if (frameNodes.TryGetValue("obstacle", out _)) continue; // TODO: Obstacles
+                if (frameNodes.TryGetValue("damage", out _)) continue; // TODO: Trap damage.
 
-                if (NXFactory.Shared.HasNode(MapleFiles.Map, objSet, "seat")) continue; // TODO: Seats
-                if (NXFactory.Shared.HasNode(MapleFiles.Map, objSet, "blend")) continue; // TODO: Blend animation
-                if (NXFactory.Shared.HasNode(MapleFiles.Map, objSet, "obstacle")) continue; // TODO: Obstacles
-                if (NXFactory.Shared.HasNode(MapleFiles.Map, objSet, "damage")) continue; // TODO: Trap damage.
-
-                if (objSet.ChildCount > 1)
+                if (frameNodes.Count > 1)
                 {
                     var frames = new List<string>(objSet.ChildCount);
-                    for (var k = 0; k < objSet.ChildCount; k++)
+                    foreach(var (_, node) in frameNodes)
                     {
-                        var node = NXFactory.Shared.GetChildNode(MapleFiles.Map, objSet, k.ToString()) ??
-                                   throw new NullReferenceException($"Failed to find [{objSet.NodePath}/{k}] node");
                         var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "origin")?.GetVector() ??
-                                     throw new NullReferenceException("Failed to find [origin] node");
-                        var texture = node.GetTexture();
-                        ResourceFactory.Shared.RegisterResource(new TextureResource(node.NodePath)
+                                     Vector2.Zero;
+                        if (!ResourceFactory.Shared.HasResource(node.NodePath))
                         {
-                            Texture = texture,
-                            Origin = origin,
-                            Delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "delay")?.GetInt() ??
-                                    150f
-                        });
+                            var texture = node.GetTexture();
+                            ResourceFactory.Shared.RegisterResource(new TextureResource(node.NodePath)
+                            {
+                                Texture = texture,
+                                Origin = origin,
+                                Delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "delay")?.GetInt() ??
+                                        150f
+                            });
+                        }
+
                         frames.Add(node.NodePath);
                     }
 
-                    var objEntity = EntityFactory.Shared.CreateEntity($"Obj_{i}_{j}", "Obj_Animated");
-                    objEntity.Layer = i;
-                    
+                    var objEntity = EntityFactory.Shared.CreateEntity($"Obj", "Obj_Animated");
                     var transform = EntityFactory.Shared.GetComponent<Transform>(objEntity.Id);
+                    objEntity.Layer = i;
                     transform.Position = new Vector2(x, y);
                     transform.Z = order;
 
@@ -260,20 +251,23 @@ public abstract class SceneBase
                 }
                 else
                 {
-                    var node = NXFactory.Shared.GetChildNode(MapleFiles.Map, objSet, "0") ??
-                               throw new NullReferenceException("Failed to find [0] node");
+                    var node = frameNodes["0"];
                     var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "origin")?.GetVector() ??
-                                 throw new NullReferenceException("Failed to find [origin] node");
-                    var objEntity = EntityFactory.Shared.CreateEntity($"Obj_{i}_{j}", "Obj_Static");
-                    objEntity.Layer = i;
-                    
+                                 Vector2.Zero;
+                    var objEntity = EntityFactory.Shared.CreateEntity($"Obj", "Obj_Static");
                     var transform = EntityFactory.Shared.GetComponent<Transform>(objEntity.Id);
-                    ResourceFactory.Shared.RegisterResource(new TextureResource(node.NodePath)
+
+                    if (!ResourceFactory.Shared.HasResource(node.NodePath))
                     {
-                        Texture = node.GetTexture(),
-                        Origin = origin,
-                        Delay = 0f,
-                    });
+                        ResourceFactory.Shared.RegisterResource(new TextureResource(node.NodePath)
+                        {
+                            Texture = node.GetTexture(),
+                            Origin = origin,
+                            Delay = 0f,
+                        });
+                    }
+
+                    objEntity.Layer = i;
                     transform.Position = new Vector2(x, y);
                     transform.Origin = origin;
                     transform.Z = order;
@@ -312,55 +306,54 @@ public abstract class SceneBase
                             throw new NullReferenceException("Failed to find [tile] node");
 
             if (tileLayer.ChildCount == 0) return;
-            var infoNode = NXFactory.Shared.GetChildNode(file, layerNode, "info") ??
+            var info = NXFactory.Shared.GetChildNode(file, layerNode, "info") ??
                            throw new NullReferenceException("Failed to find [info] node");
+            var infoNodes = NXFactory.Shared.GetChildren(file, info);
+            
             var tS = "";
-            if (NXFactory.Shared.HasNode(file, infoNode, "tS"))
+            if (infoNodes.TryGetValue("tS", out var tSNode))
             {
-                tS = NXFactory.Shared.GetChildNode(file, infoNode, "tS")?.GetString() ??
-                     throw new NullReferenceException("Failed to find [tS] node");
+                tS = tSNode.GetString();
             }
             else
             {
                 tS = NXFactory.Shared.GetNode(file, $"{imgNode.NodePath}/0/info/tS")?.GetString() ??
-                     throw new NullReferenceException("Failed to find [tS] node");
+                     "grassySoil";
             }
 
             Console.WriteLine($"Loading tiles for layer {i}");
-            for (var j = 0; j < tileLayer.ChildCount; j++)
+            
+            var tileNodes = NXFactory.Shared.GetChildren(file, tileLayer);
+            foreach (var (_, tileNode) in tileNodes)
             {
-                var tileNode = NXFactory.Shared.GetChildNode(file, tileLayer, j.ToString()) ??
-                               throw new NullReferenceException("Failed to find [tile] node");
-                var x = NXFactory.Shared.GetChildNode(file, tileNode, "x")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [x] node");
-                var y = NXFactory.Shared.GetChildNode(file, tileNode, "y")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [y] node");
-                var zM = NXFactory.Shared.GetChildNode(file, tileNode, "zM")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [zM] node");
-                var u = NXFactory.Shared.GetChildNode(file, tileNode, "u")?.GetString() ??
-                        throw new NullReferenceException("Failed to find [u] node");
-                var no = NXFactory.Shared.GetChildNode(file, tileNode, "no")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [no] node");
-
-                var tile = NXFactory.Shared.GetNode(MapleFiles.Map, $"Tile/{tS}.img/{u}/{no}") ??
+                var tile = NXFactory.Shared.GetChildren(file, tileNode);
+                var x = tile["x"].GetInt();
+                var y = tile["y"].GetInt();
+                var zM = tile["zM"].GetInt();
+                var u = tile["u"].GetString();
+                var no = tile["no"].GetInt();
+                
+                var tileSet = NXFactory.Shared.GetNode(MapleFiles.Map, $"Tile/{tS}.img/{u}/{no}") ??
                            throw new NullReferenceException("Failed to find [tile] node");
-                var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, tile, "origin")?.GetVector() ??
-                             throw new NullReferenceException("Failed to find [origin] node");
-                var z = NXFactory.Shared.GetChildNode(MapleFiles.Map, tile, "z")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [z] node");
+                var setNodes = NXFactory.Shared.GetChildren(MapleFiles.Map, tileSet);
+                var origin = setNodes["origin"].GetVector();
+                var z = setNodes["z"].GetInt();
                 var order = z + 10 * (3000 * (int)(i) - zM) - 1073721834;
-
-                var tileEntity = EntityFactory.Shared.CreateEntity($"Tile_{i}_{j}", u);
-                tileEntity.Layer = i;
                 
+                var tileEntity = EntityFactory.Shared.CreateEntity("Tile", u);
                 var transform = EntityFactory.Shared.GetComponent<Transform>(tileEntity.Id);
-                ResourceFactory.Shared.RegisterResource(new TextureResource(tile.NodePath)
-                {
-                    Texture = tile.GetTexture(),
-                    Origin = origin,
-                    Delay = 0f
-                });
                 
+                if (!ResourceFactory.Shared.HasResource(tileSet.NodePath))
+                {
+                    ResourceFactory.Shared.RegisterResource(new TextureResource(tileSet.NodePath)
+                    {
+                        Texture = tileSet.GetTexture(),
+                        Origin = origin,
+                        Delay = 0f
+                    });
+                }
+
+                tileEntity.Layer = i;
                 transform.Position = new Vector2(x, y);
                 transform.Origin = origin;
                 transform.Z = order;
@@ -368,7 +361,7 @@ public abstract class SceneBase
                 var mapObjComponent = new MapObj()
                 {
                     Owner = tileEntity.Id,
-                    Textures = [tile.NodePath],
+                    Textures = [tileSet.NodePath],
                     Blend = false,
                     Loop = false,
                     Frame = 0,
@@ -385,7 +378,6 @@ public abstract class SceneBase
                 };
 
                 EntityFactory.Shared.AddComponent(collision);
-
             }
         }
         catch (Exception e)

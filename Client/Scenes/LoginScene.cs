@@ -15,13 +15,16 @@ public class LoginScene : SceneBase
 
     public override void InitSystems()
     {
+        var background = new BackgroundAnimation();
+        var mapObj = new MapObjAnimation();
+        
         // Add any draw systems here
-        DrawSystems.Add(new BackgroundAnimation());
-        DrawSystems.Add(new MapObjAnimation());
+        DrawSystems.Add(background);
+        DrawSystems.Add(mapObj);
         
         // Add any update systems here
-        UpdateSystems.Add(new BackgroundAnimation());
-        UpdateSystems.Add(new MapObjAnimation());
+        UpdateSystems.Add(background);
+        UpdateSystems.Add(mapObj);
     }
 
     public override void LoadContent()
@@ -29,7 +32,10 @@ public class LoginScene : SceneBase
         var imgNode = NXFactory.Shared.GetFastImg(MapleFiles.UI, $"{SceneName}.img") ?? 
                       throw new NullReferenceException("Could not find image");
         LoadBackground(MapleFiles.UI, imgNode);
-        //LoadObjects(MapleFiles.UI, imgNode);
-        //LoadTiles(MapleFiles.UI, imgNode);
+        for (var i = 0; i < 7; ++i)
+        {
+            LoadObjects(MapleFiles.UI, imgNode, i);
+            LoadTiles(MapleFiles.UI, imgNode, i);
+        }
     }
 }

@@ -23,5 +23,4 @@ public class Entity
     /// Returns the visibility of the entity.
     /// </summary>
     public bool Visible { get; set; } = true;
-    public int Masks { get; set; } = 0;
 }

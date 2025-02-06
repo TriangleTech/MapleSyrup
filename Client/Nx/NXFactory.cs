@@ -2,7 +2,7 @@
 
 public class NXFactory
 {
-    private readonly Dictionary<MapleFiles, NXFile> _files = new();
+    private readonly Dictionary<MapleFiles, NXFile> _files;
     private const string DefaultPath = "D:/v41";
     
     public static NXFactory Shared { get; private set; }
@@ -11,18 +11,22 @@ public class NXFactory
     
     public NXFactory()
     {
-        _files[MapleFiles.Character] = new NXFile(string.Concat(DefaultPath, "/Character.nx"));
-        _files[MapleFiles.Effect] = new NXFile(string.Concat(DefaultPath, "/Effect.nx"));
-        _files[MapleFiles.Etc] = new NXFile(string.Concat(DefaultPath, "/Etc.nx"));
-        _files[MapleFiles.Map] = new NXFile(string.Concat(DefaultPath, "/Map.nx"));
-        _files[MapleFiles.Mob] = new NXFile(string.Concat(DefaultPath, "/Mob.nx"));
-        _files[MapleFiles.Npc] = new NXFile(string.Concat(DefaultPath, "/Npc.nx"));
-        _files[MapleFiles.Quest] = new NXFile(string.Concat(DefaultPath, "/Quest.nx"));
-        _files[MapleFiles.Reactor] = new NXFile(string.Concat(DefaultPath, "/Reactor.nx"));
-        _files[MapleFiles.Skill] = new NXFile(string.Concat(DefaultPath, "/Skill.nx"));
-        _files[MapleFiles.Sound] = new NXFile(string.Concat(DefaultPath, "/Sound.nx"));
-        _files[MapleFiles.TamingMob] = new NXFile(string.Concat(DefaultPath, "/TamingMob.nx"));
-        _files[MapleFiles.UI] = new NXFile(string.Concat(DefaultPath, "/UI.nx"));
+        _files = new(16)
+        {
+            [MapleFiles.Character] = new(string.Concat(DefaultPath, "/Character.nx")),
+            [MapleFiles.Effect] = new(string.Concat(DefaultPath, "/Effect.nx")),
+            [MapleFiles.Etc] = new(string.Concat(DefaultPath, "/Etc.nx")),
+            [MapleFiles.Map] = new(string.Concat(DefaultPath, "/Map.nx")),
+            [MapleFiles.Mob] = new(string.Concat(DefaultPath, "/Mob.nx")),
+            [MapleFiles.Npc] = new(string.Concat(DefaultPath, "/Npc.nx")),
+            [MapleFiles.Quest] = new(string.Concat(DefaultPath, "/Quest.nx")),
+            [MapleFiles.Reactor] = new(string.Concat(DefaultPath, "/Reactor.nx")),
+            [MapleFiles.Skill] = new(string.Concat(DefaultPath, "/Skill.nx")),
+            [MapleFiles.Sound] = new(string.Concat(DefaultPath, "/Sound.nx")),
+            [MapleFiles.TamingMob] = new(string.Concat(DefaultPath, "/TamingMob.nx")),
+            [MapleFiles.UI] = new(string.Concat(DefaultPath, "/UI.nx"))
+        };
+        
         Shared = this;
     }
 

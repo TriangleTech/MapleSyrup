@@ -7,67 +7,67 @@ namespace Client.Nx;
 public readonly struct NXNode
 {
     public string NodePath {get; init;}
-    public string Name { get; init; }
-    public uint FirstChildId { get; init; }
-    public ushort ChildCount { get; init; }
-    public NodeType Type { get; init; }
-    public ulong Offset { get; init; }
-    public Memory<byte> Data { get; init; }
+    public required string Name { get; init; }
+    public required uint FirstChildId { get; init; }
+    public required ushort ChildCount { get; init; }
+    public required NodeType Type { get; init; }
+    public required ulong Offset { get; init; }
+    public required NXBuffer Buffer { get; init; }
 
-    public int GetInt(NXFile file)
+    public int GetInt()
     {
-        file.Buffer.Seek((long)Offset + 12);
-        var data = file.Buffer.ReadUInt64();
+        Buffer.Seek((long)Offset + 12);
+        var data = Buffer.ReadUInt64();
 
         return (int)data;
     }
     
-    public double GetDouble(NXFile file)
+    public double GetDouble()
     {
-        file.Buffer.Seek((long)Offset + 12);
-        var data = file.Buffer.ReadUInt64();
+        Buffer.Seek((long)Offset + 12);
+        var data = Buffer.ReadUInt64();
 
         return data;
     }
     
-    public string GetString(NXFile file)
+    public string GetString()
     {
         if (Type != NodeType.String) throw new Exception("Not a string node");
-        file.Buffer.Seek((long)Offset + 12);
-        var stringId = file.Buffer.ReadUInt32();
+        Buffer.Seek((long)Offset + 12);
+        var stringId = Buffer.ReadUInt32();
         
-        file.Buffer.Seek((long)file.StringBlock + 8 * stringId);
-        var stringOffset = file.Buffer.ReadUInt64();
+        Buffer.Seek((long)Buffer.StringBlock + 8 * stringId);
+        var stringOffset = Buffer.ReadUInt64();
 
-        file.Buffer.Seek((long)(stringOffset)); // taking a guess here. Worst case increase to 1024
-        var nodeName = file.Buffer.ReadString();
+        Buffer.Seek((long)(stringOffset)); // taking a guess here. Worst case increase to 1024
+        var nodeName = Buffer.ReadString();
         
         return nodeName;
     }
 
-    public Vector2 GetVector(NXFile file)
+    public Vector2 GetVector()
     {
         if (Type != NodeType.Vector) throw new Exception("Not a vector node");
-        file.Buffer.Seek((long)Offset + 12);
-        var vector = new Vector2(file.Buffer.ReadUInt32(), file.Buffer.ReadUInt32());
+        Buffer.Seek((long)Offset + 12);
+        var vector = new Vector2(Buffer.ReadUInt32(), Buffer.ReadUInt32());
         
         return vector;
     }
 
-    public unsafe Texture GetTexture(NXFile file)
+    public unsafe Texture GetTexture()
     {
         if (Type != NodeType.Bitmap) throw new Exception("Not a bitmap node");
-        file.Buffer.Seek((long)Offset + 12);
-        var bitmapId = file.Buffer.ReadUInt32();
-        var width = file.Buffer.ReadUInt16();
-        var height = file.Buffer.ReadUInt16();
+        Buffer.Seek((long)Offset + 12);
+        var bitmapId = Buffer.ReadUInt32();
+        var width = Buffer.ReadUInt16();
+        var height = Buffer.ReadUInt16();
         
-        file.Buffer.Seek((long)(file.BitmapBlock + 8 * bitmapId));
-        var bitmapOffset = file.Buffer.ReadUInt64();
+        Buffer.Seek((long)(Buffer.BitmapBlock + 8 * bitmapId));
+        var bitmapOffset = Buffer.ReadUInt64();
         
-        file.Buffer.Seek((long)(bitmapOffset));
-        var dataLength = file.Buffer.ReadUInt32();
-        var compressedData = file.Buffer.ReadBytes((int)dataLength).ToArray();
+        Buffer.Seek((long)(bitmapOffset));
+        var dataLength = Buffer.ReadUInt32();
+        var compressedData = Buffer.ReadBytes((int)dataLength).ToArray();
         var decompressedData = new byte[width * height * 4];
         var decompressedSize = LZ4Codec.Decode(compressedData, 0, compressedData.Length,
             decompressedData, 0, decompressedData.Length);

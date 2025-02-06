@@ -16,10 +16,10 @@ public class WorldScene : SceneBase
 
     public override void InitSystems()
     {
-        // Add any draw systems here
         var background = new BackgroundAnimation();
         var mapObj = new MapObjAnimation();
         
+        // Add any draw systems here
         DrawSystems.Add(background);
         DrawSystems.Add(mapObj);
         
@@ -33,7 +33,7 @@ public class WorldScene : SceneBase
         var imgNode = NXFactory.Shared.GetNode(MapleFiles.Map, $"Map/Map{SceneName[0]}/{SceneName}.img") ?? 
                       throw new Exception("Could not find image");
         LoadBackground(MapleFiles.Map, imgNode);
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < 7; ++i)
         {
             LoadObjects(MapleFiles.Map, imgNode, i);
             LoadTiles(MapleFiles.Map, imgNode, i);

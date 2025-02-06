@@ -31,7 +31,8 @@ public class ResourceFactory
         {
             // ignored
         }
-
+        
+        // TODO: Fallback on a default resource, so the client doesn't crash.
         throw new KeyNotFoundException($"Resource [{resourceName}] not registered");
     }
 

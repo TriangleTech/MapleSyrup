@@ -13,7 +13,6 @@ Complete Revamp of Client
 --Changed the way the window works, no longer does it rely on a confusing resizing system.
 --Added a Json window config file, so that you can edit the details without having to recompile.
 
-
 Login Updates (8.10.24)
 --Added pants rendering to player.
 --Added Select/Create/Delete button to character board.

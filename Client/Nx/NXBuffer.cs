@@ -10,6 +10,11 @@ public unsafe  class NXBuffer : IDisposable
     private long _position, _offset;
     private readonly long _size;
     
+    public ulong NodeBlock { get; set; }
+    public ulong StringBlock { get; set; }
+    public ulong BitmapBlock { get; set; }
+    public ulong AudioBlock { get; set; }
+    
     public NXBuffer(MemoryMappedFile file)
     {
         _view = file.CreateViewAccessor();

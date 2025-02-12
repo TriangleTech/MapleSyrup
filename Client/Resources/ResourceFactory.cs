@@ -17,7 +17,11 @@ public class ResourceFactory
 
     public void RegisterResource(IResource resource)
     {
-        _resources.TryAdd(resource.Name, resource);
+        var added = _resources.TryAdd(resource.Name, resource);
+        if (!added)
+        {
+            Console.WriteLine($"Resource already registered: {resource.Name}");
+        }
     }
 
     public T GetResource<T>(string resourceName) where T : IResource

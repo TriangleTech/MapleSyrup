@@ -1,8 +1,10 @@
-﻿using Client.ECS;
+﻿using System.Numerics;
+using Client.ECS;
 using Client.ECS.Systems;
 using Client.ECS.Systems.Hybrid;
 using Client.Nx;
 using Client.Windowing;
+using ZeroElectric.Vinculum;
 
 namespace Client.Scenes;
 
@@ -11,7 +13,13 @@ public class WorldScene : SceneBase
     public WorldScene(string sceneName) 
         : base(sceneName)
     {
-       
+        Camera = new Camera2D()
+        {
+            offset = Vector2.Zero,
+            target = Vector2.Zero,
+            rotation = 0f,
+            zoom = 1.0f
+        };
     }
 
     public override void InitSystems()

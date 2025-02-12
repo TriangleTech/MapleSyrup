@@ -1,4 +1,6 @@
-﻿namespace Client.Nx;
+﻿using System.Collections.ObjectModel;
+
+namespace Client.Nx;
 
 public class NXFactory
 {
@@ -52,7 +54,7 @@ public class NXFactory
         return _files[file].GetChildNode(parent, childName);
     }
 
-    public Dictionary<string, NXNode> GetChildren(MapleFiles file, NXNode parent)
+    public ReadOnlyDictionary<string, NXNode> GetChildren(MapleFiles file, NXNode parent)
     {
         return _files[file].GetChildren(parent);
     }

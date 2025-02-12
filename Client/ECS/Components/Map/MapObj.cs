@@ -44,5 +44,10 @@ public class MapObj
     /// <summary>
     /// Returns whether the animation is animation via alpha blending.
     /// </summary>
-    public bool Blend { get; init; }
+    public bool Blend { get; set; }
+    
+    public int Alpha { get; set; } = 0;
+    public int Alpha0 { get; set; } = 0;
+    public int Alpha1 { get; set; } = 255;
+    public Color Color { get; set; } = Raylib.WHITE;
 }

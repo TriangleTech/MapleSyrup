@@ -8,6 +8,22 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <TargetFramework>net8.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <!-- Set the runtime identifier (RID) for your platform -->
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier> <!-- Replace with your target platform (e.g., linux-x64, osx-x64, etc.) -->
+
+        <!-- Enable Native AOT -->
+        <PublishAot>true</PublishAot>
+
+        <!-- Optional: Trim unused assemblies for smaller binaries -->
+        <PublishTrimmed>true</PublishTrimmed>
+
+        <!-- Optional: Strip unnecessary debug information -->
+        <DebugType>none</DebugType>
+
+        <!-- Optional: Treat warnings as errors for AOT -->
+        <WarningsAsErrors>IL2026;IL3050</WarningsAsErrors> <!-- Handles trimming-related warnings -->
+
     </PropertyGroup>
 
     <ItemGroup>

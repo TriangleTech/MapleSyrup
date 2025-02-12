@@ -1,4 +1,5 @@
-﻿using System.IO.MemoryMappedFiles;
+﻿using System.Collections.ObjectModel;
+using System.IO.MemoryMappedFiles;
 using System.Text;
 using CommunityToolkit.HighPerformance;
 
@@ -229,11 +230,11 @@ public class NXFile : IDisposable
     /// Gets the children of the provided <see cref="NXNode"/>.
     /// </summary>
     /// <param name="node">The <see cref="NXNode"/> to parse.</param>
-    /// <returns>A list of <see cref="NXNode"/></returns>
-    public Dictionary<string, NXNode> GetChildren(NXNode node)
+    /// <returns>A dictionary of <see cref="NXNode"/></returns>
+    public ReadOnlyDictionary<string, NXNode> GetChildren(NXNode node)
     {
-        if (node.ChildCount == 0) return new(0);
         var nodes = new Dictionary<string, NXNode>(node.ChildCount);
+        if (node.ChildCount == 0) return nodes.AsReadOnly();
 
         for (var i = node.FirstChildId; i < node.FirstChildId + node.ChildCount; i++)
         {
@@ -262,7 +263,7 @@ public class NXFile : IDisposable
             });
         }
 
-        return nodes;
+        return nodes.AsReadOnly();
     }
 
     /// <summary>

@@ -2,6 +2,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{F029D143-954D-44FC-A35A-121D90CF8E2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Game", "Game", "{5B5FA293-C8BA-469B-BE93-1E3886C5FE5C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameServer", "GameServer\GameServer.csproj", "{270508AD-4250-4B79-A046-BA5182907B1F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +18,13 @@ Global
 		{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7305FEAE-54E9-4A90-9D60-0B65DF6E6947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{270508AD-4250-4B79-A046-BA5182907B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{270508AD-4250-4B79-A046-BA5182907B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{270508AD-4250-4B79-A046-BA5182907B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{270508AD-4250-4B79-A046-BA5182907B1F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7305FEAE-54E9-4A90-9D60-0B65DF6E6947} = {5B5FA293-C8BA-469B-BE93-1E3886C5FE5C}
+		{270508AD-4250-4B79-A046-BA5182907B1F} = {F029D143-954D-44FC-A35A-121D90CF8E2E}
 	EndGlobalSection
 EndGlobal

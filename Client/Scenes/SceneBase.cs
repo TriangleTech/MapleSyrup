@@ -25,13 +25,6 @@ public abstract class SceneBase
         DrawSystems = new List<IDrawSystem>(5);
         UpdateSystems = new List<IUpdateSystem>(5);
         SceneName = sceneName;
-        Camera = new Camera2D()
-        {
-            offset = Vector2.Zero,
-            rotation = 0f,
-            target = new Vector2(0f, 0f),
-            zoom = 1f
-        };
     }
 
     public abstract void InitSystems();
@@ -41,66 +34,68 @@ public abstract class SceneBase
 
     protected void LoadBackground(MapleFiles file, NXNode imgNode)
     {
-        Console.WriteLine("Loading background...");
         try
         {
             var back = NXFactory.Shared.GetChildNode(file, imgNode, "back") ??
                        throw new NullReferenceException("Failed to find [back] node in img file");
-            for (var i = 0; i < back.ChildCount; i++)
+            var backgroundNodes = NXFactory.Shared.GetChildren(file, back);
+            foreach (var (_, background) in backgroundNodes)
             {
-                var node = NXFactory.Shared.GetChildNode(file, back, i.ToString()) ?? throw new NullReferenceException($"Failed to find [{i}] node");
-                var bS = NXFactory.Shared.GetChildNode(file, node, "bS")?.GetString() ??
-                         throw new NullReferenceException("Failed to find [bS] node");
-                var no = NXFactory.Shared.GetChildNode(file, node, "no")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [no] node");
-                var x = NXFactory.Shared.GetChildNode(file, node, "x")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [x] node");
-                var y = NXFactory.Shared.GetChildNode(file, node, "y")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [y] node");
-                var rx = NXFactory.Shared.GetChildNode(file, node, "rx")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [rx] node");
-                var ry = NXFactory.Shared.GetChildNode(file, node, "ry")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [ry] node");
-                var cx = NXFactory.Shared.GetChildNode(file, node, "cx")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [cx] node");
-                var cy = NXFactory.Shared.GetChildNode(file, node, "cy")?.GetInt() ??
-                         throw new NullReferenceException("Failed to find [cy] node");
-                var a = NXFactory.Shared.GetChildNode(file, node, "a")?.GetInt() ??
-                        throw new NullReferenceException("Failed to find [a] node");
-                //var front = NXFactory.Shared.GetChildNode(file, node, "front")?.GetInt() ??
-                //            throw new NullReferenceException("Failed to find [front] node");
-                var ani = NXFactory.Shared.GetChildNode(file, node, "ani")?.GetInt() ??
-                          throw new NullReferenceException("Failed to find [ani] node");
-                //var f = NXFactory.Shared.GetChildNode(file, node, "f")?.GetInt() ??
-                //        throw new NullReferenceException("Failed to find [f] node");
-                var type = NXFactory.Shared.GetChildNode(file, node, "type")?.GetInt() ??
-                           throw new NullReferenceException("Failed to find [type] node");
+                var node = NXFactory.Shared.GetChildren(file, background);
+                var bS = node["bS"].GetString();
+                var no = node["no"].GetInt();
+                var x = node["x"].GetInt();
+                var y = node["y"].GetInt();
+                var rx = node["rx"].GetInt();
+                var ry = node["ry"].GetInt();
+                var cx = node["cx"].GetInt();
+                var cy = node["cy"].GetInt();
+                var a = node["a"].GetInt();
+                var front = node["front"].GetInt();
+                var ani = node["ani"].GetInt();
+                var f = node["f"].GetInt();
+                var type = node["type"].GetInt();
 
                 if (ani == 1)
                 {
-                    var backgroundSet = NXFactory.Shared.GetNode(MapleFiles.Map, $"Back/{bS}.img/ani") ?? throw new NullReferenceException("Failed to find background set");
-                    var animatedNode = NXFactory.Shared.GetChildNode(MapleFiles.Map, backgroundSet, no.ToString()) ?? throw new NullReferenceException("Failed to find [no] node");
+                    var backgroundSet = NXFactory.Shared.GetNode(MapleFiles.Map, $"Back/{bS}.img/ani/{no}") 
+                                        ?? throw new NullReferenceException("Failed to find background set");
+                    var animationNodes = NXFactory.Shared.GetChildren(MapleFiles.Map, backgroundSet);
                     var frames = new List<string>();
-                    
-                    for (var j = 0; j < animatedNode.ChildCount; j++)
+                    var alpha = new Queue<int>();
+                    var blend = false;
+
+                    foreach (var (_, animation) in animationNodes)
                     {
-                        var texture = NXFactory.Shared.GetChildNode(MapleFiles.Map, animatedNode, j.ToString()) ?? 
-                                      throw new NullReferenceException("Failed to find [texture] node");
-                        var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, texture, "origin")?.GetVector() 
-                                     ?? throw new NullReferenceException("Failed to find [origin] node");
-                        var delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, texture, "delay")?.GetInt() ??
+                        var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, animation, "origin")?.GetVector()
+                                     ?? Vector2.Zero;
+                        var delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, animation, "delay")?.GetInt() ??
                                     150f;
-                        ResourceFactory.Shared.RegisterResource(new TextureResource(texture.NodePath)
+                        blend = NXFactory.Shared.HasNode(MapleFiles.Map, animation, "a0");
+                        if (blend)
+                        {
+                            var a0 = NXFactory.Shared.GetChildNode(MapleFiles.Map, animation, "a0") 
+                                ?? throw new NullReferenceException("Failed to find a0");
+                            var a1 = NXFactory.Shared.GetChildNode(MapleFiles.Map, animation, "a1") 
+                                     ?? throw new NullReferenceException("Failed to find a1");
+                            alpha.Enqueue(a0.GetInt());
+                            alpha.Enqueue(a1.GetInt());
+                        }
+                        if (!ResourceFactory.Shared.HasResource(animation.NodePath) && animation.Type == NodeType.Bitmap)
+                        {
+                            ResourceFactory.Shared.RegisterResource(new TextureResource(animation.NodePath)
                             {
-                                Texture = texture.GetTexture(),
+                                Texture = animation.GetTexture(),
                                 Origin = origin,
                                 Delay = delay,
                             });
-                        frames.Add(texture.NodePath);
+                        }
+                        
+                        if (animation.Type == NodeType.Bitmap) 
+                            frames.Add(animation.NodePath);
                     }
-
-                    // TODO: let's find a way to not call this twice...
-                    var backgroundEntity = EntityFactory.Shared.CreateEntity($"Background_{i}", "Background");
+                    
+                    var backgroundEntity = EntityFactory.Shared.CreateEntity($"Background", "Background_Animated");
                     backgroundEntity.Layer = -1;
                     var transform = EntityFactory.Shared.GetComponent<Transform>(backgroundEntity.Id);
                     transform.Position = new Vector2(x, y);
@@ -112,13 +107,20 @@ public abstract class SceneBase
                         Owner = backgroundEntity.Id,
                         Textures = frames,
                         Type = type,
-                        Alpha = a,
+                        Blend = blend,
                         Cx = cx,
                         Cy = cy,
                         Rx = rx,
                         Ry = ry,
-                        Animated = frames.Count > 1,
+                        Animated = !blend,
                     };
+
+                    if (blend)
+                    {
+                        Console.WriteLine("BLEND ANIMATION");
+                        backgroundComponent.Alpha0 = alpha.Dequeue();
+                        backgroundComponent.Alpha1 = alpha.Dequeue();
+                    }
 
                     EntityFactory.Shared.AddComponent(backgroundComponent);
                 }
@@ -132,16 +134,20 @@ public abstract class SceneBase
                         NXFactory.Shared.GetChildNode(MapleFiles.Map, backgroundItem, "origin")?.GetVector() ??
                         throw new NullReferenceException("Failed to find [origin] node");
                     
-                    var backgroundEntity = EntityFactory.Shared.CreateEntity($"Background_{i}", "Background");
+                    var backgroundEntity = EntityFactory.Shared.CreateEntity($"Background", "Background_Static");
                     backgroundEntity.Layer = -1;
                     
                     var transform = EntityFactory.Shared.GetComponent<Transform>(backgroundEntity.Id);
-                    ResourceFactory.Shared.RegisterResource(new TextureResource(backgroundItem.NodePath) 
+                    if (!ResourceFactory.Shared.HasResource(backgroundItem.NodePath))
+                    {
+                        ResourceFactory.Shared.RegisterResource(new TextureResource(backgroundItem.NodePath)
                         {
                             Texture = backgroundItem.GetTexture(),
                             Origin = origin,
                             Delay = 0f,
                         });
+                    }
+
                     transform.Position = new Vector2(x, y);
                     transform.Origin = origin;
                     transform.Z = 0;
@@ -180,9 +186,9 @@ public abstract class SceneBase
             var layer = NXFactory.Shared.GetChildNode(file, imgNode, i.ToString()) ??
                         throw new NullReferenceException($"Failed to find [{i}] node");
             var obj = NXFactory.Shared.GetChildNode(file, layer, "obj") ??
-                          throw new NullReferenceException($"Failed to find [obj] node");
+                      throw new NullReferenceException($"Failed to find [obj] node");
             if (obj.ChildCount == 0) return;
-            
+
             var objNodes = NXFactory.Shared.GetChildren(file, obj);
             foreach (var (_, objNode) in objNodes)
             {
@@ -195,12 +201,10 @@ public abstract class SceneBase
                 var y = nodes["y"].GetInt();
                 var z = nodes["z"].GetInt();
                 // TODO: Eventually find out what these do. Commented out to save CPU processing.
-                //var zM = NXFactory.Shared.GetChildNode(file, objNode, "zM")?.GetInt() ??
-                //         throw new NullReferenceException("Failed to find [zM] node");
-                //var f = NXFactory.Shared.GetChildNode(file, objNode, "f")?.GetInt() ??
-                //        throw new NullReferenceException("Failed to find [f] node"); // pretty sure this means flipped.
+                //var zM = nodes["zM"].GetInt();
+                //var f = nodes["f"].GetInt(); // Pretty sure this means flipped
                 var order = 30000 * i + z - 1073739824;
-                
+
                 var objSet = NXFactory.Shared.GetNode(MapleFiles.Map, $"Obj/{oS}.img/{l0}/{l1}/{l2}") ??
                              throw new NullReferenceException($"Failed to find [Obj/{oS}.img/{l0}/{l1}/{l2}] node");
                 var frameNodes = NXFactory.Shared.GetChildren(MapleFiles.Map, objSet);
@@ -208,27 +212,41 @@ public abstract class SceneBase
                 if (frameNodes.TryGetValue("blend", out _)) continue; // TODO: Blend animation
                 if (frameNodes.TryGetValue("obstacle", out _)) continue; // TODO: Obstacles
                 if (frameNodes.TryGetValue("damage", out _)) continue; // TODO: Trap damage.
+                if (frameNodes.TryGetValue("speak", out _)) continue;
+                if (frameNodes.TryGetValue("repeat", out _)) continue;
 
                 if (frameNodes.Count > 1)
                 {
                     var frames = new List<string>(objSet.ChildCount);
-                    foreach(var (_, node) in frameNodes)
+                    var alpha = new Queue<int>();
+                    var blend = false;
+                    foreach (var (_, frame) in frameNodes)
                     {
-                        var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "origin")?.GetVector() ??
+                        var origin = NXFactory.Shared.GetChildNode(MapleFiles.Map, frame, "origin")?.GetVector() ??
                                      Vector2.Zero;
-                        if (!ResourceFactory.Shared.HasResource(node.NodePath))
+                        blend = NXFactory.Shared.HasNode(MapleFiles.Map, frame, "a0");
+                        if (blend)
                         {
-                            var texture = node.GetTexture();
-                            ResourceFactory.Shared.RegisterResource(new TextureResource(node.NodePath)
+                            var a0 = NXFactory.Shared.GetChildNode(MapleFiles.Map, frame, "a0")?.GetInt() 
+                                     ?? 0;
+                            var a1 = NXFactory.Shared.GetChildNode(MapleFiles.Map, frame, "a1")?.GetInt() 
+                                     ?? 255;
+                            alpha.Enqueue(a0);
+                            alpha.Enqueue(a1);
+                        }
+                        if (!ResourceFactory.Shared.HasResource(frame.NodePath))
+                        {
+                            var texture = frame.GetTexture();
+                            ResourceFactory.Shared.RegisterResource(new TextureResource(frame.NodePath)
                             {
                                 Texture = texture,
                                 Origin = origin,
-                                Delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, node, "delay")?.GetInt() ??
+                                Delay = NXFactory.Shared.GetChildNode(MapleFiles.Map, frame, "delay")?.GetInt() ??
                                         150f
                             });
                         }
 
-                        frames.Add(node.NodePath);
+                        if (frame.Type == NodeType.Bitmap) frames.Add(frame.NodePath);
                     }
 
                     var objEntity = EntityFactory.Shared.CreateEntity($"Obj", "Obj_Animated");
@@ -237,17 +255,23 @@ public abstract class SceneBase
                     transform.Position = new Vector2(x, y);
                     transform.Z = order;
 
-                    var animation = new MapObj
+                    var mapAnimation = new MapObj
                     {
                         Owner = objEntity.Id,
-                        Blend = false,
+                        Blend = blend,
                         Frame = Random.Shared.Next(0, frames.Count),
-                        FrameDelay = 0f,
-                        Loop = true,
+                        Alpha = 255,
+                        Loop = !blend,
                         Textures = frames
                     };
+                    
+                    if (blend)
+                    {
+                        mapAnimation.Alpha0 = alpha.Dequeue();
+                        mapAnimation.Alpha1 = alpha.Dequeue();
+                    }
 
-                    EntityFactory.Shared.AddComponent(animation);
+                    EntityFactory.Shared.AddComponent(mapAnimation);
                 }
                 else
                 {
@@ -304,8 +328,8 @@ public abstract class SceneBase
                             throw new NullReferenceException("Failed to find [layer] node");
             var tileLayer = NXFactory.Shared.GetChildNode(file, layerNode, "tile") ??
                             throw new NullReferenceException("Failed to find [tile] node");
-
             if (tileLayer.ChildCount == 0) return;
+            
             var info = NXFactory.Shared.GetChildNode(file, layerNode, "info") ??
                            throw new NullReferenceException("Failed to find [info] node");
             var infoNodes = NXFactory.Shared.GetChildren(file, info);
@@ -338,7 +362,7 @@ public abstract class SceneBase
                 var setNodes = NXFactory.Shared.GetChildren(MapleFiles.Map, tileSet);
                 var origin = setNodes["origin"].GetVector();
                 var z = setNodes["z"].GetInt();
-                var order = z + 10 * (3000 * (int)(i) - zM) - 1073721834;
+                var order = z + 10 * (3000 * i - zM) - 1073721834;
                 
                 var tileEntity = EntityFactory.Shared.CreateEntity("Tile", u);
                 var transform = EntityFactory.Shared.GetComponent<Transform>(tileEntity.Id);

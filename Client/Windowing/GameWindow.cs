@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Client.ECS;
+using Client.Networking;
 using Client.Nx;
 using Client.Resources;
 using Client.Scenes;
@@ -14,6 +15,7 @@ public class GameWindow : IDisposable
     private readonly SceneFactory _sceneFactory;
     private readonly EntityFactory _entityFactory;
     private readonly NXFactory _nxFactory;
+    private readonly NetworkClient _client;
     private SceneBase _mainSceneBase;
 
     public GameWindow()
@@ -22,6 +24,7 @@ public class GameWindow : IDisposable
         _sceneFactory = new SceneFactory(this);
         _entityFactory = new EntityFactory();
         _nxFactory = new NXFactory();
+        _client = new NetworkClient("127.0.0.1", 8484);
     }
     
     private void LoadConfig()
@@ -35,19 +38,20 @@ public class GameWindow : IDisposable
                 Title = "MapleSyrup",
                 Fullscreen = false
             };
-            var jsonString = JsonSerializer.Serialize(config);
+            var jsonString = JsonSerializer.Serialize(config, ConfigContext.Default.WindowConfig);
             File.WriteAllText("window_config.json", jsonString);
             _windowConfig = config;
         }
         else
         {
             var jsonString = File.ReadAllText("window_config.json");
-            _windowConfig = JsonSerializer.Deserialize<WindowConfig>(jsonString) ?? throw new Exception();
+            _windowConfig = JsonSerializer.Deserialize(jsonString, ConfigContext.Default.WindowConfig) ?? throw new Exception();
         }
     }
 
     private void Initialize()
     {
+        _client.Connect();
         LoadConfig();
         Raylib.InitWindow(_windowConfig.Width, _windowConfig.Height, _windowConfig.Title);
         Raylib.SetTargetFPS(30);
@@ -56,13 +60,14 @@ public class GameWindow : IDisposable
 
     private void LoadContent()
     {
-        _mainSceneBase = _sceneFactory.CreateScene("100000000");
+        _mainSceneBase = _sceneFactory.CreateLogin("MapLogin");
         _mainSceneBase.InitSystems();
         _mainSceneBase.LoadContent();
     }
 
     private void UnloadContent()
     {
+        _client.Stop();
         _mainSceneBase.Shutdown();
         _resourceFactory.ShutDown();
         _entityFactory.Shutdown();

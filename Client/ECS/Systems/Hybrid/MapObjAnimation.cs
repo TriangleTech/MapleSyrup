@@ -19,7 +19,7 @@ public class MapObjAnimation : IUpdateSystem, IDrawSystem
             var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
             
             transform.Origin = frame.Origin;
-            Raylib.DrawTextureEx(frame.Texture, transform.Position - transform.Origin, transform.Rotation, transform.Scale, Raylib.WHITE);
+            Raylib.DrawTextureEx(frame.Texture, transform.Position - transform.Origin, transform.Rotation, transform.Scale, animation.Color);
         }
     }
 
@@ -30,11 +30,9 @@ public class MapObjAnimation : IUpdateSystem, IDrawSystem
         {
             var animation = entityFactory.GetComponent<MapObj>(entity);
             if (animation.Loop)
-                OnLoop(animation, entityFactory, resourceFactory, timeDelta);
-            else if (animation.Blend)
+                OnLoop(animation, resourceFactory, timeDelta);
+            if (animation.Blend)
                 OnBlend(animation, resourceFactory, timeDelta);
-            else 
-                OnAnimate(animation, resourceFactory, timeDelta);
         }
     }
 
@@ -45,10 +43,41 @@ public class MapObjAnimation : IUpdateSystem, IDrawSystem
     
     private void OnBlend(MapObj animation, ResourceFactory resourceFactory, float timeDelta)
     {
-        
+        if (animation.Frame == 0)
+        {
+            if (animation.FrameDelay <= 0) {
+                animation.Alpha -= (int)timeDelta;
+                if (animation.Alpha <= animation.Alpha0)
+                {
+                    animation.Frame = 1;
+                    animation.Alpha = animation.Alpha0;
+                    var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
+                    animation.FrameDelay = frame.Delay;
+                }
+            } else {
+                animation.FrameDelay -= timeDelta;
+            }
+        }
+        else if (animation.Frame == 1)
+        {
+            if (animation.FrameDelay <= 0) {
+                animation.Alpha += (int)timeDelta;
+                if (animation.Alpha >= animation.Alpha1)
+                {
+                    animation.Frame = 0;
+                    animation.Alpha = animation.Alpha1;
+                    var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
+                    animation.FrameDelay = frame.Delay;
+                }
+            } else {
+                animation.FrameDelay -= timeDelta;
+            }
+        }
+
+        animation.Color = new Color(255, 255, 255, animation.Alpha);
     }
     
-    private void OnLoop(MapObj animation, EntityFactory entityFactory, ResourceFactory resourceFactory, float timeDelta)
+    private void OnLoop(MapObj animation, ResourceFactory resourceFactory, float timeDelta)
     {
         if (animation.FrameDelay <= 0) {
             animation.Frame++;

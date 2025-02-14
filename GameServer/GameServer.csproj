@@ -24,4 +24,12 @@
       <None Remove="SQL\**" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Servers\Channel\Handlers\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MapleSyrup.Networking\MapleSyrup.Networking.csproj" />
+    </ItemGroup>
+
 </Project>

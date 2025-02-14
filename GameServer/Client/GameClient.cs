@@ -1,61 +1,60 @@
 ﻿using System.Net.Sockets;
 using GameServer.Servers;
-using GameServer.Servers.Packets;
+using MapleSyrup.Networking.Packets;
 
 namespace GameServer.Client;
 
 public class GameClient
 {
     public required int Id { get; init; }
-    public required Socket Socket { get; init; }
+    public required TcpClient Socket { get; init; }
     public required NetworkServer AssignedServer { get; init; }
-    public int ChannelId { get; set; }
 
-    public void WaitForData()
+    public async Task WaitForData()
     {
-        Task.Factory.StartNew(() =>
+        try
         {
-            try
+            while (Socket.Connected)
             {
-                while (AssignedServer.IsRunning)
-                {
-                    var header = new byte[NetworkServer.MinPacketSize];
-                    var headerLength = Socket.Receive(header, SocketFlags.None);
-                    if (headerLength == 0) // Client disconnected.
-                    {
-                        AssignedServer.DisconnectClient(this);
-                        break;
-                    }
-                    if (headerLength != NetworkServer.MinPacketSize)
-                        continue;
-                    Console.WriteLine($"Received {headerLength} bytes from {Socket.RemoteEndPoint}");
-                    using var mem = new MemoryStream(header);
-                    using var reader = new BinaryReader(mem);
-                    var packetLength = reader.ReadInt32();
-                    var packetId = reader.ReadInt16();
-                    var clientId = reader.ReadInt32();
+                if (Socket.Available <= 0) continue;
+                await using var ns = Socket.GetStream();
+                using var reader = new BinaryReader(ns);
 
-                    if (packetLength > NetworkServer.MaxPacketSize)
-                        throw new Exception("Possible malicious packet length.");
+                var headerLength = reader.ReadInt32();
+                var packetId = reader.ReadInt16();
+                var packet = new Packet(packetId);
+                Console.WriteLine($"Packet with ID: {(ServerToClient)packetId} with length of {headerLength}");
 
-                    var packet = new InPacket()
-                    {
-                        PacketType = packetId,
-                        ClientId = clientId,
-                        Data = new byte[packetLength],
-                    };
-
-                    var length = Socket.Receive(packet.Data, SocketFlags.None);
-                    if (length == 0 || length > packet.Data.Count)
-                        continue;
-                    AssignedServer.ProcessPacket(this, packet);
-                }
+                AssignedServer.ProcessPacket(this, packet);
             }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        });
+        }
+        catch (SocketException e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    public async Task SendPacket(Packet packet)
+    {
+        try
+        {
+            var packetLength = BitConverter.GetBytes(packet.Data.Count);
+            var packetId = BitConverter.GetBytes(packet.PacketType);
+            await using var ns = Socket.GetStream();
+            await using var writer = new BinaryWriter(ns);
+            writer.Write(packetLength);
+            writer.Write(packetId);
+            writer.Write(packet.Data);
+            writer.Flush();
+            ns.Flush();
+            writer.Close();
+            ns.Close();
+            Console.WriteLine($"Sent {packetLength} bytes to {Socket.Client.RemoteEndPoint}");
+        }
+        catch (SocketException e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

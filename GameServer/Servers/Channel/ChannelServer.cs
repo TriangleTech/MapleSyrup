@@ -1,18 +1,18 @@
 ﻿using GameServer.Client;
-using GameServer.Servers.Packets;
+using MapleSyrup.Networking.Packets;
 
 namespace GameServer.Servers.Channel;
 
 public class ChannelServer : NetworkServer
 {
     public ChannelServer(int port)
-        : base(port)
+        : base($"Channel {port - 7575 + 1} Server", port)
     {
-        ServerName = $"Channel {port - 7575 + 1} Server";
+        
     }
 
-    public override void ProcessPacket(GameClient client, InPacket packet)
+    public override void ProcessPacket(GameClient client, Packet packet)
     {
-        //throw new NotImplementedException();
+        
     }
 }

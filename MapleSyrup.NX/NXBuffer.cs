@@ -79,6 +79,26 @@ public unsafe  class NXBuffer : IDisposable
         }
     }
     
+    public int ReadInt32()
+    {
+        if (!CheckBounds(_position, sizeof(int))) return 0;
+        
+        byte *data = null;
+        _view.SafeMemoryMappedViewHandle.AcquirePointer(ref data);
+        try
+        {
+            var value = *(int*)(data + _offset + _position);
+            _position += sizeof(int);
+            
+            return value;
+        }
+        finally
+        {
+            _view.SafeMemoryMappedViewHandle.ReleasePointer();
+        }
+        
+    }
+    
     public uint ReadUInt32()
     {
         if (!CheckBounds(_position, sizeof(uint))) return 0;

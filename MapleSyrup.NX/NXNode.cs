@@ -57,13 +57,13 @@ public readonly struct NXNode
     public Vector2 GetVector()
     {
         if (Type != NodeType.Vector) throw new Exception("Not a vector node");
-        lock (Buffer)
-        {
-            Buffer.Seek((long)Offset + 12);
-            var vector = new Vector2(Buffer.ReadUInt32(), Buffer.ReadUInt32());
+        Buffer.Seek((long)Offset + 12);
+        var vector = new Vector2(Buffer.ReadInt32(), Buffer.ReadInt32()); // if you read these with uint it will give you an 4.8e^23 number.
+        
+        if (vector.Y > ushort.MaxValue) 
+            throw new Exception("Vector is too big");
 
-            return vector;
-        }
+        return vector;
     }
 
     public unsafe Texture GetTexture()

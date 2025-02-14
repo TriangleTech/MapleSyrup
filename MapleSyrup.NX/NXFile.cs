@@ -10,24 +10,10 @@ public class NXFile : IDisposable
     private readonly NXBuffer _buffer;
     private uint _nodeCount, _bitmapCount, _stringCount, _audioCount;
     private ulong _nodeBlock, _bitmapBlock, _stringBlock, _audioBlock;
-    
-    public uint NodeCount => _nodeCount;
-    public ulong NodeBlock => _nodeBlock;
-    public uint StringCount => _stringCount;
-    public ulong StringBlock => _stringBlock;
-    public uint BitmapCount => _bitmapCount;
-    public ulong BitmapBlock => _bitmapBlock;
-    public uint AudioCount => _audioCount;
-    public ulong AudioBlock => _audioBlock;
-    
-    public NXBuffer Buffer => _buffer;
-    
-    public MemoryMappedFile Handle => _mmf; // I know I can make this an auto-property, but I'm lazy
-    
+
     public NXFile(string path)
     {
         _mmf = MemoryMappedFile.CreateFromFile(path);
-        
         _buffer = new NXBuffer(_mmf);
         var magic = _buffer.ReadUInt32();
         if (magic != 0x34474B50)

@@ -1,6 +1,6 @@
 ﻿namespace MapleSyrup.ECS;
 
-public class Entity
+public record Entity
 {
     /// <summary>
     /// Returns the ID of the entity.
@@ -10,17 +10,17 @@ public class Entity
     /// <summary>
     /// Returns the [optional] name for the entity.
     /// </summary>
-    public string Name { get; init; } = "Default";
+    public required string Name { get; init; } = "Default";
     
     /// <summary>
     /// Returns the [required] tag for the entity.
     /// </summary>
     public required string Tag { get; init; } = "Default";
 
-    public int Layer { get; set; } = 0;
+    public required int Layer { get; init; } = 0;
     
     /// <summary>
     /// Returns the visibility of the entity.
     /// </summary>
-    public bool Visible { get; set; } = true;
+    internal bool Visible { get; set; } = true;
 }

@@ -3,7 +3,6 @@ using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Resources;
 using ZeroElectric.Vinculum;
-using Common_Transform = MapleSyrup.ECS.Components.Common.Transform;
 using Transform = MapleSyrup.ECS.Components.Common.Transform;
 
 namespace MapleSyrup.ECS.Systems.Hybrid;
@@ -15,7 +14,7 @@ public class BackgroundAnimation : IUpdateSystem, IDrawSystem
         var entities = entityFactory.GetAllWithComponent<BackgroundObj>();
         foreach (var entity in entities)
         {
-            var transform = entityFactory.GetComponent<Common_Transform>(entity);
+            var transform = entityFactory.GetComponent<Transform>(entity);
             var animation = entityFactory.GetComponent<BackgroundObj>(entity);
             var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
             transform.Origin = frame.Origin;
@@ -38,7 +37,7 @@ public class BackgroundAnimation : IUpdateSystem, IDrawSystem
 
     private void OnLoop(BackgroundObj animation, ResourceFactory resourceFactory, float timeDelta)
     {
-        if (animation.FrameDelay <= 0) {
+        if (animation.FrameDelay < 0) {
             animation.Frame++;
             if (animation.Frame >= animation.FrameCount)
                 animation.Frame = 0;

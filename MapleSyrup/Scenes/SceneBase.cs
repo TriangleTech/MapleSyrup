@@ -53,9 +53,9 @@ public abstract class SceneBase
         {
             foreach (var background in map.Backgrounds)
             {
-                var entity = EntityFactory.Shared.CreateEntity();
+                var entity = EntityFactory.Shared.CreateEntity(-1, background.NodePath, "Background");
                 var transform = EntityFactory.Shared.GetComponent<Transform>(entity.Id);
-                entity.Layer = -1;
+                //entity.Layer = -1;
                 transform.Position = new Vector2(background.X, background.Y);
                 transform.Origin = Vector2.Zero;
                 transform.Z = 0;
@@ -73,7 +73,7 @@ public abstract class SceneBase
                     foreach (var (_, animation) in nodes)
                     {
                         var origin = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "origin")?.GetVector()
-                                     ?? Vector2.Zero;
+                                     ?? throw new NullReferenceException("Failed to find origin");
                         var delay = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "delay")?.GetInt() ??
                                     150f;
                         blend = NXFactory.Shared.HasNode(MapleFile.Map, animation, "a0");
@@ -94,6 +94,7 @@ public abstract class SceneBase
                                 Origin = origin,
                                 Delay = delay,
                             });
+                            Console.WriteLine(origin);
                         }
                         
                         if (animation.Type == NodeType.Bitmap) 

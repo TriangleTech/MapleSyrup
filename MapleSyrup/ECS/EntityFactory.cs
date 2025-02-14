@@ -61,13 +61,14 @@ public class EntityFactory
     /// <summary>
     /// Creates an <see cref="Entity"/> with a default name and tag.
     /// </summary>
+    /// <param name="layer">Layer in which the entity resides.</param>
     /// <param name="name">Name of the entity.</param>
     /// <param name="tag">The related tag to find the entity.</param>
     /// <returns></returns>
-    public Entity CreateEntity(string name = "Default", string tag = "Default")
+    public Entity CreateEntity(int layer = 0, string name = "Default", string tag = "Default")
     {
         var id = _recycledIds.Count > 0 ? _recycledIds.Dequeue() : _entityCount++;
-        var entity = new Entity { Id = id, Name = name, Tag = tag, Visible = true };
+        var entity = new Entity { Id = id, Layer = layer, Name = name, Tag = tag, Visible = true };
         _components.Add(id, new List<IComponent>());
         _entities.Add(entity);
         _dirty = true;

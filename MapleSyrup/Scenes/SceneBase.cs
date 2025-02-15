@@ -1,20 +1,13 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
-using MapleSyrup.ECS.Components;
-using MapleSyrup.Windowing;
 using MapleSyrup.ECS;
-using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.ECS.Systems;
-using MapleSyrup.Networking;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Map;
+using MapleSyrup.ECS.Systems.Hybrid;
 using MapleSyrup.Nx;
 using MapleSyrup.NX;
 using MapleSyrup.Resources;
-using MapleSyrup.Scenes.Map;
 using ZeroElectric.Vinculum;
-using Common_Transform = MapleSyrup.ECS.Components.Common.Transform;
 using Transform = MapleSyrup.ECS.Components.Common.Transform;
 
 namespace MapleSyrup.Scenes;
@@ -23,26 +16,21 @@ public abstract class SceneBase
 {
     protected readonly List<IDrawSystem> DrawSystems;
     protected readonly List<IUpdateSystem> UpdateSystems;
-    protected readonly string SceneName;
     public Camera2D Camera;
-    public bool LoadingComplete { get; protected set; }
 
-    public SceneBase(string sceneName)
+    public SceneBase()
     {
         DrawSystems = new List<IDrawSystem>(5);
         UpdateSystems = new List<IUpdateSystem>(5);
-        SceneName = sceneName;
     }
 
     public abstract void InitSystems();
 
-    public void LoadContent(MapleMap map)
+    public virtual void LoadContent(MapleMap map)
     {
-        LoadBackground(map);
-        LoadObjects(map);
-        LoadTiles(map);
-
-        LoadingComplete = true;
+        Task.Run(() => LoadBackground(map));
+        Task.Run(() => LoadObjects(map));
+        Task.Run(() => LoadTiles(map));
     }
 
     #region Load Background
@@ -55,7 +43,6 @@ public abstract class SceneBase
             {
                 var entity = EntityFactory.Shared.CreateEntity(-1, background.NodePath, "Background");
                 var transform = EntityFactory.Shared.GetComponent<Transform>(entity.Id);
-                //entity.Layer = -1;
                 transform.Position = new Vector2(background.X, background.Y);
                 transform.Origin = Vector2.Zero;
                 transform.Z = 0;
@@ -65,26 +52,23 @@ public abstract class SceneBase
                 {
                     var animatedNode = NXFactory.Shared.GetNode(MapleFile.Map, background.NodePath)
                         ?? throw new NullReferenceException("Failed to find background animated node");
-                    var nodes = NXFactory.Shared.GetChildren(MapleFile.Map, animatedNode);
+                    var nodes = animatedNode.GetChildren();
                     var frames = new List<string>();
                     var alpha = new Queue<int>();
                     var blend = false;
                     
                     foreach (var (_, animation) in nodes)
                     {
-                        var origin = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "origin")?.GetVector()
-                                     ?? throw new NullReferenceException("Failed to find origin");
-                        var delay = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "delay")?.GetInt() ??
-                                    150f;
-                        blend = NXFactory.Shared.HasNode(MapleFile.Map, animation, "a0");
+                        var children = animatedNode.GetChildren();
+                        var origin = children.TryGetValue("origin", out _) ? children["origin"].GetVector() : Vector2.Zero;
+                        var delay = children.TryGetValue("delay", out _) ? children["delay"].GetInt() : 150f;
+                        blend = animation.HasNode("a0");
                         if (blend)
                         {
-                            var a0 = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "a0") 
-                                     ?? throw new NullReferenceException("Failed to find a0");
-                            var a1 = NXFactory.Shared.GetChildNode(MapleFile.Map, animation, "a1") 
-                                     ?? throw new NullReferenceException("Failed to find a1");
-                            alpha.Enqueue(a0.GetInt());
-                            alpha.Enqueue(a1.GetInt());
+                            var a0 = children.TryGetValue("a0", out _) ? children["a0"].GetInt() : 0;
+                            var a1 = children.TryGetValue("a1", out _) ? children["a1"].GetInt() : 255;
+                            alpha.Enqueue(a0);
+                            alpha.Enqueue(a1);
                         }
                         if (!ResourceFactory.Shared.HasResource(animation.NodePath) && animation.Type == NodeType.Bitmap)
                         {
@@ -94,7 +78,6 @@ public abstract class SceneBase
                                 Origin = origin,
                                 Delay = delay,
                             });
-                            Console.WriteLine(origin);
                         }
                         
                         if (animation.Type == NodeType.Bitmap) 
@@ -116,7 +99,6 @@ public abstract class SceneBase
                     
                     if (blend)
                     {
-                        Console.WriteLine("BLEND ANIMATION");
                         backComp.Alpha0 = alpha.Dequeue();
                         backComp.Alpha1 = alpha.Dequeue();
                     }
@@ -171,7 +153,101 @@ public abstract class SceneBase
 
     private void LoadObjects(MapleMap map)
     {
-      
+        try
+        {
+            foreach (var mapObject in map.Objects)
+            {
+                var entity = EntityFactory.Shared.CreateEntity(mapObject.Layer, mapObject.NodePath, "MapObject");
+                var transform = EntityFactory.Shared.GetComponent<Transform>(entity.Id);
+                transform.Position = new Vector2(mapObject.X, mapObject.Y);
+                transform.Origin = Vector2.Zero;
+                transform.Z = mapObject.Z;
+
+                var item = NXFactory.Shared.GetNode(MapleFile.Map, mapObject.NodePath)??
+                           throw new NullReferenceException();
+                var children = item.GetChildren();
+                
+                if (item.Type == NodeType.Bitmap)
+                {
+                    var origin = children.TryGetValue("origin", out _) ? children["origin"].GetVector() : Vector2.Zero;
+                    transform.Origin = origin;
+                    
+                    var mapComponent = new MapObj()
+                    {
+                        Owner = entity.Id,
+                        Textures = [mapObject.NodePath],
+                        Alpha = 255,
+                        Blend = false,
+                        Loop = false,
+                        Frame = 0,
+                        FrameDelay = 0f,
+                    };
+                    EntityFactory.Shared.AddComponent(mapComponent);
+                    
+                    if (ResourceFactory.Shared.HasResource(item.NodePath)) continue;
+                    ResourceFactory.Shared.RegisterResource(new TextureResource(item.NodePath)
+                    {
+                        MainFile = MapleFile.Map,
+                        Origin = origin,
+                        Delay = 0f,
+                    });
+                }
+                else
+                {
+                    var frames = new List<string>();
+                    var alpha = new Queue<int>();
+                    var blend = false;
+
+                    foreach (var (_, animation) in children)
+                    {
+                        if (animation.Type != NodeType.Bitmap) continue; // TODO: Handle cases such as "blend", "obstacle", etc. exist
+                        var nodes = animation.GetChildren();
+                        var origin = nodes.TryGetValue("origin", out _) ? nodes["origin"].GetVector() : Vector2.Zero;
+                        blend = animation.HasNode("a0");
+                        if (blend)
+                        {
+                            var a0 = nodes.TryGetValue("a0", out _) ? nodes["a0"].GetInt() : 0;
+                            var a1 = nodes.TryGetValue("a1", out _) ? nodes["a1"].GetInt() : 0;
+                            alpha.Enqueue(a0);
+                            alpha.Enqueue(a1);
+                        }
+                        frames.Add(animation.NodePath);
+                        
+                        if (ResourceFactory.Shared.HasResource(animation.NodePath)) continue;
+                        var delay = nodes.TryGetValue("delay", out _) ? nodes["delay"].GetInt() : 150f;
+                        ResourceFactory.Shared.RegisterResource(new TextureResource(animation.NodePath)
+                        {
+                            MainFile = MapleFile.Map,
+                            Origin = origin,
+                            Delay = delay,
+                        });
+                    }
+
+                    var mapComponent = new MapObj()
+                    {
+                        Owner = entity.Id,
+                        Textures = frames,
+                        Alpha = 255,
+                        Blend = blend,
+                        Loop = !blend,
+                        Frame = 0,
+                    };
+
+                    if (blend)
+                    {
+                        mapComponent.Alpha0 = alpha.Dequeue();
+                        mapComponent.Alpha1 = alpha.Dequeue();
+                    }
+                    
+                    EntityFactory.Shared.AddComponent(mapComponent);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     #endregion
@@ -180,6 +256,47 @@ public abstract class SceneBase
 
     private void LoadTiles(MapleMap map)
     {
+        try
+        {
+            foreach (var tile in map.Tiles)
+            {
+                var entity = EntityFactory.Shared.CreateEntity(tile.Layer, tile.NodePath, "MapTile");
+                var transform = EntityFactory.Shared.GetComponent<Transform>(entity.Id);
+                transform.Position = new Vector2(tile.X, tile.Y);
+                transform.Z = tile.Z;
+                
+                var tileNode = NXFactory.Shared.GetNode(MapleFile.Map, tile.NodePath) ??
+                               throw new NullReferenceException($"Failed to find [{tile.NodePath}]");
+                var origin = NXFactory.Shared.GetChildNode(MapleFile.Map, tileNode, "origin")?.GetVector() ??
+                             throw new NullReferenceException("Failed to find [origin] node");
+                transform.Origin = origin;
+
+                var tileComponent = new MapObj()
+                {
+                    Owner = entity.Id,
+                    Textures = [tile.NodePath],
+                    Alpha = 255,
+                    Blend = false,
+                    Loop = false,
+                    Frame = 0,
+                    FrameDelay = 0f,
+                };
+                
+                EntityFactory.Shared.AddComponent(tileComponent);
+                if (ResourceFactory.Shared.HasResource(tile.NodePath)) continue;
+                ResourceFactory.Shared.RegisterResource(new TextureResource(tile.NodePath)
+                {
+                    MainFile = MapleFile.Map,
+                    Origin = origin,
+                    Delay = 0f,
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     #endregion
@@ -188,7 +305,6 @@ public abstract class SceneBase
     
     public void Draw()
     {
-        if (!LoadingComplete) return;
         foreach (var system in DrawSystems)
         {
             system.Draw(EntityFactory.Shared, ResourceFactory.Shared);
@@ -197,7 +313,6 @@ public abstract class SceneBase
 
     public void Update(float timeDelta)
     {
-        if (!LoadingComplete) return;
         foreach (var system in UpdateSystems)
         {
             system.Update(EntityFactory.Shared, ResourceFactory.Shared, timeDelta);

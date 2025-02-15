@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using GameServer.Client;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 
 namespace GameServer.Servers;
 

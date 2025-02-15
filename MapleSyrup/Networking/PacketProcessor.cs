@@ -1,6 +1,5 @@
-﻿using MapleSyrup.Networking.Handlers;
-using MapleSyrup.Networking.Packets;
-using MapleSyrup.Windowing;
+﻿using MapleSyrup.Common.Packets;
+using MapleSyrup.Networking.Handlers;
 
 namespace MapleSyrup.Networking;
 
@@ -12,7 +11,7 @@ public class PacketProcessor
     {
         _packetHandlers = new ()
         {
-            { ServerToClient.ClientStart, new ClientStartHandler() }
+            { ServerToClient.ClientStart, new OnClientStart() }
         };
     }
 

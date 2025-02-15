@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MapleSyrup.Scenes.Map;
+namespace MapleSyrup.Common.Map;
 
 public class MapleMap
 {

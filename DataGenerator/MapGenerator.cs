@@ -1,15 +1,15 @@
 ﻿using System.Text.Json;
-using CommunityToolkit.HighPerformance;
+using MapleSyrup.Common.Map;
 using MapleSyrup.NX;
 
-namespace MapGenerator;
+namespace DataGenerator;
 
-public class Generator
+public class MapGenerator
 {
     private readonly NXFile _map = new NXFile("D:/v41/Map.nx");
     private readonly NXFile _ui = new NXFile("D:/v41/UI.nx");
 
-    public void Generate()
+    public void GenerateMapData()
     {
         if (!Directory.Exists("MapData"))
         {
@@ -20,10 +20,10 @@ public class Generator
         var mapleMap = new MapleMap();
         
         var mapNode = _map.GetNode("Map") ?? throw new NullReferenceException("Failed to find [Map] node");
-        var mapNodes = _map.GetChildren(mapNode);
+        var mapNodes = mapNode.GetChildren();
         foreach (var (_, node) in mapNodes)
         {
-            var mapIds = _map.GetChildren(node);
+            var mapIds = node.GetChildren();
             foreach (var (id, map) in mapIds)
             {
                 var withoutImg = id.Replace(".img", "");
@@ -69,13 +69,13 @@ public class Generator
     {
         try
         {
-            if (!file.HasNode(mapNode, "back")) return;
+            if (!mapNode.HasNode("back")) return;
             var back = file.GetChildNode(mapNode, "back") ??
                        throw new NullReferenceException("Failed to find [back] node in img file");
-            var backgroundNodes = file.GetChildren(back);
+            var backgroundNodes = back.GetChildren();
             foreach (var (_, background) in backgroundNodes)
             {
-                var node = file.GetChildren(background);
+                var node = background.GetChildren();
                 var bS = node["bS"].GetString();
                 var no = node["no"].GetInt();
                 var x = node["x"].GetInt();
@@ -133,16 +133,16 @@ public class Generator
     {
         try
         {
-            if (!file.HasNode(mapNode, i.ToString())) return;
+            if (!mapNode.HasNode(i.ToString())) return;
             var layer = file.GetChildNode(mapNode, i.ToString()) ?? throw new NullReferenceException();
             var obj = file.GetChildNode(layer, "obj") ??
                       throw new NullReferenceException($"Failed to find [obj] node");
             if (obj.ChildCount == 0) return;
 
-            var objNodes = file.GetChildren(obj);
+            var objNodes = obj.GetChildren();
             foreach (var (_, objNode) in objNodes)
             {
-                var nodes = file.GetChildren(objNode);
+                var nodes = objNode.GetChildren();
                 var oS = nodes["oS"].GetString();
                 var l0 = nodes["l0"].GetString();
                 var l1 = nodes["l1"].GetString();
@@ -177,7 +177,7 @@ public class Generator
     {
         try
         {
-            if (!file.HasNode(mapNode, i.ToString())) return;
+            if (!mapNode.HasNode(i.ToString())) return;
             var layerNode = file.GetChildNode(mapNode, i.ToString()) ??
                             throw new NullReferenceException("Failed to find [layer] node");
             var tileLayer = file.GetChildNode(layerNode, "tile") ??
@@ -186,7 +186,7 @@ public class Generator
             
             var info = file.GetChildNode(layerNode, "info") ??
                        throw new NullReferenceException("Failed to find [info] node");
-            var infoNodes = file.GetChildren(info);
+            var infoNodes = info.GetChildren();
             
             var tS = "";
             if (infoNodes.TryGetValue("tS", out var tSNode))
@@ -199,10 +199,10 @@ public class Generator
                      "grassySoil";
             }
             
-            var tileNodes = file.GetChildren(tileLayer);
+            var tileNodes = tileLayer.GetChildren();
             foreach (var (_, tileNode) in tileNodes)
             {
-                var tile = file.GetChildren(tileNode);
+                var tile = tileNode.GetChildren();
                 var x = tile["x"].GetInt();
                 var y = tile["y"].GetInt();
                 var zM = tile["zM"].GetInt();
@@ -211,7 +211,7 @@ public class Generator
 
                 var tileSet = _map.GetNode($"Tile/{tS}.img/{u}/{no}") ??
                               throw new NullReferenceException("Failed to find [tile] node");
-                var setNodes = _map.GetChildren(tileSet);
+                var setNodes = tileSet.GetChildren();
                 var z = setNodes.TryGetValue("z", out var zNode) ? zNode.GetInt() : 0;
                 var order = z + 10 * (3000 * i - zM) - 1073721834;
                 

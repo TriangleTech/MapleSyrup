@@ -1,9 +1,10 @@
 ﻿using System.Numerics;
+using MapleSyrup.Common.Map;
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Systems;
 using MapleSyrup.Windowing;
 using MapleSyrup.ECS.Systems.Hybrid;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 using MapleSyrup.Nx;
 using ZeroElectric.Vinculum;
 
@@ -11,8 +12,7 @@ namespace MapleSyrup.Scenes;
 
 public class LoginScene : SceneBase
 {
-    public LoginScene(string sceneName) 
-        : base(sceneName)
+    public LoginScene() 
     {
         Camera = new Camera2D()
         {
@@ -35,5 +35,10 @@ public class LoginScene : SceneBase
         // Add any update systems here
         UpdateSystems.Add(background);
         UpdateSystems.Add(mapObj);
+    }
+
+    public override void LoadContent(MapleMap map)
+    {
+        base.LoadContent(map);
     }
 }

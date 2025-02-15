@@ -54,21 +54,6 @@ public class NXFactory
     {
         return _files[file].GetChildNode(parent, childName);
     }
-
-    public ReadOnlyDictionary<string, NXNode> GetChildren(MapleFile file, NXNode parent)
-    {
-        return _files[file].GetChildren(parent);
-    }
-
-    public Span<string> GetChildrenNames(MapleFile file, NXNode parent)
-    {
-        return _files[file].GetChildrenNames(parent);
-    }
-
-    public bool HasNode(MapleFile file, NXNode parent, string nodeName)
-    {
-        return _files[file].HasNode(parent, nodeName);
-    }
     
     public void Shutdown()
     {

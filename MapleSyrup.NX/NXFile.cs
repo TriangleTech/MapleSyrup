@@ -10,11 +10,11 @@ public class NXFile : IDisposable
     private readonly NXBuffer _buffer;
     private uint _nodeCount, _bitmapCount, _stringCount, _audioCount;
     private ulong _nodeBlock, _bitmapBlock, _stringBlock, _audioBlock;
-
+    
     public NXFile(string path)
     {
         _mmf = MemoryMappedFile.CreateFromFile(path);
-        _buffer = new NXBuffer(_mmf);
+        _buffer = CreateBuffer();
         var magic = _buffer.ReadUInt32();
         if (magic != 0x34474B50)
         {
@@ -36,15 +36,6 @@ public class NXFile : IDisposable
         _buffer.StringBlock = _stringBlock;
         _buffer.BitmapBlock = _bitmapBlock;
         _buffer.AudioBlock = _audioBlock;
-
-        //Console.WriteLine($"Node count: {_nodeCount}");
-        //Console.WriteLine($"Root node: {_nodeBlock}");
-        //Console.WriteLine($"String count: {_stringCount}");
-        //Console.WriteLine($"String block: {_stringBlock}");
-        //Console.WriteLine($"Bitmap count: {_bitmapCount}");
-        //Console.WriteLine($"Bitmap block: {_bitmapBlock}");
-        //Console.WriteLine($"Audio count: {_audioCount}");
-        //Console.WriteLine($"Audio block: {_audioBlock}");
     }
 
     /// <summary>
@@ -54,69 +45,59 @@ public class NXFile : IDisposable
     /// <returns></returns>
     public NXNode? GetNode(string nodePath)
     {
-        //Console.WriteLine($"Getting node: {nodePath}");
-        // Get the individual nodes
-        var path = nodePath.Split('/');
-        var pathCount = 0;
-        
-        ulong offset = 0;
-        var maxOffset = _nodeBlock + 20 * _nodeCount;
-        ulong nodeStart = 1;
-        ulong count = 0;
-
-        while (offset < maxOffset)
+        lock (_buffer)
         {
-            offset = _nodeBlock + 20 * (nodeStart + count);
-            _buffer.Seek((long)offset);
-            var nameOffset = _buffer.ReadUInt32();
-            var firstChildId = _buffer.ReadUInt32();
-            var childCount = _buffer.ReadUInt16();
-            var nodeType = (NodeType)_buffer.ReadUInt16();
+            //Console.WriteLine($"Getting node: {nodePath}");
+            // Get the individual nodes
+            var path = nodePath.Split('/');
+            var pathCount = 0;
+            
+            ulong offset = 0;
+            var maxOffset = _nodeBlock + 20 * _nodeCount;
+            ulong nodeStart = 1;
+            ulong count = 0;
 
-            _buffer.Seek((long)(_stringBlock + 8 * nameOffset));
-            var stringOffset = _buffer.ReadUInt64();
-
-            _buffer.Seek((long)(stringOffset)); 
-            var nodeName = _buffer.ReadString();
-
-            if (path[pathCount] != nodeName)
+            while (offset < maxOffset)
             {
-                count++;
-                continue;
-            }
+                offset = _nodeBlock + 20 * (nodeStart + count);
+                _buffer.Seek((long)offset);
+                var nameOffset = _buffer.ReadUInt32();
+                var firstChildId = _buffer.ReadUInt32();
+                var childCount = _buffer.ReadUInt16();
+                var nodeType = (NodeType)_buffer.ReadUInt16();
 
-            count = 0;
-            nodeStart = firstChildId;
-            pathCount++;
-            /*
-            Console.WriteLine($"---------------------------------------");
-            Console.WriteLine($"Node: {nodeName}");
-            Console.WriteLine($"Path Count: {pathCount}");
-            Console.WriteLine($"Path: {nodePath}");
-            Console.WriteLine($"Offset: {offset}");
-            Console.WriteLine($"First Child Id: {firstChildId}");
-            Console.WriteLine($"Child Count: {childCount}");
-            Console.WriteLine($"Node Type: {nodeType}");
-            Console.WriteLine($"String Offset: {stringOffset}");
-            Console.WriteLine($"String Name: {nodeName}");
-            Console.WriteLine($"---------------------------------------");*/
+                _buffer.Seek((long)(_stringBlock + 8 * nameOffset));
+                var stringOffset = _buffer.ReadUInt64();
 
-            if (pathCount == path.Length)
-            {
-                return new NXNode
-                    { 
-                        NodePath = nodePath, 
-                        Name = nodeName, 
-                        FirstChildId = firstChildId, 
-                        ChildCount = childCount, 
-                        Type = nodeType, 
-                        Offset = offset,
-                        Buffer = _buffer,
-                    };
+                _buffer.Seek((long)(stringOffset)); 
+                var nodeName = _buffer.ReadString();
+
+                if (path[pathCount] != nodeName)
+                {
+                    count++;
+                    continue;
+                }
+
+                count = 0;
+                nodeStart = firstChildId;
+                pathCount++;
+
+                if (pathCount == path.Length)
+                {
+                    return new NXNode
+                        { 
+                            NodePath = nodePath, 
+                            Name = nodeName, 
+                            FirstChildId = firstChildId, 
+                            ChildCount = childCount, 
+                            Type = nodeType, 
+                            Offset = offset,
+                            Buffer = CreateBuffer(),
+                        };
+                }
             }
+            return null;
         }
-
-        return null;
     }
 
     public NXNode? GetChildNode(NXNode node, string childName)
@@ -137,17 +118,6 @@ public class NXFile : IDisposable
 
             _buffer.Seek((long)(stringOffset)); 
             var nodeName = _buffer.ReadString();
-            /*
-            Console.WriteLine($"------------------CHILD NODE---------------------");
-            Console.WriteLine($"Node: {nodeName}");
-            Console.WriteLine($"Offset: {offset}");
-            Console.WriteLine($"First Child Id: {firstChildId}");
-            Console.WriteLine($"Child Count: {childCount}");
-            Console.WriteLine($"Node Type: {nodeType}");
-            Console.WriteLine($"String Offset: {stringOffset}");
-            Console.WriteLine($"String Name: {nodeName}");
-            Console.WriteLine($"---------------------------------------");
-            */
             if (nodeName == childName)
             {
                 return new NXNode
@@ -158,7 +128,7 @@ public class NXFile : IDisposable
                     ChildCount = childCount, 
                     Type = nodeType, 
                     Offset = offset,
-                    Buffer = _buffer,
+                    Buffer = CreateBuffer(),
                 };
             }
         }
@@ -198,87 +168,23 @@ public class NXFile : IDisposable
                     ChildCount = childCount,
                     Type = nodeType,
                     Offset = (ulong)offset,
-                    Buffer = _buffer,
+                    Buffer = CreateBuffer(),
                 };
             }
         }
 
         return null;
     }
-
-    public bool HasNode(NXNode node, string nodeName)
+    
+    private NXBuffer CreateBuffer()
     {
-        return GetChildNode(node, nodeName) != null;
-    }
-
-    /// <summary>
-    /// Gets the children of the provided <see cref="NXNode"/>.
-    /// </summary>
-    /// <param name="node">The <see cref="NXNode"/> to parse.</param>
-    /// <returns>A dictionary of <see cref="NXNode"/></returns>
-    public ReadOnlyDictionary<string, NXNode> GetChildren(NXNode node)
-    {
-        var nodes = new Dictionary<string, NXNode>(node.ChildCount);
-        if (node.ChildCount == 0) return nodes.AsReadOnly();
-
-        for (var i = node.FirstChildId; i < node.FirstChildId + node.ChildCount; i++)
+        return new NXBuffer(_mmf)
         {
-            var offset = _nodeBlock + 20 * i;
-            _buffer.Seek((long)offset);
-            var nameOffset = _buffer.ReadUInt32();
-            var firstChildId = _buffer.ReadUInt32();
-            var childCount = _buffer.ReadUInt16();
-            var nodeType = (NodeType)_buffer.ReadUInt16();
-
-            _buffer.Seek((long)(_stringBlock + 8 * nameOffset));
-            var stringOffset = _buffer.ReadUInt64();
-
-            _buffer.Seek((long)(stringOffset));
-            var nodeName = _buffer.ReadString();
-            
-            nodes.Add(nodeName, new NXNode
-            {
-                NodePath = string.Concat(node.NodePath, $"/{nodeName}"),
-                Name = nodeName,
-                FirstChildId = firstChildId,
-                ChildCount = childCount,
-                Type = nodeType,
-                Offset = offset,
-                Buffer = _buffer,
-            });
-        }
-
-        return nodes.AsReadOnly();
-    }
-
-    /// <summary>
-    /// Gets the names of the children contained in the <see cref="NXNode"/>
-    /// </summary>
-    /// <param name="node">The <see cref="NXNode"/> to parse</param>
-    /// <returns>A span of strings containing the names.</returns>
-    public Span<string> GetChildrenNames(NXNode node)
-    {
-        if (node.ChildCount == 0) return Array.Empty<string>();
-        var nodes = new List<string>();
-        
-        for (var i = node.FirstChildId; i < node.FirstChildId + node.ChildCount; i++)
-        {
-            var offset = _nodeBlock + 20 * i;
-            _buffer.Seek((long)offset);
-            var nameOffset = _buffer.ReadUInt32();
-            var firstChildId = _buffer.ReadUInt32();
-            var childCount = _buffer.ReadUInt16();
-            var nodeType = (NodeType)_buffer.ReadUInt16();
-
-            _buffer.Seek((long)(_stringBlock + 8 * nameOffset));
-            var stringOffset = _buffer.ReadUInt64();
-
-            _buffer.Seek((long)(stringOffset));
-            var nodeName = _buffer.ReadString();
-            nodes.Add(nodeName);
-        }
-        
-        return nodes.AsSpan();
+            NodeBlock = _nodeBlock,
+            StringBlock = _stringBlock,
+            BitmapBlock = _bitmapBlock,
+            AudioBlock = _audioBlock,
+        };
     }
 
     public void Dispose()

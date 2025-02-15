@@ -12,11 +12,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleSyrup.NX", "MapleSyrup
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{B75DFA7B-0653-43B5-A39E-B60B77114B96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapGenerator", "MapGenerator\MapGenerator.csproj", "{5DCA9AB8-14CB-45EC-B667-5F6944B3121D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataGenerator", "DataGenerator\DataGenerator.csproj", "{5DCA9AB8-14CB-45EC-B667-5F6944B3121D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{16C553F7-E6D6-4EC1-979D-AE71469F36FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleSyrup.Networking", "MapleSyrup.Networking\MapleSyrup.Networking.csproj", "{4B59870A-F8A6-4C9B-A33D-6B5EDAC4D15E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleSyrup.Common", "MapleSyrup.Common\MapleSyrup.Common.csproj", "{4B59870A-F8A6-4C9B-A33D-6B5EDAC4D15E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

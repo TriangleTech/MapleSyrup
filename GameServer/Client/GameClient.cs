@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 using GameServer.Servers;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 
 namespace GameServer.Client;
 

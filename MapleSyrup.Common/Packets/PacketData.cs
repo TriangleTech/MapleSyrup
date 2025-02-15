@@ -1,4 +1,4 @@
-﻿namespace MapleSyrup.Networking.Packets;
+﻿namespace MapleSyrup.Common.Packets;
 
 public struct PacketData
 {

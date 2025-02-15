@@ -25,7 +25,7 @@ public class GameWindow : IDisposable
         _nxFactory = new NXFactory();
         _client = new NetworkClient();
     }
-    
+
     private void LoadConfig()
     {
         if (!File.Exists("config.json"))
@@ -50,7 +50,7 @@ public class GameWindow : IDisposable
 
     private void Initialize()
     {
-        _client.ConnectAsync();
+        Task.Factory.StartNew(() => _client.ConnectAsync());
     }
 
     private void LoadContent()
@@ -71,7 +71,7 @@ public class GameWindow : IDisposable
     {
         Initialize();
         LoadContent();
-        
+
         Raylib.InitWindow(_windowConfig.Width, _windowConfig.Height, _windowConfig.Title);
         Raylib.SetTargetFPS(30);
         Raylib.SetTraceLogLevel((int)TraceLogLevel.LOG_NONE);
@@ -80,10 +80,10 @@ public class GameWindow : IDisposable
         {
             if (!_sceneFactory.SceneReady) continue;
             _resourceFactory.LoadPendingTextures();
-            
+
             var frameTime = Raylib.GetFrameTime() * 1000;
             _sceneFactory.Scene.Update(frameTime);
-            
+
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib.GRAY);
             Raylib.BeginMode2D(_sceneFactory.Scene.Camera);
@@ -92,11 +92,11 @@ public class GameWindow : IDisposable
             Raylib.DrawFPS(0, 0);
             Raylib.EndDrawing();
         }
-        
+
         UnloadContent();
         Raylib.CloseWindow();
     }
-    
+
     public void Dispose()
     {
         // TODO release managed resources here

@@ -40,10 +40,11 @@
     <ItemGroup>
       <Folder Include="ECS\Systems\DrawSystems\" />
       <Folder Include="ECS\Systems\UpdateSystems\" />
+      <Folder Include="Gui\" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MapleSyrup.Networking\MapleSyrup.Networking.csproj" />
+      <ProjectReference Include="..\MapleSyrup.Common\MapleSyrup.Common.csproj" />
       <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
     </ItemGroup>
 

@@ -1,16 +1,15 @@
 ﻿using GameServer.Client;
 using GameServer.Servers.Interfaces;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 
 namespace GameServer.Servers.Login.Handlers;
 
-public class ClientStartHandler : IPacketHandler 
+public record OnClientStart : IPacketHandler 
 {
     public void HandlePacket(GameClient client, Packet packet)
     {
         lock (this)
         {
-            Console.WriteLine("Received ClientStartPacket");
             using var fs = File.OpenRead("MapData/MapLogin.json");
             using var stream = new MemoryStream((int)fs.Length);
             fs.CopyTo(stream);

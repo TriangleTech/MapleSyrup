@@ -1,4 +1,4 @@
-﻿namespace MapleSyrup.Scenes.Map;
+﻿namespace MapleSyrup.Common.Map;
 
 public struct MapTile
 {

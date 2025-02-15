@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using CommunityToolkit.HighPerformance;
 
-namespace MapleSyrup.Networking.Packets;
+namespace MapleSyrup.Common.Packets;
 
 public class Packet
 {

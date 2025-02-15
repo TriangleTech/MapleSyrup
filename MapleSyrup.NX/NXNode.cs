@@ -1,18 +1,118 @@
-﻿using System.Numerics;
+﻿using System.Collections.ObjectModel;
+using System.Numerics;
+using CommunityToolkit.HighPerformance;
 using K4os.Compression.LZ4;
 using ZeroElectric.Vinculum;
 
 namespace MapleSyrup.NX;
 
-public readonly struct NXNode
+public record NXNode
 {
-    public string NodePath { get; init; }
+    public required string NodePath { get; init; }
     public required string Name { get; init; }
     public required uint FirstChildId { get; init; }
     public required ushort ChildCount { get; init; }
     public required NodeType Type { get; init; }
     public required ulong Offset { get; init; }
     public required NXBuffer Buffer { get; init; }
+    
+    ~NXNode()
+    {
+        Buffer.Dispose();
+    }
+
+    /// <summary>
+    /// Gets the children of the node
+    /// </summary>
+    /// <returns>A dictionary of <see cref="NXNode"/></returns>
+    public ReadOnlyDictionary<string, NXNode> GetChildren()
+    {
+        var nodes = new Dictionary<string, NXNode>(ChildCount);
+        if (ChildCount == 0) return nodes.AsReadOnly();
+
+        for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
+        {
+            var offset = Buffer.NodeBlock + 20 * i;
+            Buffer.Seek((long)offset);
+            var nameOffset = Buffer.ReadUInt32();
+            var firstChildId = Buffer.ReadUInt32();
+            var childCount = Buffer.ReadUInt16();
+            var nodeType = (NodeType)Buffer.ReadUInt16();
+
+            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Buffer.ReadUInt64();
+
+            Buffer.Seek((long)(stringOffset));
+            var nodeName = Buffer.ReadString();
+            
+            nodes.Add(nodeName, new NXNode
+            {
+                NodePath = string.Concat(NodePath, $"/{nodeName}"),
+                Name = nodeName,
+                FirstChildId = firstChildId,
+                ChildCount = childCount,
+                Type = nodeType,
+                Offset = offset,
+                Buffer = new NXBuffer(Buffer.MemoryMappedFile)
+                {
+                    NodeBlock = Buffer.NodeBlock,
+                    StringBlock = Buffer.StringBlock,
+                    BitmapBlock = Buffer.BitmapBlock,
+                    AudioBlock = Buffer.AudioBlock,
+                },
+            });
+        }
+
+        return nodes.AsReadOnly();
+    }
+    
+    /// <summary>
+    /// Gets the names of the children contained in the <see cref="NXNode"/>
+    /// </summary>
+    /// <returns>A span of strings containing the names.</returns>
+    public Span<string> GetChildrenNames()
+    {
+        if (ChildCount == 0) return Array.Empty<string>();
+        var nodes = new List<string>();
+        
+        for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
+        {
+            var offset = Buffer.NodeBlock + 20 * i;
+            Buffer.Seek((long)offset);
+            var nameOffset = Buffer.ReadUInt32();
+
+            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Buffer.ReadUInt64();
+
+            Buffer.Seek((long)(stringOffset));
+            var nodeName = Buffer.ReadString();
+            nodes.Add(nodeName);
+        }
+        
+        return nodes.AsSpan();
+    }
+    
+    public bool HasNode(string name)
+    {
+        if (ChildCount == 0) return false;
+        
+        for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
+        {
+            var offset = Buffer.NodeBlock + 20 * i;
+            Buffer.Seek((long)offset);
+            var nameOffset = Buffer.ReadUInt32();
+
+            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Buffer.ReadUInt64();
+
+            Buffer.Seek((long)(stringOffset));
+            var nodeName = Buffer.ReadString();
+            
+            if (nodeName == name) return true;
+        }
+
+        return false;
+    }
 
     public int GetInt()
     {
@@ -60,7 +160,7 @@ public readonly struct NXNode
         Buffer.Seek((long)Offset + 12);
         var vector = new Vector2(Buffer.ReadInt32(), Buffer.ReadInt32()); // if you read these with uint it will give you an 4.8e^23 number.
         
-        if (vector.Y > ushort.MaxValue) 
+        if (vector.X > ushort.MaxValue || vector.Y > ushort.MaxValue) 
             throw new Exception("Vector is too big");
 
         return vector;

@@ -37,7 +37,7 @@ public class EntityFactory
     /// Checks whether an entity has been added to the scene in order to sort the entities
     /// by their layer and/or z-buffer.
     /// </summary>
-    private bool _dirty;
+    private bool _needSort;
     
     /// <summary>
     /// The number of entities in the scene.
@@ -71,7 +71,7 @@ public class EntityFactory
         var entity = new Entity { Id = id, Layer = layer, Name = name, Tag = tag, Visible = true };
         _components.Add(id, new List<IComponent>());
         _entities.Add(entity);
-        _dirty = true;
+        _needSort = true;
         AddComponent(new Transform { Owner = id, Position = Vector2.Zero, Origin = Vector2.One }); // every entity has a transform component
         
         return entity;
@@ -173,7 +173,7 @@ public class EntityFactory
 
     public void Sort()
     {
-        if (!_dirty) return;
+        if (!_needSort) return;
         
         _entities.Sort((a, b) =>
         {
@@ -185,7 +185,7 @@ public class EntityFactory
             return t1.Z.CompareTo(t2.Z);
         });
         
-        _dirty = false;
+        _needSort = false;
     }
     
     public void Shutdown()

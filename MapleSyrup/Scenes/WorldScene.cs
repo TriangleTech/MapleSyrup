@@ -3,7 +3,7 @@ using MapleSyrup.ECS;
 using MapleSyrup.ECS.Systems;
 using MapleSyrup.Windowing;
 using MapleSyrup.ECS.Systems.Hybrid;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 using MapleSyrup.Nx;
 using ZeroElectric.Vinculum;
 
@@ -11,8 +11,7 @@ namespace MapleSyrup.Scenes;
 
 public class WorldScene : SceneBase
 {
-    public WorldScene(string sceneName) 
-        : base(sceneName)
+    public WorldScene() 
     {
         Camera = new Camera2D()
         {

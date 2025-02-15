@@ -1,8 +1,4 @@
-﻿using System.Text.Json.Nodes;
-using MapleSyrup.ECS;
-using MapleSyrup.Nx;
-using MapleSyrup.Scenes.Map;
-using MapleSyrup.Windowing;
+﻿using MapleSyrup.Common.Map;
 
 namespace MapleSyrup.Scenes;
 
@@ -20,7 +16,7 @@ public class SceneFactory
         Shared = this;
     }
 
-    public void CreateScene<T>(string sceneName, MapleMap map) where T : SceneBase
+    public void CreateScene<T>(MapleMap map) where T : SceneBase
     {
         lock (this)
         {
@@ -30,13 +26,13 @@ public class SceneFactory
             var type = typeof(T);
             if (type == typeof(LoginScene))
             {
-                _scene = new LoginScene(sceneName);
+                _scene = new LoginScene();
                 _scene.InitSystems();
                 _scene.LoadContent(map);
             }
             else if (type == typeof(WorldScene))
             {
-                _scene = new WorldScene(sceneName);
+                _scene = new WorldScene();
             }
             else
             {
@@ -46,6 +42,13 @@ public class SceneFactory
             _dirty = true;
             SceneReady = true;
         }
+    }
+
+    public void ChangeScene<T>(MapleMap map) where T : SceneBase
+    {
+        SceneReady = false;
+        _scene.Shutdown();
+        CreateScene<T>(map);
     }
 
     public void Shutdown()

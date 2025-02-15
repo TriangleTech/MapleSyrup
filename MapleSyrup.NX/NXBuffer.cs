@@ -7,19 +7,20 @@ public unsafe  class NXBuffer : IDisposable
 {
     private readonly MemoryMappedViewAccessor _view;
     private long _position, _offset;
-    private readonly long _size;
     
-    public ulong NodeBlock { get; set; }
-    public ulong StringBlock { get; set; }
-    public ulong BitmapBlock { get; set; }
-    public ulong AudioBlock { get; set; }
+    public required ulong NodeBlock { get; set; }
+    public required ulong StringBlock { get; set; }
+    public required ulong BitmapBlock { get; set; }
+    public required ulong AudioBlock { get; set; }
+    
+    public MemoryMappedFile MemoryMappedFile {get;}
     
     public NXBuffer(MemoryMappedFile file)
     {
+        MemoryMappedFile = file;
         _view = file.CreateViewAccessor();
         _position = 0;
         _offset = 0;
-        _size = _view.Capacity;
     }
 
     public Span<byte> ReadBytes(int len)
@@ -34,25 +35,6 @@ public unsafe  class NXBuffer : IDisposable
             _position += len;
             
             return span;
-        }
-        finally
-        {
-            _view.SafeMemoryMappedViewHandle.ReleasePointer();
-        }
-    }
-
-    public byte ReadByte()
-    {
-        if (!CheckBounds(_position, 1)) return 0;
-        
-        byte *data = null;
-        _view.SafeMemoryMappedViewHandle.AcquirePointer(ref data);
-        try
-        {
-            byte value = *(data + _offset + _position);
-            _position += sizeof(byte);
-            
-            return value;
         }
         finally
         {
@@ -150,13 +132,12 @@ public unsafe  class NXBuffer : IDisposable
 
     private bool CheckBounds(long offset, long size)
     {
-        return offset + size <= _size;
+        return offset + size <= _view.Capacity;
     }
 
     public void Seek(long offset)
     {
-        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
-        if (offset > _size) throw new ArgumentOutOfRangeException(nameof(offset));
+        if (offset > _view.Capacity || offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
         
         _offset = offset;
         _position = 0;

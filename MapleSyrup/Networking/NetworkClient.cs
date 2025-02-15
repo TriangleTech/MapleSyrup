@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using MapleSyrup.Networking.Handlers;
-using MapleSyrup.Networking.Packets;
+using MapleSyrup.Common.Packets;
 
 namespace MapleSyrup.Networking;
 
@@ -18,10 +17,8 @@ public class NetworkClient
         TerminationToken = new CancellationTokenSource();
     }
 
-    public void ConnectAsync()
+    public async Task ConnectAsync()
     {
-        Task.Factory.StartNew(async () =>
-        {
             try
             {
                 await _client.ConnectAsync("127.0.0.1", 8484);
@@ -37,7 +34,6 @@ public class NetworkClient
                 Console.WriteLine(e);
                 throw;
             }
-        });
     }
 
     private void WaitForData()

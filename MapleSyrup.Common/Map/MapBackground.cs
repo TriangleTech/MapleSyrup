@@ -1,4 +1,4 @@
-﻿namespace MapGenerator;
+﻿namespace MapleSyrup.Common.Map;
 
 public class MapBackground
 {

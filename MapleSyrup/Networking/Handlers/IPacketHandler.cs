@@ -1,4 +1,4 @@
-﻿using MapleSyrup.Networking.Packets;
+﻿using MapleSyrup.Common.Packets;
 
 namespace MapleSyrup.Networking.Handlers;
 

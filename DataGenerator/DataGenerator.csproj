@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MapleSyrup.Common\MapleSyrup.Common.csproj" />
       <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
     </ItemGroup>
 

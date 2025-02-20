@@ -1,7 +1,8 @@
 ﻿namespace MapleSyrup.ECS.Components.Character;
 
-public class PlayerInfo
+public class CharacterInfo : IComponent
 {
+    public int Owner { get; init; }
     public required int PlayerId { get; init; }
     public required string PlayerName { get; set; }
     public required int Health { get; set; }

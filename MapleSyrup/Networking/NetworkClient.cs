@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using MapleSyrup.Common.Map;
 using MapleSyrup.Common.Packets;
+using MapleSyrup.Networking.Packets;
 
 namespace MapleSyrup.Networking;
 
@@ -22,7 +24,7 @@ public class NetworkClient
             try
             {
                 await _client.ConnectAsync("127.0.0.1", 8484);
-                _ = Send(ClientToServer.OnClientStart);
+                await Send(CommonPackets.RequestMapData(MapType.Login, "MapLogin"));
 
                 while (!TerminationToken.IsCancellationRequested)
                 {
@@ -46,8 +48,7 @@ public class NetworkClient
 
             var headerLength = reader.ReadInt32();
             var packetId = reader.ReadInt16();
-            var packet = new Packet(packetId);
-            packet.SetData(reader.ReadBytes(headerLength));
+            var packet = new Packet(packetId, reader.ReadBytes(headerLength));
             Console.WriteLine($"Packet with ID: {(ServerToClient)packetId} with length of {headerLength}");
 
             _packetProcessor.ProcessPacket(packet);
@@ -72,24 +73,6 @@ public class NetworkClient
             writer.Write(packet.Data);
             writer.Flush();
             Console.WriteLine($"Sent {packetLength} bytes to server");
-        }
-        catch (SocketException e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task Send(ClientToServer packet)
-    {
-        try
-        {
-            await using var ns = new NetworkStream(_client.Client, false);
-            await using var writer = new BinaryWriter(ns);
-            writer.Write((int)2);
-            writer.Write((short)ServerToClient.ClientStart);
-            writer.Flush();
-            Console.WriteLine($"Sent {packet} to server");
         }
         catch (SocketException e)
         {

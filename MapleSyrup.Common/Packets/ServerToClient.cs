@@ -2,5 +2,7 @@
 
 public enum ServerToClient : short
 {
-    ClientStart = 0x00
+    MapData = 0x00,
+    UIData = 0x01,
+    PlayerData = 0x02,
 }

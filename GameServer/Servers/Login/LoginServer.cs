@@ -1,6 +1,6 @@
 ﻿using GameServer.Client;
 using GameServer.Servers.Interfaces;
-using GameServer.Servers.Login.Handlers;
+using GameServer.Servers.Shared;
 using MapleSyrup.Common.Packets;
 
 namespace GameServer.Servers.Login;
@@ -14,7 +14,7 @@ public class LoginServer : NetworkServer
     {
         _packetHandlers = new()
         {
-            { ClientToServer.OnClientStart, new OnClientStart() }
+            { ClientToServer.RequestMapData, new MapDataRequest() }
         };
     }
 

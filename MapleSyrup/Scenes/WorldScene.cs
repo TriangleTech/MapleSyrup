@@ -2,8 +2,8 @@
 using MapleSyrup.ECS;
 using MapleSyrup.ECS.Systems;
 using MapleSyrup.Windowing;
-using MapleSyrup.ECS.Systems.Hybrid;
 using MapleSyrup.Common.Packets;
+using MapleSyrup.ECS.Systems.Map;
 using MapleSyrup.Nx;
 using ZeroElectric.Vinculum;
 

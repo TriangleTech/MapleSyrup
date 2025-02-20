@@ -1,54 +1,46 @@
-﻿using MapleSyrup.ECS.Components;
-using MapleSyrup.ECS.Components.Common;
-using MapleSyrup.ECS.Components.Map;
+﻿using MapleSyrup.ECS.Components.Map;
 using MapleSyrup.Resources;
 using ZeroElectric.Vinculum;
+using Common_Transform = MapleSyrup.ECS.Components.Common.Transform;
 using Transform = MapleSyrup.ECS.Components.Common.Transform;
 
-namespace MapleSyrup.ECS.Systems.Hybrid;
+namespace MapleSyrup.ECS.Systems.Map;
 
-public class BackgroundAnimation : IUpdateSystem, IDrawSystem
+public class MapObjAnimation : IUpdateSystem, IDrawSystem
 {
     public void Draw(EntityFactory entityFactory, ResourceFactory resourceFactory)
     {
-        var entities = entityFactory.GetAllWithComponent<BackgroundObj>();
+        var entities = entityFactory.GetAllWithComponent<MapObj>();
         foreach (var entity in entities)
         {
-            var transform = entityFactory.GetComponent<Transform>(entity);
-            var animation = entityFactory.GetComponent<BackgroundObj>(entity);
+            var transform = entityFactory.GetComponent<Common_Transform>(entity);
+            var animation = entityFactory.GetComponent<MapObj>(entity);
             var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
+            
             transform.Origin = frame.Origin;
             Raylib.DrawTextureEx(frame.Texture, transform.Position - transform.Origin, transform.Rotation, transform.Scale, animation.Color);
         }
     }
-    
+
     public void Update(EntityFactory entityFactory, ResourceFactory resourceFactory, float timeDelta)
     {
-        var entities = entityFactory.GetAllWithComponent<BackgroundObj>();
+        var entities = entityFactory.GetAllWithComponent<MapObj>();
         foreach (var entity in entities)
         {
-            var animation = entityFactory.GetComponent<BackgroundObj>(entity);
-            if (animation.Animated)
+            var animation = entityFactory.GetComponent<MapObj>(entity);
+            if (animation.Loop)
                 OnLoop(animation, resourceFactory, timeDelta);
             if (animation.Blend)
                 OnBlend(animation, resourceFactory, timeDelta);
         }
     }
 
-    private void OnLoop(BackgroundObj animation, ResourceFactory resourceFactory, float timeDelta)
+    private void OnAnimate(MapObj animation, ResourceFactory resourceFactory, float timeDelta)
     {
-        if (animation.FrameDelay < 0) {
-            animation.Frame++;
-            if (animation.Frame >= animation.FrameCount)
-                animation.Frame = 0;
-            var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
-            animation.FrameDelay = frame.Delay;
-        } else {
-            animation.FrameDelay -= timeDelta;
-        }
+        
     }
-
-    public void OnBlend(BackgroundObj animation, ResourceFactory resourceFactory, float timeDelta)
+    
+    private void OnBlend(MapObj animation, ResourceFactory resourceFactory, float timeDelta)
     {
         if (animation.Frame == 0)
         {
@@ -82,5 +74,19 @@ public class BackgroundAnimation : IUpdateSystem, IDrawSystem
         }
 
         animation.Color = new Color(255, 255, 255, animation.Alpha);
+    }
+    
+    private void OnLoop(MapObj animation, ResourceFactory resourceFactory, float timeDelta)
+    {
+        if (animation.FrameDelay <= 0) {
+            animation.Frame++;
+            if (animation.Frame >= animation.FrameCount)
+                animation.Frame = 0;
+            
+            var frame = resourceFactory.GetResource<TextureResource>(animation.Textures[animation.Frame]);
+            animation.FrameDelay = frame.Delay;
+        } else {
+            animation.FrameDelay -= timeDelta;
+        }
     }
 }

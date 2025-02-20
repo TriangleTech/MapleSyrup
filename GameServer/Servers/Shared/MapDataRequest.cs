@@ -2,12 +2,15 @@
 using GameServer.Servers.Interfaces;
 using MapleSyrup.Common.Packets;
 
-namespace GameServer.Servers.Login.Handlers;
+namespace GameServer.Servers.Shared;
 
-public record OnCreateCharacter : IPacketHandler
+public class MapDataRequest : IPacketHandler
 {
     public void HandlePacket(GameClient client, Packet packet)
     {
+        var type = packet.ReadByte();
+        var mapId = packet.ReadString();
+        
         
     }
 }

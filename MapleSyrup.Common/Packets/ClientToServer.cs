@@ -2,5 +2,7 @@
 
 public enum ClientToServer : short
 {
-    OnClientStart = 0x00,
+    RequestMapData = 0x00,
+    RequestUIData = 0x01,
+    RequestPlayerData = 0x02
 }

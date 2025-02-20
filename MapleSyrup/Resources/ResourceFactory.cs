@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using MapleSyrup.Nx;
+using ZeroElectric.Vinculum;
 
 namespace MapleSyrup.Resources;
 
@@ -36,10 +37,20 @@ public class ResourceFactory
                 _resourceQueue.TryDequeue(out var resource);
                 if (resource == null) continue;
                 
-                var texture = NXFactory.Shared.GetNode(resource.MainFile, resource.Name)?.GetTexture() ?? throw new NullReferenceException();
-                if (resource is TextureResource textureResource)
+                var texture = NXFactory.Shared.GetNode(resource.MainFile, resource.Name)?.GetTexture() 
+                              ?? throw new NullReferenceException();
+
+                switch (resource)
                 {
-                    textureResource.Texture = texture;
+                    case MappedResource mappedResource:
+                        mappedResource.Texture = texture;
+                        break;
+                    case TextureResource textureResource:
+                        textureResource.Texture = texture;
+                        break;
+                    default:
+                        Raylib.UnloadTexture(texture);
+                        throw new NotImplementedException();
                 }
 
                 _resources.TryAdd(resource.Name, resource);

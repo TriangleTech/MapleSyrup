@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Numerics;
 using MapleSyrup.ECS.Components.Common;
 using MapleSyrup.ECS.Components.Map;
@@ -26,7 +27,7 @@ public class EntityFactory
     /// <summary>
     /// Contains the components of all the entity in the scene.
     /// </summary>
-    private readonly Dictionary<int, List<IComponent>> _components = new(1024);
+    private readonly ConcurrentDictionary<int, List<IComponent>> _components = new(Environment.ProcessorCount, 1024);
     
     /// <summary>
     /// Contains the IDs of any entities that have been destroyed, so they can be reused.
@@ -69,7 +70,8 @@ public class EntityFactory
     {
         var id = _recycledIds.Count > 0 ? _recycledIds.Dequeue() : _entityCount++;
         var entity = new Entity { Id = id, Layer = layer, Name = name, Tag = tag, Visible = true };
-        _components.Add(id, new List<IComponent>());
+        if (!_components.TryAdd(id, new List<IComponent>())) 
+            throw new Exception("An entity with the same id already exists");
         _entities.Add(entity);
         _needSort = true;
         AddComponent(new Transform { Owner = id, Position = Vector2.Zero, Origin = Vector2.One }); // every entity has a transform component
@@ -84,12 +86,16 @@ public class EntityFactory
     public void DestroyEntity(int id)
     {
         var index = _entities.FindIndex(x => x.Id == id);
-        if (index == -1) return;
+        if (index == -1) 
+            return;
         _entities[index].Visible = false;
         _entities.RemoveAt(index);
-        _components[id].Clear();
-        _components.Remove(id);
+        _needSort = true;
         _recycledIds.Enqueue(id);
+        
+        if (!_components.TryRemove(id, out var components))
+            return;
+        components.Clear();
     }
     
     /// <summary>

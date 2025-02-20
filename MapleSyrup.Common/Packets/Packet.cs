@@ -6,64 +6,119 @@ namespace MapleSyrup.Common.Packets;
 public class Packet
 {
     public short PacketType { get; }
-    private List<byte> _data;
-    
-    public ArraySegment<byte> Data => _data.ToArray();
+    private MemoryStream _stream;
+    private BinaryReader? _reader;
+    private BinaryWriter? _writer;
 
-    public Packet(short packetType, int capacity = 256)
+    public ArraySegment<byte> Data => _stream.ToArray();
+
+    public Packet(short packetType)
     {
         PacketType = packetType;
-        _data = new(capacity);
+        _stream = new MemoryStream();
+        _writer = new BinaryWriter(_stream);
     }
 
-    public void SetData(byte[] data)
+    public Packet(short packetType, Span<byte> data)
     {
-        _data = new(data);
+        PacketType = packetType;
+        _stream = new MemoryStream(data.ToArray());
+        _reader = new BinaryReader(_stream);
     }
 
+    ~Packet()
+    {
+        _writer?.Dispose();
+        _reader?.Dispose();
+    }
+    
+    #region Reader
+
+    public byte ReadByte()
+    {
+        return _reader?.ReadByte() ?? 0;
+    }
+
+    public Span<byte> ReadBytes(int count)
+    {
+        return _reader?.ReadBytes(count);
+    }
+
+    public short ReadShort()
+    {
+        return _reader?.ReadInt16() ?? -1;
+    }
+
+    public int ReadInt()
+    {
+        return _reader?.ReadInt32() ?? -1;
+    }
+
+    public long ReadLong()
+    {
+        return _reader?.ReadInt64() ?? -1;
+    }
+
+    public double ReadDouble()
+    {
+        return _reader?.ReadDouble() ?? -1;
+    }
+
+    public float ReadFloat()
+    {
+        return _reader?.ReadSingle() ?? -1;
+    }
+
+    public string ReadString()
+    {
+        var len = ReadShort();
+        if (len == -1) return string.Empty;
+        
+        var data = _reader?.ReadBytes(len);
+        if (data == null) return string.Empty;
+        
+        return Encoding.UTF8.GetString(data);
+    }
+    
+    #endregion
+    
+    #region Writer
+    
     public void WriteByte(byte value)
     {
-        _data.Add(value);
+        _stream.WriteByte(value);
     }
     
     public void WriteShort(short value)
     {
-        _data.AddRange(BitConverter.GetBytes(value));
+        _writer?.Write(BitConverter.GetBytes(value));
     }
 
     public void WriteInt(int value)
     {
-        _data.AddRange(BitConverter.GetBytes(value));
+        _writer?.Write(BitConverter.GetBytes(value));
     }
 
     public void WriteLong(long value)
     {
-        _data.AddRange(BitConverter.GetBytes(value));
+        _writer?.Write(BitConverter.GetBytes(value));
     }
 
     public void WriteFloat(float value)
     {
-        _data.AddRange(BitConverter.GetBytes(value));
+        _writer?.Write(BitConverter.GetBytes(value));
     }
 
     public void WriteDouble(double value)
     {
-        _data.AddRange(BitConverter.GetBytes(value));
+        _writer?.Write(BitConverter.GetBytes(value));
     }
 
     public void WriteString(string value)
     {
         WriteShort((short)value.Length);
-        _data.AddRange(Encoding.UTF8.GetBytes(value));
+        _writer?.Write(Encoding.UTF8.GetBytes(value));
     }
-
-    public ReadOnlySpan<byte> GetData()
-    {
-        return _data.AsSpan();
-    }
-
-    public void Destroy()
-    {
-        _data.Clear();
-    }
+    
+    #endregion
 }

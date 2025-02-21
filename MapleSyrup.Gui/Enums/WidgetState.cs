@@ -2,8 +2,9 @@
 
 public enum WidgetState
 {
+    Normal,
+    Hover,
+    Pressed,
     Disabled,
     Active,
-    Hovered,
-    Pressed,
 }

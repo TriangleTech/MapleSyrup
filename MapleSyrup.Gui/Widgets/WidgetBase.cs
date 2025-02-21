@@ -1,35 +1,33 @@
 ﻿using System.Numerics;
-using MapleSyrup.Gui.Containers;
+using MapleSyrup.Gui.Enums;
+using MapleSyrup.Gui.Panels;
 using ZeroElectric.Vinculum;
 
 namespace MapleSyrup.Gui.Widgets;
 
-public abstract class Widget
+public abstract class WidgetBase
 {
-    public Container Parent { get; set; }
-    public string Identifier { get; init; }
-    public int Width;
-    public int Height;
-    public Vector2 Position;
+    public PanelBase Parent { get; set; }
+    public string Name { get; }
+    public required int Width { get; init; }
+    public required int Height { get; init; }
+    public required Vector2 Position { get; set; }
+    public bool Visible { get; set; } = true;
+    public bool Movable { get; init; }
     public Rectangle Bounds { get; protected set; }
-    public bool IsVisible = true;
+    public WidgetState State { get; set; } = WidgetState.Normal;
 
-    public Widget(string identifier, int width, int height)
+    public WidgetBase(string name)
     {
-        Identifier = identifier;
-        Width = width;
-        Height = height;
-        Bounds = new Rectangle(Position.X, Position.Y, width, height);
+        Name = name;
     }
-
-    public virtual void Draw()
-    {
-        if (!IsVisible) return;
-    }
-
+    
+    public abstract void Draw();
     public virtual void Update(float deltaTime)
     {
-        if (!IsVisible) return;
+        if (!Visible) 
+            return;
+        
         var x = Parent.Position.X + Position.X;
         var y = Parent.Position.Y + Position.Y;
         if (x > Parent.Position.X + Parent.Width - Width)

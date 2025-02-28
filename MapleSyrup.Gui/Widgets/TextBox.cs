@@ -77,19 +77,20 @@ public class TextBox : WidgetBase
 
         if (State != WidgetState.Active) 
             return;
+        Thread.SpinWait(10);
         
         var keyPressed = Raylib.GetKeyPressed();
-        if (Raylib.IsKeyPressed(KeyboardKey.KEY_BACKSPACE) ||
-            Raylib.IsKeyDown(KeyboardKey.KEY_BACKSPACE))
+        if (Raylib.IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
         {
             var length = Text.Length;
             if (length == 0) return;
             Text = Text.Remove(length - 1);
-            Thread.Sleep(100); // TODO: Find better solution to holding down backspace
             return;
         }
         
-        if (Text.Length >= CharacterLimit) return;
+        if (Text.Length >= CharacterLimit) 
+            return;
+        
         switch (keyPressed)
         {
             case >= 1 and <= 92:

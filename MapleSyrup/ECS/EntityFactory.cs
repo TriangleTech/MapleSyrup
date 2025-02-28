@@ -1,17 +1,12 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Immutable;
 using System.Numerics;
-using MapleSyrup.ECS.Components.Common;
-using MapleSyrup.ECS.Components.Map;
 using CommunityToolkit.HighPerformance;
 using MapleSyrup.ECS.Components;
+using MapleSyrup.ECS.Components.Common;
+using MapleSyrup.ECS.Interfaces;
 using MapleSyrup.Windowing;
-using ZeroElectric.Vinculum;
-using Transform = MapleSyrup.ECS.Components.Common.Transform;
 
 namespace MapleSyrup.ECS;
-
-using Transform = Components.Common.Transform;
 
 /// <summary>
 /// The <see cref="EntityFactory"/> class manages the creation, destruction, and
@@ -20,9 +15,11 @@ using Transform = Components.Common.Transform;
 public class EntityFactory
 {
     /// <summary>
-    /// Contains the entities currently in the scene, regardless of visibility. TODO: Maybe separate them?
+    /// Contains the entities currently in the scene, regardless of visibility.
     /// </summary>
     private readonly List<Entity> _entities = new(1024);
+    private readonly ConcurrentQueue<Entity> _pendingAdd = new();
+    private readonly ConcurrentQueue<Entity> _pendingRemove = new();
     
     /// <summary>
     /// Contains the components of all the entity in the scene.
@@ -44,6 +41,8 @@ public class EntityFactory
     /// The number of entities in the scene.
     /// </summary>
     private int _entityCount;
+    
+    public List<Entity> Entities => _entities;
 
     /// <summary>
     /// The instance of the created <see cref="EntityFactory"/>. All instances are created in the
@@ -68,34 +67,49 @@ public class EntityFactory
     /// <returns></returns>
     public Entity CreateEntity(int layer = 0, string name = "Default", string tag = "Default")
     {
-        var id = _recycledIds.Count > 0 ? _recycledIds.Dequeue() : _entityCount++;
-        var entity = new Entity { Id = id, Layer = layer, Name = name, Tag = tag, Visible = true };
-        if (!_components.TryAdd(id, new List<IComponent>())) 
-            throw new Exception("An entity with the same id already exists");
-        _entities.Add(entity);
-        _needSort = true;
-        AddComponent(new Transform { Owner = id, Position = Vector2.Zero, Origin = Vector2.One }); // every entity has a transform component
-        
-        return entity;
+        lock (_entities)
+        {
+            var id = _recycledIds.Count > 0 ? _recycledIds.Dequeue() : _entityCount;
+            var entity = new Entity { Id = id, Layer = layer, Name = name, Tag = tag, Visible = true };
+            if (!_components.TryAdd(id, new List<IComponent>()))
+                throw new Exception("An entity with the same id already exists");
+            _pendingAdd.Enqueue(entity);
+            _entityCount++;
+            
+            AddComponent(new TransformComponent
+            {
+                Owner = id, 
+                Position = Vector2.Zero, 
+                Origin = Vector2.One
+            }); // every entity has a transform component
+            
+            return entity;
+        }
     }
 
     /// <summary>
     /// Destroys an <see cref="Entity"/> based on the id.
     /// </summary>
     /// <param name="id">ID the <see cref="Entity"/></param>
-    public void DestroyEntity(int id)
+    public void DestroyEntity(Entity entity)
     {
-        var index = _entities.FindIndex(x => x.Id == id);
-        if (index == -1) 
-            return;
-        _entities[index].Visible = false;
-        _entities.RemoveAt(index);
+        lock (_entities)
+        {
+            _pendingRemove.Enqueue(entity);
+        }
+    }
+
+    public void ChangeLayer(int layer, Entity entity)
+    {
+        entity.Layer = layer;
         _needSort = true;
-        _recycledIds.Enqueue(id);
-        
-        if (!_components.TryRemove(id, out var components))
-            return;
-        components.Clear();
+    }
+
+    public void ChangeZBuffer(int entityId, int zBuffer)
+    {
+        var transform = GetComponent<TransformComponent>(entityId);
+        transform.Z = zBuffer;
+        _needSort = true;
     }
     
     /// <summary>
@@ -140,54 +154,93 @@ public class EntityFactory
         throw new Exception($"Entity {id} does not have component {typeof(T).Name}");
     }
 
+    public bool HasComponent<T>(int id) where T : class, IComponent
+    {
+        foreach (var component in _components[id])
+        {
+            if (component is T t)
+                return true;
+        }
+
+        return false;
+    }
+    
+    public int GetEntityWithComponent<T1>() 
+        where T1 : class, IComponent
+    {
+        var id = -999;
+        foreach (var entity in _entities)
+        {
+            if (_components[entity.Id].FindIndex(x => x is T1) == -1)
+                continue; 
+            if (!entity.Visible)
+                continue;
+            id = entity.Id;
+            break;
+        }
+
+        return id;
+    }
+
     /// <summary>
     /// Returns the IDs of all Entities with a specified <see cref="IComponent"/>.
     /// </summary>
     /// <typeparam name="T">The type of <see cref="IComponent"/></typeparam>
     /// <returns>An array of IDs of <c>visible</c> entities within the scene.</returns>
-    public Span<int> GetAllWithComponent<T>() where T : class, IComponent
+    public Span<Entity> GetEntitiesWithComponents<T>() 
+        where T : class, IComponent
     {
-        List<int> ids = new(512);
+        List<Entity> ids = new(512);
         foreach (var entity in _entities)
         {
             if (_components[entity.Id].FindIndex(x => x is T) == -1)
                 continue; 
             if (!entity.Visible)
                 continue;
-            ids.Add(entity.Id);
+            ids.Add(entity);
         }
         return ids.AsSpan();
     }
 
-    /// <summary>
-    /// Returns the IDs of all entities in the scene with a specified <c>Tag</c>
-    /// </summary>
-    /// <param name="tag">The tag the entities reference.</param>
-    /// <returns>An array containing the entities' ID.</returns>
-    public Span<int> GetAllWithTag(string tag)
+    public void ProcessPending()
     {
-        List<int> ids = new(512);
-        foreach (var entity in _entities)
+        lock (_entities)
         {
-            if (entity.Tag != tag || !entity.Visible)
-                continue; 
-            ids.Add(entity.Id);
+            while (_pendingAdd.TryDequeue(out var entity))
+            {
+                _entities.Add(entity);
+                _needSort = true;
+            }
+            
+            while (_pendingRemove.TryDequeue(out var entity))
+            {
+                var index = _entities.FindIndex(x => x.Id == entity.Id);
+                if (index == -1) 
+                    continue;
+                entity.Visible = false;
+                _recycledIds.Enqueue(entity.Id);
+                _entities.RemoveAt(index);
+                _needSort = true;
+        
+                if (!_components.TryRemove(entity.Id, out var components))
+                    continue;
+                components.Clear();
+            }
         }
-
-        return ids.AsSpan();
     }
 
     public void Sort()
     {
-        if (!_needSort) return;
+        if (!_needSort) 
+            return;
         
         _entities.Sort((a, b) =>
         {
             if (a.Layer != b.Layer)
                 return a.Layer.CompareTo(b.Layer);
 
-            var t1 = GetComponent<Transform>(a.Id);
-            var t2 = GetComponent<Transform>(b.Id);
+            var t1 = GetComponent<TransformComponent>(a.Id);
+            var t2 = GetComponent<TransformComponent>(b.Id);
             return t1.Z.CompareTo(t2.Z);
         });
         

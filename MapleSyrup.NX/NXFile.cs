@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.IO.MemoryMappedFiles;
-using CommunityToolkit.HighPerformance;
+﻿using System.IO.MemoryMappedFiles;
 
 namespace MapleSyrup.NX;
 
@@ -10,6 +8,9 @@ public class NXFile : IDisposable
     private readonly NXBuffer _buffer;
     private uint _nodeCount, _bitmapCount, _stringCount, _audioCount;
     private ulong _nodeBlock, _bitmapBlock, _stringBlock, _audioBlock;
+    
+    public MemoryMappedFile MemoryMappedFile => _mmf;
+    public NXBuffer Buffer => _buffer;
     
     public NXFile(string path)
     {
@@ -86,13 +87,13 @@ public class NXFile : IDisposable
                 {
                     return new NXNode
                         { 
+                            Parent = this,
                             NodePath = nodePath, 
                             Name = nodeName, 
                             FirstChildId = firstChildId, 
                             ChildCount = childCount, 
                             Type = nodeType, 
                             Offset = offset,
-                            Buffer = CreateBuffer(),
                         };
                 }
             }
@@ -122,13 +123,13 @@ public class NXFile : IDisposable
             {
                 return new NXNode
                 {
+                    Parent = this,
                     NodePath = string.Concat(node.NodePath, $"/{nodeName}"), 
                     Name = nodeName, 
                     FirstChildId = firstChildId, 
                     ChildCount = childCount, 
                     Type = nodeType, 
                     Offset = offset,
-                    Buffer = CreateBuffer(),
                 };
             }
         }
@@ -162,13 +163,13 @@ public class NXFile : IDisposable
             {
                 return new NXNode
                 {
+                    Parent = this,
                     NodePath = string.Empty,
                     Name = nodeName,
                     FirstChildId = firstChildId,
                     ChildCount = childCount,
                     Type = nodeType,
                     Offset = (ulong)offset,
-                    Buffer = CreateBuffer(),
                 };
             }
         }

@@ -3,6 +3,5 @@
 public enum ResourceType
 {
     Texture,
-    Audio,
-    Mapped
+    Mapped,
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Numerics;
+using System.Text.Json;
 using MapleSyrup.Common.Map;
 using MapleSyrup.NX;
 
@@ -18,31 +19,41 @@ public class MapGenerator
         
         Console.WriteLine("Generating maps...");
         var mapleMap = new MapleMap();
-        
         var mapNode = _map.GetNode("Map") ?? throw new NullReferenceException("Failed to find [Map] node");
         var mapNodes = mapNode.GetChildren();
         foreach (var (_, node) in mapNodes)
         {
-            var mapIds = node.GetChildren();
-            foreach (var (id, map) in mapIds)
+            var mapImgs = node.GetChildren();
+            foreach (var (id, map) in mapImgs)
             {
                 var withoutImg = id.Replace(".img", "");
-                if (withoutImg.Length < 9) continue;
-                if (File.Exists($"MapData/{withoutImg}.json")) continue;
+                if (withoutImg.Length < 9) 
+                    continue;
                 
+                //ParseInfo(map, mapleMap.MapInfo);
                 ParseBackgrounds(_map, map, mapleMap.Backgrounds);
                 for (var i = 0; i < 8; i++)
                 {
                     ParseObjects(_map, map, mapleMap.Objects, i);
                     ParseTiles(_map, map, mapleMap.Tiles, i);
                 }
+                ParseFootholds(map, mapleMap.Footholds);
             
                 var jsonString = JsonSerializer.Serialize(mapleMap, MapleMapContext.Default.MapleMap);
-                File.WriteAllText($"MapData/{withoutImg}.json", jsonString);
+                using var fs = File.Open($"MapData/{withoutImg}.json", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+                using var writer = new StreamWriter(fs);
+                writer.Write(jsonString);
+                
+                //File.WriteAllText($"MapData/{withoutImg}.json", jsonString);
                 Console.WriteLine($"Map with ID: {withoutImg} was generated.");
+                
                 mapleMap.Clear();
             }
+            
+            //mapImgs.Clear();
         }
+        
+        //mapNodes.Clear();
 
         {
             var login = _ui.GetFastImg("MapLogin.img") 
@@ -64,14 +75,16 @@ public class MapGenerator
         _map.Dispose();
         _ui.Dispose();
     }
+    
+    #region Backgrounds
 
     private void ParseBackgrounds(NXFile file, NXNode mapNode, List<MapBackground> backgrounds)
     {
         try
         {
-            if (!mapNode.HasNode("back")) return;
             var back = file.GetChildNode(mapNode, "back") ??
                        throw new NullReferenceException("Failed to find [back] node in img file");
+            
             var backgroundNodes = back.GetChildren();
             foreach (var (_, background) in backgroundNodes)
             {
@@ -120,7 +133,11 @@ public class MapGenerator
                         Z = 0,
                     });
                 }
+                
+                //node.Clear();
             }
+            
+            //backgroundNodes.Clear();
         }
         catch (Exception e)
         {
@@ -128,16 +145,20 @@ public class MapGenerator
             throw;
         }
     }
+    
+    #endregion
 
+    #region Objects
+    
     private void ParseObjects(NXFile file, NXNode mapNode, List<MapObject> objects, int i)
     {
         try
         {
-            if (!mapNode.HasNode(i.ToString())) return;
             var layer = file.GetChildNode(mapNode, i.ToString()) ?? throw new NullReferenceException();
             var obj = file.GetChildNode(layer, "obj") ??
                       throw new NullReferenceException($"Failed to find [obj] node");
-            if (obj.ChildCount == 0) return;
+            if (obj.ChildCount == 0) 
+                return;
 
             var objNodes = obj.GetChildren();
             foreach (var (_, objNode) in objNodes)
@@ -164,7 +185,11 @@ public class MapGenerator
                     Y = y,
                     Z = order,
                 });
+                
+                //nodes.Clear();
             }
+            
+            //objNodes.Clear();
         }
         catch (Exception e)
         {
@@ -172,17 +197,22 @@ public class MapGenerator
             throw;
         }
     }
+    
+    #endregion
+    
+    #region Tiles
 
-    private void ParseTiles(NXFile file, NXNode mapNode, List<MapTile> tiles, int i)
+    private void ParseTiles(NXFile file, NXNode mapNode, List<MapTile> mapTiles, int i)
     {
         try
         {
-            if (!mapNode.HasNode(i.ToString())) return;
+           
             var layerNode = file.GetChildNode(mapNode, i.ToString()) ??
                             throw new NullReferenceException("Failed to find [layer] node");
             var tileLayer = file.GetChildNode(layerNode, "tile") ??
                             throw new NullReferenceException("Failed to find [tile] node");
-            if (tileLayer.ChildCount == 0) return;
+            if (tileLayer.ChildCount == 0) 
+                return;
             
             var info = file.GetChildNode(layerNode, "info") ??
                        throw new NullReferenceException("Failed to find [info] node");
@@ -202,12 +232,12 @@ public class MapGenerator
             var tileNodes = tileLayer.GetChildren();
             foreach (var (_, tileNode) in tileNodes)
             {
-                var tile = tileNode.GetChildren();
-                var x = tile["x"].GetInt();
-                var y = tile["y"].GetInt();
-                var zM = tile["zM"].GetInt();
-                var u = tile["u"].GetString();
-                var no = tile["no"].GetInt();
+                var tiles = tileNode.GetChildren();
+                var x = tiles["x"].GetInt();
+                var y = tiles["y"].GetInt();
+                var zM = tiles["zM"].GetInt();
+                var u = tiles["u"].GetString();
+                var no = tiles["no"].GetInt();
 
                 var tileSet = _map.GetNode($"Tile/{tS}.img/{u}/{no}") ??
                               throw new NullReferenceException("Failed to find [tile] node");
@@ -215,7 +245,7 @@ public class MapGenerator
                 var z = setNodes.TryGetValue("z", out var zNode) ? zNode.GetInt() : 0;
                 var order = z + 10 * (3000 * i - zM) - 1073721834;
                 
-                tiles.Add(new MapTile()
+                mapTiles.Add(new MapTile()
                 {
                     Layer = i,
                     NodePath = tileSet.NodePath,
@@ -224,7 +254,13 @@ public class MapGenerator
                     Z = order,
                     TileType = 0,
                 });
+                
+                //setNodes.Clear();
+                //tiles.Clear();
             }
+            
+            //infoNodes.Clear();
+            //tileNodes.Clear();
         }
         catch (Exception e)
         {
@@ -232,4 +268,50 @@ public class MapGenerator
             throw;
         }
     }
+    
+    #endregion
+    
+    #region Footholds
+
+    private void ParseFootholds(NXNode mapNode, List<MapFoothold> mapFootholds)
+    {
+        var rootNode = _map.GetChildNode(mapNode, "foothold") ?? throw new NullReferenceException("Failed to find foothold node");
+        var footholdLayers = rootNode.GetChildren();
+
+        foreach (var (_, layer) in footholdLayers)
+        {
+            var footholdGroups = layer.GetChildren();
+            foreach (var (_, group) in footholdGroups)
+            {
+                var footholds = group.GetChildren();
+                foreach (var (_, foothold) in footholds)
+                {
+                    var nodes = foothold.GetChildren();
+                    var x1 = nodes["x1"].GetInt();
+                    var y1 = nodes["y1"].GetInt();
+                    var x2 = nodes["x2"].GetInt();
+                    var y2 = nodes["y2"].GetInt();
+
+                    mapFootholds.Add(new MapFoothold()
+                    {
+                        Layer = int.Parse(layer.Name),
+                        X1 = x1,
+                        Y1 = y1,
+                        X2 = x2,
+                        Y2 = y2,
+                    });
+                    
+                    //nodes.Clear();
+                }
+                
+                //footholds.Clear();
+            }
+            
+            //footholdGroups.Clear();
+        }
+        
+        //footholdLayers.Clear();
+    }
+    
+    #endregion
 }

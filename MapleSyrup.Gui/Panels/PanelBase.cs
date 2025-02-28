@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using MapleSyrup.Gui.Enums;
 using MapleSyrup.Gui.Widgets;
 using ZeroElectric.Vinculum;
 
@@ -8,8 +7,8 @@ namespace MapleSyrup.Gui.Panels;
 public abstract class PanelBase
 {
     public string Name { get; }
-    public required int Width { get; init; }
-    public required int Height { get; init; }
+    public int Width { get; init; } = 500;
+    public int Height { get; init; } = 500;
     public bool Visible { get; set; }
     public bool Movable { get; init; }
     public Rectangle Bounds { get; protected set; }
@@ -38,7 +37,7 @@ public abstract class PanelBase
 
     public void SetActive(WidgetBase widget)
     {
-        if (widget.Name == string.Empty)
+        if (widget.Name == string.Empty || _activeWidget != string.Empty)
             return;
         _activeWidget = widget.Name;
     }

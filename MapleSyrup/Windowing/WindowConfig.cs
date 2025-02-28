@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace MapleSyrup.Windowing;
+﻿namespace MapleSyrup.Windowing;
 
 public class WindowConfig
 {

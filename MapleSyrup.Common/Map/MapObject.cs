@@ -1,6 +1,6 @@
 ﻿namespace MapleSyrup.Common.Map;
 
-public class MapObject
+public struct MapObject
 {
     public required string NodePath { get; init; }
     public required short ObjType { get; init; }

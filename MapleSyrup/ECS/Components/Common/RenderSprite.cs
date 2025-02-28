@@ -1,4 +1,5 @@
-﻿using ZeroElectric.Vinculum;
+﻿using MapleSyrup.ECS.Interfaces;
+using ZeroElectric.Vinculum;
 
 namespace MapleSyrup.ECS.Components.Common;
 

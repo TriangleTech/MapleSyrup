@@ -8,58 +8,48 @@ namespace MapleSyrup.NX;
 
 public record NXNode
 {
+    public required NXFile Parent { get; init; }
     public required string NodePath { get; init; }
     public required string Name { get; init; }
     public required uint FirstChildId { get; init; }
     public required ushort ChildCount { get; init; }
     public required NodeType Type { get; init; }
     public required ulong Offset { get; init; }
-    public required NXBuffer Buffer { get; init; }
     
-    ~NXNode()
-    {
-        Buffer.Dispose();
-    }
-
     /// <summary>
     /// Gets the children of the node
     /// </summary>
     /// <returns>A dictionary of <see cref="NXNode"/></returns>
     public ReadOnlyDictionary<string, NXNode> GetChildren()
     {
+        if (ChildCount == 0)
+            return ReadOnlyDictionary<string, NXNode>.Empty;
+        
         var nodes = new Dictionary<string, NXNode>(ChildCount);
-        if (ChildCount == 0) return nodes.AsReadOnly();
-
         for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
         {
-            var offset = Buffer.NodeBlock + 20 * i;
-            Buffer.Seek((long)offset);
-            var nameOffset = Buffer.ReadUInt32();
-            var firstChildId = Buffer.ReadUInt32();
-            var childCount = Buffer.ReadUInt16();
-            var nodeType = (NodeType)Buffer.ReadUInt16();
+            var offset = Parent.Buffer.NodeBlock + 20 * i;
+            Parent.Buffer.Seek((long)offset);
+            var nameOffset = Parent.Buffer.ReadUInt32();
+            var firstChildId = Parent.Buffer.ReadUInt32();
+            var childCount = Parent.Buffer.ReadUInt16();
+            var nodeType = (NodeType)Parent.Buffer.ReadUInt16();
 
-            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
-            var stringOffset = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)(Parent.Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Parent.Buffer.ReadUInt64();
 
-            Buffer.Seek((long)(stringOffset));
-            var nodeName = Buffer.ReadString();
+            Parent.Buffer.Seek((long)(stringOffset));
+            var nodeName = Parent.Buffer.ReadString();
             
             nodes.Add(nodeName, new NXNode
             {
+                Parent = Parent,
                 NodePath = string.Concat(NodePath, $"/{nodeName}"),
                 Name = nodeName,
                 FirstChildId = firstChildId,
                 ChildCount = childCount,
                 Type = nodeType,
                 Offset = offset,
-                Buffer = new NXBuffer(Buffer.MemoryMappedFile)
-                {
-                    NodeBlock = Buffer.NodeBlock,
-                    StringBlock = Buffer.StringBlock,
-                    BitmapBlock = Buffer.BitmapBlock,
-                    AudioBlock = Buffer.AudioBlock,
-                },
             });
         }
 
@@ -77,15 +67,15 @@ public record NXNode
         
         for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
         {
-            var offset = Buffer.NodeBlock + 20 * i;
-            Buffer.Seek((long)offset);
-            var nameOffset = Buffer.ReadUInt32();
+            var offset = Parent.Buffer.NodeBlock + 20 * i;
+            Parent.Buffer.Seek((long)offset);
+            var nameOffset = Parent.Buffer.ReadUInt32();
 
-            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
-            var stringOffset = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)(Parent.Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Parent.Buffer.ReadUInt64();
 
-            Buffer.Seek((long)(stringOffset));
-            var nodeName = Buffer.ReadString();
+            Parent.Buffer.Seek((long)(stringOffset));
+            var nodeName = Parent.Buffer.ReadString();
             nodes.Add(nodeName);
         }
         
@@ -98,15 +88,15 @@ public record NXNode
         
         for (var i = FirstChildId; i < FirstChildId + ChildCount; i++)
         {
-            var offset = Buffer.NodeBlock + 20 * i;
-            Buffer.Seek((long)offset);
-            var nameOffset = Buffer.ReadUInt32();
+            var offset = Parent.Buffer.NodeBlock + 20 * i;
+            Parent.Buffer.Seek((long)offset);
+            var nameOffset = Parent.Buffer.ReadUInt32();
 
-            Buffer.Seek((long)(Buffer.StringBlock + 8 * nameOffset));
-            var stringOffset = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)(Parent.Buffer.StringBlock + 8 * nameOffset));
+            var stringOffset = Parent.Buffer.ReadUInt64();
 
-            Buffer.Seek((long)(stringOffset));
-            var nodeName = Buffer.ReadString();
+            Parent.Buffer.Seek((long)(stringOffset));
+            var nodeName = Parent.Buffer.ReadString();
             
             if (nodeName == name) return true;
         }
@@ -116,10 +106,10 @@ public record NXNode
 
     public int GetInt()
     {
-        lock (Buffer)
+        lock (Parent.Buffer)
         {
-            Buffer.Seek((long)Offset + 12);
-            var data = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)Offset + 12);
+            var data = Parent.Buffer.ReadUInt64();
 
             return (int)data;
         }
@@ -127,10 +117,10 @@ public record NXNode
 
     public double GetDouble()
     {
-        lock (Buffer)
+        lock (Parent.Buffer)
         {
-            Buffer.Seek((long)Offset + 12);
-            var data = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)Offset + 12);
+            var data = Parent.Buffer.ReadUInt64();
 
             return data;
         }
@@ -139,16 +129,16 @@ public record NXNode
     public string GetString()
     {
         if (Type != NodeType.String) throw new Exception("Not a string node");
-        lock (Buffer)
+        lock (Parent.Buffer)
         {
-            Buffer.Seek((long)Offset + 12);
-            var stringId = Buffer.ReadUInt32();
+            Parent.Buffer.Seek((long)Offset + 12);
+            var stringId = Parent.Buffer.ReadUInt32();
 
-            Buffer.Seek((long)Buffer.StringBlock + 8 * stringId);
-            var stringOffset = Buffer.ReadUInt64();
+            Parent.Buffer.Seek((long)Parent.Buffer.StringBlock + 8 * stringId);
+            var stringOffset = Parent.Buffer.ReadUInt64();
 
-            Buffer.Seek((long)(stringOffset)); // taking a guess here. Worst case increase to 1024
-            var nodeName = Buffer.ReadString();
+            Parent.Buffer.Seek((long)(stringOffset)); // taking a guess here. Worst case increase to 1024
+            var nodeName = Parent.Buffer.ReadString();
 
             return nodeName;
         }
@@ -157,8 +147,8 @@ public record NXNode
     public Vector2 GetVector()
     {
         if (Type != NodeType.Vector) throw new Exception("Not a vector node");
-        Buffer.Seek((long)Offset + 12);
-        var vector = new Vector2(Buffer.ReadInt32(), Buffer.ReadInt32()); // if you read these with uint it will give you an 4.8e^23 number.
+        Parent.Buffer.Seek((long)Offset + 12);
+        var vector = new Vector2(Parent.Buffer.ReadInt32(), Parent.Buffer.ReadInt32()); // if you read these with uint it will give you an 4.8e^23 number.
         
         if (vector.X > ushort.MaxValue || vector.Y > ushort.MaxValue) 
             throw new Exception("Vector is too big");
@@ -169,17 +159,17 @@ public record NXNode
     public unsafe Texture GetTexture()
     {
         if (Type != NodeType.Bitmap) throw new Exception("Not a bitmap node");
-        Buffer.Seek((long)Offset + 12);
-        var bitmapId = Buffer.ReadUInt32();
-        var width = Buffer.ReadUInt16();
-        var height = Buffer.ReadUInt16();
+        Parent.Buffer.Seek((long)Offset + 12);
+        var bitmapId = Parent.Buffer.ReadUInt32();
+        var width = Parent.Buffer.ReadUInt16();
+        var height = Parent.Buffer.ReadUInt16();
 
-        Buffer.Seek((long)(Buffer.BitmapBlock + 8 * bitmapId));
-        var bitmapOffset = Buffer.ReadUInt64();
+        Parent.Buffer.Seek((long)(Parent.Buffer.BitmapBlock + 8 * bitmapId));
+        var bitmapOffset = Parent.Buffer.ReadUInt64();
 
-        Buffer.Seek((long)(bitmapOffset));
-        var dataLength = Buffer.ReadUInt32();
-        var compressedData = Buffer.ReadBytes((int)dataLength).ToArray();
+        Parent.Buffer.Seek((long)(bitmapOffset));
+        var dataLength = Parent.Buffer.ReadUInt32();
+        var compressedData = Parent.Buffer.ReadBytes((int)dataLength).ToArray();
         var decompressedData = new byte[width * height * 4];
         var decompressedSize = LZ4Codec.Decode(compressedData, 0, compressedData.Length,
             decompressedData, 0, decompressedData.Length);

@@ -13,17 +13,14 @@ public unsafe  class NXBuffer : IDisposable
     public required ulong BitmapBlock { get; set; }
     public required ulong AudioBlock { get; set; }
     
-    public MemoryMappedFile MemoryMappedFile {get;}
-    
     public NXBuffer(MemoryMappedFile file)
     {
-        MemoryMappedFile = file;
         _view = file.CreateViewAccessor();
         _position = 0;
         _offset = 0;
     }
 
-    public Span<byte> ReadBytes(int len)
+    public ReadOnlySpan<byte> ReadBytes(int len)
     {
         if (!CheckBounds(_position, len)) return Span<byte>.Empty;
 

@@ -13,6 +13,7 @@
       <ProjectReference Include="..\MapleSyrup.Common\MapleSyrup.Common.csproj" />
       <ProjectReference Include="..\MapleSyrup.Gui\MapleSyrup.Gui.csproj" />
       <ProjectReference Include="..\MapleSyrup.NX\MapleSyrup.NX.csproj" />
+      <ProjectReference Include="..\MapleSyrup\MapleSyrup.csproj" />
     </ItemGroup>
 
 </Project>

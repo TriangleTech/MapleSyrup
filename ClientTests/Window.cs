@@ -1,23 +1,20 @@
 ﻿using System.Numerics;
 using MapleSyrup.Gui.Panels;
 using MapleSyrup.Gui.Widgets;
-using MapleSyrup.Nx;
+using MapleSyrup.Resources;
 using ZeroElectric.Vinculum;
 
 namespace ClientTests;
 
 public class Window
 {
-    private readonly NXFactory _nxFactory;
 
     public Window()
     {
-        _nxFactory = new NXFactory();
     }
 
     private void UnloadContent()
     {
-        _nxFactory.Shutdown();
     }
 
     public void Run()

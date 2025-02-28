@@ -17,7 +17,7 @@ public record Entity
     /// </summary>
     public required string Tag { get; init; } = "Default";
 
-    public required int Layer { get; init; } = 0;
+    public required int Layer { get; set; } = 0;
     
     /// <summary>
     /// Returns the visibility of the entity.

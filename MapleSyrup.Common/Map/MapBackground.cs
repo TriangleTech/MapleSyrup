@@ -1,14 +1,18 @@
 ﻿namespace MapleSyrup.Common.Map;
 
-public class MapBackground
+public struct MapBackground
 {
-    public required string NodePath { get; init; }
-    public required int BackgroundType { get; init; }
-    public required float X { get; init; }
-    public required float Y { get; init; }
-    public required int Z { get; init; }
-    public int Cx { get; init; } = 0;
-    public int Cy { get; init; } = 0;
-    public int Rx { get; init; } = 0;
-    public int Ry { get; init; } = 0;
+    public MapBackground()
+    {
+    }
+
+    public required string NodePath { get; init; } = string.Empty;
+    public required int BackgroundType { get; init; } = 0;
+    public required float X { get; init; } = 0;
+    public required float Y { get; init; } = 0;
+    public required int Z { get; init; } = 0;
+    public required int Cx { get; init; } = 0;
+    public required int Cy { get; init; } = 0;
+    public required int Rx { get; init; } = 0;
+    public required int Ry { get; init; } = 0;
 }
